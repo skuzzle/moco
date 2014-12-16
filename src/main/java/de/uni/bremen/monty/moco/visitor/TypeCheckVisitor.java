@@ -39,15 +39,31 @@
 package de.uni.bremen.monty.moco.visitor;
 
 import java.util.List;
+
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
-import de.uni.bremen.monty.moco.ast.declaration.*;
-import de.uni.bremen.monty.moco.ast.expression.*;
-import de.uni.bremen.monty.moco.ast.expression.literal.*;
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.Declaration;
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeVariable;
+import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
+import de.uni.bremen.monty.moco.ast.expression.CastExpression;
+import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
+import de.uni.bremen.monty.moco.ast.expression.Expression;
+import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
+import de.uni.bremen.monty.moco.ast.expression.IsExpression;
+import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
+import de.uni.bremen.monty.moco.ast.expression.ParentExpression;
+import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
+import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
+import de.uni.bremen.monty.moco.ast.expression.literal.ArrayLiteral;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
-import de.uni.bremen.monty.moco.exception.*;
+import de.uni.bremen.monty.moco.exception.InvalidExpressionException;
+import de.uni.bremen.monty.moco.exception.TypeMismatchException;
 
 /** This visitor must traverse the entire AST and perform type-safety checks.
  *
@@ -64,6 +80,13 @@ public class TypeCheckVisitor extends BaseVisitor {
 		}
 		super.visit(node);
 	}
+
+    @Override
+    public void visit(TypeVariable node) {
+        if (!node.isResolved()) {
+            throw new TypeMismatchException(node, "Could not infer type");
+        }
+    }
 
 	/** {@inheritDoc} */
 	@Override
@@ -203,7 +226,11 @@ public class TypeCheckVisitor extends BaseVisitor {
 	@Override
 	public void visit(FunctionDeclaration node) {
 		super.visit(node);
-		if (!(node.getReturnType() instanceof ClassDeclaration)) {
+        final TypeDeclaration returnType = node.getReturnType() instanceof TypeVariable
+                ? ((TypeVariable) node.getReturnType()).getResolvedType()
+                : node.getReturnType();
+
+        if (!(returnType instanceof ClassDeclaration)) {
 			throw new TypeMismatchException(node, "Must return a class type.");
 		}
 	}

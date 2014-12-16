@@ -38,16 +38,39 @@
  */
 package de.uni.bremen.monty.moco.visitor;
 
-import de.uni.bremen.monty.moco.ast.*;
-import de.uni.bremen.monty.moco.ast.declaration.*;
-import de.uni.bremen.monty.moco.ast.expression.*;
-import de.uni.bremen.monty.moco.ast.expression.literal.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import de.uni.bremen.monty.moco.ast.ASTNode;
+import de.uni.bremen.monty.moco.ast.ClassScope;
+import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
+import de.uni.bremen.monty.moco.ast.Scope;
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.Declaration;
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeVariable;
+import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
+import de.uni.bremen.monty.moco.ast.expression.CastExpression;
+import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
+import de.uni.bremen.monty.moco.ast.expression.Expression;
+import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
+import de.uni.bremen.monty.moco.ast.expression.IsExpression;
+import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
+import de.uni.bremen.monty.moco.ast.expression.ParentExpression;
+import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
+import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
+import de.uni.bremen.monty.moco.ast.expression.literal.ArrayLiteral;
+import de.uni.bremen.monty.moco.ast.expression.literal.BooleanLiteral;
+import de.uni.bremen.monty.moco.ast.expression.literal.CharacterLiteral;
+import de.uni.bremen.monty.moco.ast.expression.literal.FloatLiteral;
+import de.uni.bremen.monty.moco.ast.expression.literal.IntegerLiteral;
+import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
+import de.uni.bremen.monty.moco.exception.TypeMismatchException;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 import de.uni.bremen.monty.moco.exception.UnknownTypeException;
-
-import java.util.List;
-import java.util.Arrays;
-import java.util.ArrayList;
 
 /** This visitor must traverse the entire AST and resolve variables and types. */
 public class ResolveVisitor extends VisitOnceVisitor {
@@ -246,6 +269,28 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		super.visit(node);
 	}
 
+    @Override
+	public void visit(ReturnStatement node) {
+	    super.visit(node);
+
+        final ProcedureDeclaration proc = findEnclosingProcedure(node);
+        if (proc instanceof FunctionDeclaration) {
+            final FunctionDeclaration function = (FunctionDeclaration) proc;
+            final TypeDeclaration type = function.getReturnType();
+
+            if (type instanceof TypeVariable) {
+                final TypeVariable tv = (TypeVariable) type;
+                if (!tv.isResolved()) {
+                    tv.setResolvedType(node.getParameter().getType());
+                } else if (!node.getParameter().getType().matchesType(type)) {
+                    throw new TypeMismatchException(node, String.format(
+                            "Type variable already resolved to %s",
+                            tv.getResolvedType().getIdentifier().getSymbol()));
+                }
+            }
+        }
+	}
+
 	/** {@inheritDoc} */
 	@Override
 	public void visit(FunctionCall node) {
@@ -270,6 +315,8 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			if (procedure instanceof FunctionDeclaration) {
 				FunctionDeclaration function = (FunctionDeclaration) procedure;
 				visitDoubleDispatched(function);
+
+				propagateParamTypes(node, function);
 				node.setType(function.getReturnType());
 			} else {
 				node.setType(CoreClasses.voidType());
@@ -277,9 +324,12 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		}
 	}
 
-	/** Find an enclosing class of this node.
-	 *
-	 * If the search is not sucessfull this method returns CoreClasses.voidType(). */
+	    /**
+     * Find an enclosing class of this node.
+     *
+     * If the search is not successful this method returns
+     * CoreClasses.voidType().
+     */
 	private ClassDeclaration findEnclosingClass(ASTNode node) {
 		for (ASTNode parent = node; parent != null; parent = parent.getParentNode()) {
 			if (parent instanceof ClassDeclaration) {
@@ -288,6 +338,15 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		}
 		return CoreClasses.voidType();
 	}
+
+    private ProcedureDeclaration findEnclosingProcedure(ASTNode node) {
+        for (ASTNode parent = node; parent != null; parent = parent.getParentNode()) {
+            if (parent instanceof ProcedureDeclaration) {
+                return (ProcedureDeclaration) parent;
+            }
+        }
+        return null;
+    }
 
 	/** Searches the given class declaration in order to find a initializer declaration that matches the signature of the
 	 * given initializer node.
@@ -352,5 +411,24 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			}
 		}
 		return procedures.get(0);
+	}
+
+	private void propagateParamTypes(FunctionCall call, ProcedureDeclaration procedure) {
+		// replace variable substitutions
+		// invariant: all actual and formal parameters are already compatible
+		for (int i = 0; i < call.getArguments().size(); i++) {
+			final Expression actualParam = call.getArguments().get(i);
+			final VariableDeclaration formalParam = procedure.getParameter().get(i);
+			if (actualParam.getType() instanceof TypeVariable) {
+				final TypeVariable tv = (TypeVariable) actualParam.getType();
+
+				if (tv.isResolved()) {
+					// this variable is already resolved. Now choose the type
+					// which is more concrete
+				} else {
+					tv.setResolvedType(formalParam.getType());
+				}
+			}
+		}
 	}
 }

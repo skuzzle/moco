@@ -168,7 +168,17 @@ public class BaseVisitor {
 		node.visitChildren(this);
 		onExitChildrenEachNode(node);
 	}
-
+	
+    /** Visitor method to visit a TypeVariable.
+    *
+    * @param node
+    *            the node to visit */
+    public void visit(TypeVariable node) {
+        onEnterChildrenEachNode(node);
+        node.visitChildren(this);
+        onExitChildrenEachNode(node);
+    }
+	
 	// Expression
 
 	/** Visitor method to visit a ConditionalExpression.

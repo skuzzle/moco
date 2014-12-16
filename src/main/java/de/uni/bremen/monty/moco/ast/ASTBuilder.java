@@ -38,37 +38,91 @@
  */
 package de.uni.bremen.monty.moco.ast;
 
-import de.uni.bremen.monty.moco.antlr.MontyBaseVisitor;
-import de.uni.bremen.monty.moco.antlr.MontyParser;
-import de.uni.bremen.monty.moco.antlr.MontyParser.DefaultParameterContext;
-import de.uni.bremen.monty.moco.antlr.MontyParser.TypeContext;
-import de.uni.bremen.monty.moco.antlr.MontyParser.*;
-import de.uni.bremen.monty.moco.ast.declaration.*;
-import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration.DeclarationType;
-import de.uni.bremen.monty.moco.ast.expression.*;
-import de.uni.bremen.monty.moco.ast.expression.literal.*;
-import de.uni.bremen.monty.moco.ast.statement.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Stack;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.io.FilenameUtils;
 
-import java.util.*;
+import de.uni.bremen.monty.moco.antlr.MontyBaseVisitor;
+import de.uni.bremen.monty.moco.antlr.MontyParser;
+import de.uni.bremen.monty.moco.antlr.MontyParser.AssignmentContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.BreakStmContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.ClassDeclarationContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.CompoundAssignmentContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.DefaultParameterContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.ElifContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.ExpressionContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.FunctionCallContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.FunctionDeclarationContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.IfStatementContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.IndependentDeclarationContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.LiteralContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.MemberAccessStmtContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.MemberDeclarationContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.ParameterListContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.PrimaryContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.ProcedureDeclarationContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.RaiseStmContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.RetTypeContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.ReturnStmContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.SkipStmContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.StatementBlockContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.StatementContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.TryStatementContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.TypeContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.VariableDeclarationContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.WhileStatementContext;
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.Declaration;
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration.DeclarationType;
+import de.uni.bremen.monty.moco.ast.declaration.TypeVariable;
+import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
+import de.uni.bremen.monty.moco.ast.expression.CastExpression;
+import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
+import de.uni.bremen.monty.moco.ast.expression.Expression;
+import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
+import de.uni.bremen.monty.moco.ast.expression.IsExpression;
+import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
+import de.uni.bremen.monty.moco.ast.expression.ParentExpression;
+import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
+import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
+import de.uni.bremen.monty.moco.ast.expression.literal.ArrayLiteral;
+import de.uni.bremen.monty.moco.ast.expression.literal.BooleanLiteral;
+import de.uni.bremen.monty.moco.ast.expression.literal.CharacterLiteral;
+import de.uni.bremen.monty.moco.ast.expression.literal.FloatLiteral;
+import de.uni.bremen.monty.moco.ast.expression.literal.IntegerLiteral;
+import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
+import de.uni.bremen.monty.moco.ast.statement.Assignment;
+import de.uni.bremen.monty.moco.ast.statement.BreakStatement;
+import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
+import de.uni.bremen.monty.moco.ast.statement.RaiseStatement;
+import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
+import de.uni.bremen.monty.moco.ast.statement.SkipStatement;
+import de.uni.bremen.monty.moco.ast.statement.Statement;
+import de.uni.bremen.monty.moco.ast.statement.TryStatement;
+import de.uni.bremen.monty.moco.ast.statement.WhileLoop;
 
 public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	private final String fileName;
-	private Stack<Block> currentBlocks;
+	private final Stack<Block> currentBlocks;
 	private VariableDeclaration.DeclarationType currentVariableContext;
 	private ProcedureDeclaration.DeclarationType currentProcedureContext;
 
 	public ASTBuilder(String fileName) {
 		this.fileName = fileName;
-		currentBlocks = new Stack<>();
+		this.currentBlocks = new Stack<>();
 	}
 
 	private Position position(Token idSymbol) {
-		return new Position(fileName, idSymbol.getLine(), idSymbol.getCharPositionInLine());
+		return new Position(this.fileName, idSymbol.getLine(), idSymbol.getCharPositionInLine());
 	}
 
 	private String getText(TerminalNode identifier) {
@@ -79,9 +133,9 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	public ASTNode visitModuleDeclaration(@NotNull MontyParser.ModuleDeclarationContext ctx) {
 		Block block = new Block(position(ctx.getStart()));
 		ModuleDeclaration module =
-		        new ModuleDeclaration(position(ctx.getStart()), new Identifier(FilenameUtils.getBaseName(fileName)),
-		                block, new ArrayList<Import>());
-		currentBlocks.push(block);
+		        new ModuleDeclaration(position(ctx.getStart()),
+		                new Identifier(FilenameUtils.getBaseName(this.fileName)), block, new ArrayList<Import>());
+		this.currentBlocks.push(block);
 
 		for (MontyParser.ImportLineContext imp : ctx.importLine()) {
 
@@ -94,7 +148,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			block.addDeclaration(classDecl);
 		}
 		addStatementsToBlock(block, ctx.statement());
-		currentBlocks.pop();
+		this.currentBlocks.pop();
 		return module;
 	}
 
@@ -122,7 +176,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		String typeName = ctx.type().ClassIdentifier().toString();
 		ResolvableIdentifier type = new ResolvableIdentifier(typeName);
 		return new VariableDeclaration(position(ctx.getStart()), new Identifier(getText(ctx.Identifier())), type,
-		        currentVariableContext);
+		        this.currentVariableContext);
 	}
 
 	@Override
@@ -151,7 +205,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	private void buildDefaultProcedures(boolean functionDeclaration, List<DefaultParameterContext> defaultParameter,
 	        List<VariableDeclaration> allVariableDeclarations, List<VariableDeclaration> params,
 	        List<Expression> defaultExpression, List<VariableDeclaration> defaultVariableDeclaration,
-	        Identifier identifier, Token token, TypeContext typeContext, DeclarationType declarationTypeCopy) {
+	        Identifier identifier, Token token, String returnTypeName, DeclarationType declarationTypeCopy) {
 
 		for (int defaultParameterIdx = 0; defaultParameterIdx < defaultParameter.size(); defaultParameterIdx++) {
 			Block block = new Block(position(token));
@@ -183,24 +237,25 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			ProcedureDeclaration procDecl1;
 			if (functionDeclaration) {
 				block.addStatement(new ReturnStatement(new Position(), expression));
+
 				procDecl1 =
 				        new FunctionDeclaration(position(token), identifier, block, subParams, declarationTypeCopy,
-				                new ResolvableIdentifier(typeContext.ClassIdentifier().getText()));
+				                new ResolvableIdentifier(returnTypeName));
 			} else {
 				block.addStatement((Statement) expression);
 				block.addStatement(new ReturnStatement(new Position(), null));
 				procDecl1 =
 				        new ProcedureDeclaration(position(token), identifier, block, subParams, declarationTypeCopy);
 			}
-			currentBlocks.peek().addDeclaration(procDecl1);
+			this.currentBlocks.peek().addDeclaration(procDecl1);
 		}
 	}
 
 	private ProcedureDeclaration buildProcedures(boolean functionDeclaration,
-	        ParameterListContext parameterListContext, Token token, TypeContext typeContext,
+	        ParameterListContext parameterListContext, Token token, RetTypeContext typeContext,
 	        StatementBlockContext statementBlockContext, Identifier identifier) {
 
-		ProcedureDeclaration.DeclarationType declarationTypeCopy = currentProcedureContext;
+		ProcedureDeclaration.DeclarationType declarationTypeCopy = this.currentProcedureContext;
 		List<VariableDeclaration> params = parameterListToVarDeclList(parameterListContext);
 		List<DefaultParameterContext> defaultParameter = defaultParameterListToVarDeclList(parameterListContext);
 
@@ -215,6 +270,18 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		allVariableDeclarations.addAll(params);
 		allVariableDeclarations.addAll(defaultVariableDeclaration);
 
+		final String returnTypeName;
+		if (typeContext == null) {
+			// procedure
+			returnTypeName = null;
+		} else if (typeContext.type() != null) {
+			// explicit type
+			returnTypeName = typeContext.type().ClassIdentifier().getText();
+		} else {
+			// type var
+			returnTypeName = TypeVariable.nextName();
+		}
+
 		buildDefaultProcedures(
 		        functionDeclaration,
 		        defaultParameter,
@@ -224,7 +291,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		        defaultVariableDeclaration,
 		        identifier,
 		        token,
-		        typeContext,
+		        returnTypeName,
 		        declarationTypeCopy);
 
 		ProcedureDeclaration procDecl2;
@@ -232,8 +299,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		if (functionDeclaration) {
 			procDecl2 =
 			        new FunctionDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
-			                allVariableDeclarations, declarationTypeCopy, new ResolvableIdentifier(
-			                        typeContext.ClassIdentifier().getText()));
+			                allVariableDeclarations, declarationTypeCopy, new ResolvableIdentifier(returnTypeName));
 		} else {
 			procDecl2 =
 			        new ProcedureDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
@@ -251,42 +317,13 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			identifier = new Identifier("operator" + ctx.binaryOperation().getText());
 		}
 
-		return buildProcedures(true, ctx.parameterList(), ctx.getStart(), ctx.type(), ctx.statementBlock(), identifier);
-	}
-
-	@Override
-	public ASTNode visitClassDeclaration(ClassDeclarationContext ctx) {
-		List<ResolvableIdentifier> superClasses = new ArrayList<>();
-		if (ctx.typeList() != null) {
-			for (TypeContext type : ctx.typeList().type()) {
-				superClasses.add(new ResolvableIdentifier(type.ClassIdentifier().getText()));
-			}
-		}
-		ClassDeclaration cl =
-		        new ClassDeclaration(position(ctx.getStart()), new Identifier(ctx.ClassIdentifier().getText()),
-		                superClasses, new Block(position(ctx.getStart())));
-
-		currentBlocks.push(cl.getBlock());
-		for (MemberDeclarationContext member : ctx.memberDeclaration()) {
-			currentVariableContext = VariableDeclaration.DeclarationType.ATTRIBUTE;
-			currentProcedureContext = ProcedureDeclaration.DeclarationType.METHOD;
-			ASTNode astNode = visit(member);
-			if (astNode instanceof Declaration) {
-
-				Declaration decl = (Declaration) astNode;
-				decl.setAccessModifier(AccessModifier.stringToAccess(member.accessModifier().modifier.getText()));
-				cl.getBlock().addDeclaration(decl);
-			} else if (astNode instanceof Assignment) {
-
-				Assignment asgnmnt =
-				        new Assignment(astNode.getPosition(), new MemberAccess(astNode.getPosition(),
-				                new SelfExpression(new Position()), ((Assignment) astNode).getLeft()),
-				                ((Assignment) astNode).getRight());
-				cl.getBlock().addStatement(asgnmnt);
-			}
-		}
-		currentBlocks.pop();
-		return cl;
+		return buildProcedures(
+		        true,
+		        ctx.parameterList(),
+		        ctx.getStart(),
+		        ctx.retType(),
+		        ctx.statementBlock(),
+		        identifier);
 	}
 
 	@Override
@@ -302,12 +339,47 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		return proc;
 	}
 
+	@Override
+	public ASTNode visitClassDeclaration(ClassDeclarationContext ctx) {
+		List<ResolvableIdentifier> superClasses = new ArrayList<>();
+		if (ctx.typeList() != null) {
+			for (TypeContext type : ctx.typeList().type()) {
+				superClasses.add(new ResolvableIdentifier(type.ClassIdentifier().getText()));
+			}
+		}
+		ClassDeclaration cl =
+		        new ClassDeclaration(position(ctx.getStart()), new Identifier(ctx.ClassIdentifier().getText()),
+		                superClasses, new Block(position(ctx.getStart())));
+
+		this.currentBlocks.push(cl.getBlock());
+		for (MemberDeclarationContext member : ctx.memberDeclaration()) {
+			this.currentVariableContext = VariableDeclaration.DeclarationType.ATTRIBUTE;
+			this.currentProcedureContext = ProcedureDeclaration.DeclarationType.METHOD;
+			ASTNode astNode = visit(member);
+			if (astNode instanceof Declaration) {
+
+				Declaration decl = (Declaration) astNode;
+				decl.setAccessModifier(AccessModifier.stringToAccess(member.accessModifier().modifier.getText()));
+				cl.getBlock().addDeclaration(decl);
+			} else if (astNode instanceof Assignment) {
+
+				Assignment asgnmnt =
+				        new Assignment(astNode.getPosition(), new MemberAccess(astNode.getPosition(),
+				                new SelfExpression(new Position()), ((Assignment) astNode).getLeft()),
+				                ((Assignment) astNode).getRight());
+				cl.getBlock().addStatement(asgnmnt);
+			}
+		}
+		this.currentBlocks.pop();
+		return cl;
+	}
+
 	private List<VariableDeclaration> parameterListToVarDeclList(ParameterListContext parameter) {
 		if (parameter == null) {
 			return new ArrayList<>();
 		}
 		ArrayList<VariableDeclaration> parameterList = new ArrayList<>();
-		currentVariableContext = VariableDeclaration.DeclarationType.PARAMETER;
+		this.currentVariableContext = VariableDeclaration.DeclarationType.PARAMETER;
 		for (VariableDeclarationContext var : parameter.variableDeclaration()) {
 			parameterList.add((VariableDeclaration) visit(var));
 		}
@@ -318,7 +390,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		if (parameter == null) {
 			return new ArrayList<>();
 		}
-		currentVariableContext = VariableDeclaration.DeclarationType.PARAMETER;
+		this.currentVariableContext = VariableDeclaration.DeclarationType.PARAMETER;
 		return parameter.defaultParameter();
 	}
 
@@ -387,8 +459,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 
 	public void addStatementsToBlock(Block block, List<StatementContext> statements) {
 		for (StatementContext stm : statements) {
-			currentVariableContext = VariableDeclaration.DeclarationType.VARIABLE;
-			currentProcedureContext = ProcedureDeclaration.DeclarationType.UNBOUND;
+			this.currentVariableContext = VariableDeclaration.DeclarationType.VARIABLE;
+			this.currentProcedureContext = ProcedureDeclaration.DeclarationType.UNBOUND;
 			ASTNode node = visit(stm);
 			if (node instanceof Statement) {
 				block.addStatement((Statement) node);
@@ -408,7 +480,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		} else {
 			node = visit(ctx.variableDeclaration());
 			if (ctx.expression() != null) {
-				currentBlocks.peek().addDeclaration((Declaration) node);
+				this.currentBlocks.peek().addDeclaration((Declaration) node);
 				return new Assignment(position(ctx.getStart()), new VariableAccess(position(ctx.getStart()),
 				        ResolvableIdentifier.convert(((VariableDeclaration) node).getIdentifier())),
 				        (Expression) visit(ctx.expression()));
@@ -421,9 +493,9 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	public ASTNode visitStatementBlock(StatementBlockContext ctx) {
 
 		Block block = new Block(position(ctx.getStart()));
-		currentBlocks.push(block);
+		this.currentBlocks.push(block);
 		addStatementsToBlock(block, ctx.statement());
-		currentBlocks.pop();
+		this.currentBlocks.pop();
 		return block;
 	}
 
@@ -638,6 +710,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		        getText(ctx.ClassIdentifier())));
 	}
 
+	@Override
 	protected ASTNode aggregateResult(ASTNode aggregate, ASTNode nextResult) {
 		return nextResult == null ? aggregate : nextResult;
 	}

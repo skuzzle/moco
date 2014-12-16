@@ -52,12 +52,17 @@ type
   : ClassIdentifier ('<' typeList '>')?
   ;
 
+retType
+  : type
+  | 'var'
+  ;  
+
 typeList
   : type (',' type)*
   ;
 
 functionDeclaration
-  : type
+  : retType
     (Identifier | 'operator' binaryOperation)
     Lparenthesis parameterList? Rparenthesis ':' EndOfLine
     statementBlock

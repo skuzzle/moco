@@ -38,16 +38,30 @@
  */
 package de.uni.bremen.monty.moco.visitor;
 
-import de.uni.bremen.monty.moco.ast.*;
-import de.uni.bremen.monty.moco.ast.statement.*;
-import de.uni.bremen.monty.moco.ast.expression.*;
-import de.uni.bremen.monty.moco.ast.Package;
-import de.uni.bremen.monty.moco.ast.declaration.*;
-import de.uni.bremen.monty.moco.exception.InvalidPlaceToDeclareException;
-
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+
+import de.uni.bremen.monty.moco.ast.ASTNode;
+import de.uni.bremen.monty.moco.ast.Block;
+import de.uni.bremen.monty.moco.ast.ClassScope;
+import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.Package;
+import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
+import de.uni.bremen.monty.moco.ast.Scope;
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeVariable;
+import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
+import de.uni.bremen.monty.moco.ast.expression.Expression;
+import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
+import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
+import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
+import de.uni.bremen.monty.moco.ast.statement.Statement;
+import de.uni.bremen.monty.moco.exception.InvalidPlaceToDeclareException;
 
 /** This visitor must traverse the entire AST, set up scopes and define declarations.
  * <p>
@@ -89,8 +103,8 @@ public class DeclarationVisitor extends BaseVisitor {
 		}
 		Block classBlock = node.getBlock();
 
-		currentScope.define(node);
-		currentScope = new ClassScope(currentScope);
+		this.currentScope.define(node);
+		this.currentScope = new ClassScope(this.currentScope);
 
 		// These are not boxed yet. So they cant inherit from object and cant have initializers.
 		List<ClassDeclaration> treatSpecial =
@@ -111,27 +125,36 @@ public class DeclarationVisitor extends BaseVisitor {
 		super.visit(node);
 
 		node.setScope(classBlock.getScope());
-		currentScope = currentScope.getParentScope();
+		this.currentScope = this.currentScope.getParentScope();
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public void visit(FunctionDeclaration node) {
-		currentScope.define(node);
-		currentScope = new Scope(currentScope);
+		this.currentScope.define(node);
+		if (isNameATypeVariable(node.getReturnTypeIdentifier())) {
+            final TypeVariable tv = new TypeVariable(node.getPosition(),
+                    node.getReturnTypeIdentifier());
+			this.currentScope.define(tv);
+		}
+		this.currentScope = new Scope(this.currentScope);
 		super.visit(node);
 		node.setScope(node.getBody().getScope());
-		currentScope = currentScope.getParentScope();
+		this.currentScope = this.currentScope.getParentScope();
+	}
+
+	private boolean isNameATypeVariable(Identifier id) {
+		return id.getSymbol().startsWith(TypeVariable.NAME);
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public void visit(ProcedureDeclaration node) {
-		currentScope.define(node);
-		currentScope = new Scope(currentScope);
+		this.currentScope.define(node);
+		this.currentScope = new Scope(this.currentScope);
 		super.visit(node);
 		node.setScope(node.getBody().getScope());
-		currentScope = currentScope.getParentScope();
+		this.currentScope = this.currentScope.getParentScope();
 	}
 
 	/** {@inheritDoc} */
@@ -141,7 +164,7 @@ public class DeclarationVisitor extends BaseVisitor {
 		if (node.getParentNode().getParentNode() instanceof ModuleDeclaration) {
 			node.setIsGlobal(true);
 		}
-		currentScope.define(node.getIdentifier(), node);
+		this.currentScope.define(node.getIdentifier(), node);
 		super.visit(node);
 	}
 
@@ -153,23 +176,23 @@ public class DeclarationVisitor extends BaseVisitor {
 		boolean backToParentScope = false;
 
 		if (node.getParentNode() instanceof ClassDeclaration) {
-			currentScope = new ClassScope(currentScope);
+			this.currentScope = new ClassScope(this.currentScope);
 			backToParentScope = true;
 		} else if (!(node.getParentNode() instanceof ModuleDeclaration)) {
-			currentScope = new Scope(currentScope);
+			this.currentScope = new Scope(this.currentScope);
 			backToParentScope = true;
 		}
 
 		super.visit(node);
 
 		if (backToParentScope) {
-			currentScope = currentScope.getParentScope();
+			this.currentScope = this.currentScope.getParentScope();
 		}
 	}
 
 	@Override
 	protected void onEnterChildrenEachNode(ASTNode node) {
-		node.setScope(currentScope);
+		node.setScope(this.currentScope);
 	}
 
 	private ProcedureDeclaration buildDefaultInitializer(ClassDeclaration node) {
