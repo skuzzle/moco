@@ -269,26 +269,26 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		super.visit(node);
 	}
 
-    @Override
+	@Override
 	public void visit(ReturnStatement node) {
-	    super.visit(node);
+		super.visit(node);
 
-        final ProcedureDeclaration proc = findEnclosingProcedure(node);
-        if (proc instanceof FunctionDeclaration) {
-            final FunctionDeclaration function = (FunctionDeclaration) proc;
-            final TypeDeclaration type = function.getReturnType();
+		final ProcedureDeclaration proc = findEnclosingProcedure(node);
+		if (proc instanceof FunctionDeclaration) {
+			final FunctionDeclaration function = (FunctionDeclaration) proc;
+			final TypeDeclaration type = function.getReturnType();
 
-            if (type instanceof TypeVariable) {
-                final TypeVariable tv = (TypeVariable) type;
-                if (!tv.isResolved()) {
-                    tv.setResolvedType(node.getParameter().getType());
-                } else if (!node.getParameter().getType().matchesType(type)) {
-                    throw new TypeMismatchException(node, String.format(
-                            "Type variable already resolved to %s",
-                            tv.getResolvedType().getIdentifier().getSymbol()));
-                }
-            }
-        }
+			if (type instanceof TypeVariable) {
+				final TypeVariable tv = (TypeVariable) type;
+				if (!tv.isResolved()) {
+					tv.setResolvedType(node.getParameter().getType());
+				} else if (!node.getParameter().getType().matchesType(type)) {
+					throw new TypeMismatchException(node, String.format(
+					        "Type variable already resolved to %s",
+					        tv.getResolvedType().getIdentifier().getSymbol()));
+				}
+			}
+		}
 	}
 
 	/** {@inheritDoc} */
@@ -324,12 +324,9 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		}
 	}
 
-	    /**
-     * Find an enclosing class of this node.
-     *
-     * If the search is not successful this method returns
-     * CoreClasses.voidType().
-     */
+	/** Find an enclosing class of this node.
+	 * 
+	 * If the search is not successful this method returns CoreClasses.voidType(). */
 	private ClassDeclaration findEnclosingClass(ASTNode node) {
 		for (ASTNode parent = node; parent != null; parent = parent.getParentNode()) {
 			if (parent instanceof ClassDeclaration) {
@@ -339,18 +336,18 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		return CoreClasses.voidType();
 	}
 
-    private ProcedureDeclaration findEnclosingProcedure(ASTNode node) {
-        for (ASTNode parent = node; parent != null; parent = parent.getParentNode()) {
-            if (parent instanceof ProcedureDeclaration) {
-                return (ProcedureDeclaration) parent;
-            }
-        }
-        return null;
-    }
+	private ProcedureDeclaration findEnclosingProcedure(ASTNode node) {
+		for (ASTNode parent = node; parent != null; parent = parent.getParentNode()) {
+			if (parent instanceof ProcedureDeclaration) {
+				return (ProcedureDeclaration) parent;
+			}
+		}
+		return null;
+	}
 
 	/** Searches the given class declaration in order to find a initializer declaration that matches the signature of the
 	 * given initializer node.
-	 *
+	 * 
 	 * @param node
 	 *            a function call node representing a initializer
 	 * @param classDeclaration
@@ -382,7 +379,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	}
 
 	/** Searches the given list of procedures in order to find one that matches the signature of the given function call.
-	 *
+	 * 
 	 * @param node
 	 *            a function call node representing the function call
 	 * @param procedures

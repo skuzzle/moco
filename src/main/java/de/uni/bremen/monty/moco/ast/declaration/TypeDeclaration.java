@@ -46,7 +46,7 @@ import de.uni.bremen.monty.moco.ast.Position;
  * The TypeDeclarations are used as types for Expressions. */
 public abstract class TypeDeclaration extends Declaration {
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node
 	 * @param identifier
@@ -55,19 +55,16 @@ public abstract class TypeDeclaration extends Declaration {
 		super(position, identifier);
 	}
 
-    /**
-     * If this is a {@link TypeVariable}, this method returns its resolved type.
-     * Otherwise, it simply returns this type.
-     *
-     * @return The unwrapped type.
-     */
-    public TypeDeclaration unwrapVariable() {
-        return this;
-    }
+	/** If this is a {@link TypeVariable}, this method returns its resolved type. Otherwise, it simply returns this type.
+	 * 
+	 * @return The unwrapped type. */
+	public TypeDeclaration unwrapVariable() {
+		return this;
+	}
 
 	/** Check equality of two types taking into account the AST object hierachy.
 	 * <p>
-	 *
+	 * 
 	 * @param other
 	 *            the other TypeDeclaration to check against
 	 * @return if equal */

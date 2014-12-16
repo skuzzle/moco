@@ -1,0 +1,6 @@
+class Foo:
+    + var fak(Int n):
+        if n <= 1:
+            return 1
+        else:
+            return n * fak(n - 1)

@@ -66,7 +66,7 @@ import de.uni.bremen.monty.moco.exception.InvalidExpressionException;
 import de.uni.bremen.monty.moco.exception.TypeMismatchException;
 
 /** This visitor must traverse the entire AST and perform type-safety checks.
- *
+ * 
  * This visitor does neither resolve nor set a type. It just checks. */
 public class TypeCheckVisitor extends BaseVisitor {
 
@@ -81,12 +81,12 @@ public class TypeCheckVisitor extends BaseVisitor {
 		super.visit(node);
 	}
 
-    @Override
-    public void visit(TypeVariable node) {
-        if (!node.isResolved()) {
-            throw new TypeMismatchException(node, "Could not infer type");
-        }
-    }
+	@Override
+	public void visit(TypeVariable node) {
+		if (!node.isResolved()) {
+			throw new TypeMismatchException(node, "Could not infer type");
+		}
+	}
 
 	/** {@inheritDoc} */
 	@Override
@@ -226,11 +226,10 @@ public class TypeCheckVisitor extends BaseVisitor {
 	@Override
 	public void visit(FunctionDeclaration node) {
 		super.visit(node);
-        final TypeDeclaration returnType = node.getReturnType() instanceof TypeVariable
-                ? ((TypeVariable) node.getReturnType()).getResolvedType()
-                : node.getReturnType();
+		final TypeDeclaration returnType =
+		        node.getReturnType() instanceof TypeVariable ? ((TypeVariable) node.getReturnType()).getResolvedType() : node.getReturnType();
 
-        if (!(returnType instanceof ClassDeclaration)) {
+		if (!(returnType instanceof ClassDeclaration)) {
 			throw new TypeMismatchException(node, "Must return a class type.");
 		}
 	}

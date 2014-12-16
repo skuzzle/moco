@@ -20,10 +20,10 @@ public class TypeVariable extends TypeDeclaration {
 		super(position, identifier);
 	}
 
-    @Override
-    public TypeDeclaration unwrapVariable() {
-        return this.resolvedType;
-    }
+	@Override
+	public TypeDeclaration unwrapVariable() {
+		return this.resolvedType;
+	}
 
 	public void setResolvedType(TypeDeclaration resolvedType) {
 		this.resolvedType = resolvedType;
@@ -38,11 +38,11 @@ public class TypeVariable extends TypeDeclaration {
 	}
 
 	@Override
-    public void setParentNode(ASTNode parentNode) {
-        super.setParentNode(parentNode);
-    }
+	public void setParentNode(ASTNode parentNode) {
+		super.setParentNode(parentNode);
+	}
 
-    @Override
+	@Override
 	public boolean matchesType(TypeDeclaration other) {
 		if (isResolved()) {
 			return this.resolvedType.matchesType(other);

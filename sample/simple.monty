@@ -1,0 +1,10 @@
+class Simple:
+    + foo():
+        String x := shouldNotFail(5)
+
+    + var shouldNotFail(Int a):
+        if a < 0:
+            return 1
+        else:
+            return 2
+            

@@ -66,17 +66,17 @@ import de.uni.bremen.monty.moco.exception.InvalidPlaceToDeclareException;
 /** This visitor must traverse the entire AST, set up scopes and define declarations.
  * <p>
  * For every node that opens a new scope this scope must be created and assigned:
- *
+ * 
  * <pre>
  * currentScope = node.setScope(new Scope(currentScope));
  * </pre>
- *
+ * 
  * For every other node the associated scope must be set:
- *
+ * 
  * <pre>
  * node.setScope(currentScope);
  * </pre>
- *
+ * 
  * Every declaration must be defined using the currentScope. */
 public class DeclarationVisitor extends BaseVisitor {
 
@@ -133,8 +133,7 @@ public class DeclarationVisitor extends BaseVisitor {
 	public void visit(FunctionDeclaration node) {
 		this.currentScope.define(node);
 		if (isNameATypeVariable(node.getReturnTypeIdentifier())) {
-            final TypeVariable tv = new TypeVariable(node.getPosition(),
-                    node.getReturnTypeIdentifier());
+			final TypeVariable tv = new TypeVariable(node.getPosition(), node.getReturnTypeIdentifier());
 			this.currentScope.define(tv);
 		}
 		this.currentScope = new Scope(this.currentScope);
