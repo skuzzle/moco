@@ -50,19 +50,15 @@ constantDeclaration
 
 type
   : ClassIdentifier ('<' typeList '>')?
+  | '?'
   ;
-
-retType
-  : type
-  | 'var'
-  ;  
 
 typeList
   : type (',' type)*
   ;
 
 functionDeclaration
-  : retType
+  : type
     (Identifier | 'operator' binaryOperation)
     Lparenthesis parameterList? Rparenthesis ':' EndOfLine
     statementBlock

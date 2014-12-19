@@ -1,8 +1,12 @@
 class Simple:
+    + ? bar := "hallO"
+    
     + foo():
-        String x := shouldNotFail(5)
+        ? x := shouldNotFail(5)
+        ? i := x*bar
 
-    + var shouldNotFail(Int a):
+    // test
+    + ? shouldNotFail(Int a):
         if a < 0:
             return 1
         else:

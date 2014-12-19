@@ -1,5 +1,5 @@
 class Foo:
-    + var fak(Int n):
+    + ? fak(Int n):
         if n <= 1:
             return 1
         else:

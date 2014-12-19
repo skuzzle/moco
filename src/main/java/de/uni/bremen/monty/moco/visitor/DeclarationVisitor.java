@@ -56,12 +56,14 @@ import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration.DeclarationType;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
 import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.exception.InvalidPlaceToDeclareException;
+import de.uni.bremen.monty.moco.exception.MontyBaseException;
 
 /** This visitor must traverse the entire AST, set up scopes and define declarations.
  * <p>
@@ -132,7 +134,7 @@ public class DeclarationVisitor extends BaseVisitor {
 	@Override
 	public void visit(FunctionDeclaration node) {
 		this.currentScope.define(node);
-		if (isNameATypeVariable(node.getReturnTypeIdentifier())) {
+		if (TypeVariable.isNameATypeVariable(node.getReturnTypeIdentifier())) {
 			final TypeVariable tv = new TypeVariable(node.getPosition(), node.getReturnTypeIdentifier());
 			this.currentScope.define(tv);
 		}
@@ -140,10 +142,6 @@ public class DeclarationVisitor extends BaseVisitor {
 		super.visit(node);
 		node.setScope(node.getBody().getScope());
 		this.currentScope = this.currentScope.getParentScope();
-	}
-
-	private boolean isNameATypeVariable(Identifier id) {
-		return id.getSymbol().startsWith(TypeVariable.NAME);
 	}
 
 	/** {@inheritDoc} */
@@ -164,6 +162,14 @@ public class DeclarationVisitor extends BaseVisitor {
 			node.setIsGlobal(true);
 		}
 		this.currentScope.define(node.getIdentifier(), node);
+		if (TypeVariable.isNameATypeVariable(node.getTypeIdentifier())) {
+
+			if (node.getDeclarationType() == DeclarationType.PARAMETER) {
+				throw new MontyBaseException(node, "Type inferrence not supported for parameters");
+			}
+
+			currentScope.define(new TypeVariable(node.getPosition(), node.getTypeIdentifier()));
+		}
 		super.visit(node);
 	}
 

@@ -67,6 +67,7 @@ import de.uni.bremen.monty.moco.ast.expression.literal.BooleanLiteral;
 import de.uni.bremen.monty.moco.ast.expression.literal.CharacterLiteral;
 import de.uni.bremen.monty.moco.ast.expression.literal.FloatLiteral;
 import de.uni.bremen.monty.moco.ast.expression.literal.IntegerLiteral;
+import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.exception.TypeMismatchException;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
@@ -143,6 +144,18 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		node.setType(scope.resolveType(node.getTypeIdentifier()));
 	}
 
+	@Override
+	public void visit(Assignment node) {
+		super.visit(node);
+
+		if (node.getLeft().getType() instanceof TypeVariable) {
+			final TypeVariable tv = (TypeVariable) node.getLeft().getType();
+			if (!tv.isResolved()) {
+				tv.setResolvedType(node.getRight().getType());
+			}
+		}
+	}
+
 	/** {@inheritDoc} */
 	@Override
 	public void visit(VariableAccess node) {
@@ -203,10 +216,12 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	@Override
 	public void visit(MemberAccess node) {
 		visitDoubleDispatched(node.getLeft());
-		if (node.getLeft().getType() instanceof ClassDeclaration) {
-			node.getRight().setScope(node.getLeft().getType().getScope());
+		final TypeDeclaration unwrapped = node.getLeft().getType().unwrapVariable();
+		if (unwrapped instanceof ClassDeclaration) {
+			node.getRight().setScope(unwrapped.getScope());
 		}
 		visitDoubleDispatched(node.getRight());
+
 		node.setType(node.getRight().getType());
 	}
 
@@ -283,8 +298,11 @@ public class ResolveVisitor extends VisitOnceVisitor {
 				if (!tv.isResolved()) {
 					tv.setResolvedType(node.getParameter().getType());
 				} else if (!node.getParameter().getType().matchesType(type)) {
+				    
+				    // TODO: try to find best matching common super type 
+				    
 					throw new TypeMismatchException(node, String.format(
-					        "Type variable already resolved to %s",
+					        "Return type already resolved to %s",
 					        tv.getResolvedType().getIdentifier().getSymbol()));
 				}
 			}

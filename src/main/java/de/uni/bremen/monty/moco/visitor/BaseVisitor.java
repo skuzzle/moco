@@ -105,6 +105,7 @@ public class BaseVisitor {
 			        getClass().getSimpleName(),
 			        getNodeInformation(exc.getNode()),
 			        exc.getMessage()));
+			exception.printStackTrace();
 		} else {
 			exception.printStackTrace();
 		}

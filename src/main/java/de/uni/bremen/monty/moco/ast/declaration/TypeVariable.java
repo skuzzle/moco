@@ -14,6 +14,10 @@ public class TypeVariable extends TypeDeclaration {
 		return NAME.concat(String.valueOf(counter++));
 	}
 
+	public static boolean isNameATypeVariable(Identifier id) {
+		return id.getSymbol().startsWith(NAME);
+	}
+
 	private TypeDeclaration resolvedType;
 
 	public TypeVariable(Position position, Identifier identifier) {
@@ -22,7 +26,10 @@ public class TypeVariable extends TypeDeclaration {
 
 	@Override
 	public TypeDeclaration unwrapVariable() {
-		return this.resolvedType;
+		if (this.resolvedType instanceof TypeVariable) {
+			return resolvedType.unwrapVariable();
+		}
+		return getResolvedType();
 	}
 
 	public void setResolvedType(TypeDeclaration resolvedType) {
@@ -30,6 +37,10 @@ public class TypeVariable extends TypeDeclaration {
 	}
 
 	public TypeDeclaration getResolvedType() {
+	    if (!isResolved()) {
+	        throw new IllegalStateException(String.format(
+	                "Variable '%s' has not been resolved", this.getIdentifier()));
+	    }
 		return this.resolvedType;
 	}
 

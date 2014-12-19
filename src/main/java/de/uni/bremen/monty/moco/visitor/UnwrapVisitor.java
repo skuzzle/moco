@@ -13,6 +13,12 @@ public class UnwrapVisitor extends BaseVisitor {
 	@Override
 	protected void onEnterChildrenEachNode(ASTNode node) {
 		if (node instanceof Expression) {
+		}
+	}
+
+	@Override
+	protected void onEnterEachNode(ASTNode node) {
+		if (node instanceof Expression) {
 			final Expression expression = (Expression) node;
 			expression.setType(expression.getType().unwrapVariable());
 		}

@@ -68,7 +68,6 @@ import de.uni.bremen.monty.moco.antlr.MontyParser.ParameterListContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.PrimaryContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.ProcedureDeclarationContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.RaiseStmContext;
-import de.uni.bremen.monty.moco.antlr.MontyParser.RetTypeContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.ReturnStmContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.SkipStmContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.StatementBlockContext;
@@ -173,7 +172,12 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 
 	@Override
 	public ASTNode visitVariableDeclaration(@NotNull VariableDeclarationContext ctx) {
-		String typeName = ctx.type().ClassIdentifier().toString();
+		final String typeName;
+		if (ctx.type().ClassIdentifier() == null) {
+			typeName = TypeVariable.nextName();
+		} else {
+			typeName = ctx.type().ClassIdentifier().toString();
+		}
 		ResolvableIdentifier type = new ResolvableIdentifier(typeName);
 		return new VariableDeclaration(position(ctx.getStart()), new Identifier(getText(ctx.Identifier())), type,
 		        this.currentVariableContext);
@@ -252,7 +256,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	}
 
 	private ProcedureDeclaration buildProcedures(boolean functionDeclaration,
-	        ParameterListContext parameterListContext, Token token, RetTypeContext typeContext,
+	        ParameterListContext parameterListContext, Token token, TypeContext typeContext,
 	        StatementBlockContext statementBlockContext, Identifier identifier) {
 
 		ProcedureDeclaration.DeclarationType declarationTypeCopy = this.currentProcedureContext;
@@ -274,9 +278,9 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		if (typeContext == null) {
 			// procedure
 			returnTypeName = null;
-		} else if (typeContext.type() != null) {
+		} else if (typeContext.ClassIdentifier() != null) {
 			// explicit type
-			returnTypeName = typeContext.type().ClassIdentifier().getText();
+			returnTypeName = typeContext.ClassIdentifier().getText();
 		} else {
 			// type var
 			returnTypeName = TypeVariable.nextName();
@@ -317,13 +321,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			identifier = new Identifier("operator" + ctx.binaryOperation().getText());
 		}
 
-		return buildProcedures(
-		        true,
-		        ctx.parameterList(),
-		        ctx.getStart(),
-		        ctx.retType(),
-		        ctx.statementBlock(),
-		        identifier);
+		return buildProcedures(true, ctx.parameterList(), ctx.getStart(), ctx.type(), ctx.statementBlock(), identifier);
 	}
 
 	@Override
