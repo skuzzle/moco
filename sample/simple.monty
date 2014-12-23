@@ -3,7 +3,9 @@ class Simple:
     
     + foo():
         ? x := shouldNotFail(5)
-        ? i := x*bar
+        ? xyz := "bla"
+        ? y := shouldNotFail(xyz)
+        //? i := x * bar
 
     // test
     + ? shouldNotFail(Int a):
@@ -12,3 +14,5 @@ class Simple:
         else:
             return 2
             
+    + ? shouldNotFail():
+        return ""

@@ -38,17 +38,30 @@
  */
 package de.uni.bremen.monty.moco.ast;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
-import de.uni.bremen.monty.moco.ast.declaration.*;
-import de.uni.bremen.monty.moco.exception.*;
+import de.uni.bremen.monty.moco.ast.declaration.ClassType;
+import de.uni.bremen.monty.moco.ast.declaration.Declaration;
+import de.uni.bremen.monty.moco.ast.declaration.Function;
+import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.Type;
+import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
+import de.uni.bremen.monty.moco.exception.RedeclarationException;
+import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
+import de.uni.bremen.monty.moco.exception.UnknownTypeException;
 
 /** A scope in which an identifier is associated with a declaration.
  * <p>
  * To nest scopes or build a stack the parent scope is passed as an argument to the constructor. So you use it like
  * this:
  * <p>
- * 
+ *
  * <pre>
  * {@code
  * // create a new scope and nest the old one
@@ -60,62 +73,178 @@ import de.uni.bremen.monty.moco.exception.*;
  * </pre> */
 public class Scope {
 
+    /** Scope's name */
+    protected final String name;
+
 	/** The parent scope in nesting hierarchy. */
-	protected Scope parent;
+    protected final Scope parent;
 
 	/** The map to store the associations to procedure declarations. */
-	protected Map<Identifier, List<ProcedureDeclaration>> procedures;
+    protected final Map<Identifier, List<ProcedureDeclaration>> procedures;
 
 	/** The map to store the remaining associations. */
-	protected Map<Identifier, Declaration> members;
+    protected final Map<Identifier, Declaration> members;
 
-	/** Constructor.
-	 * 
-	 * @param parent
-	 *            the parent scope in nesting hierarchy */
-	public Scope(Scope parent) {
+	        /**
+     * Constructor.
+     *
+     * @param name The scope's name.
+     * @param parent the parent scope in nesting hierarchy
+     */
+    public Scope(String name, Scope parent) {
+        this.name = name;
 		this.parent = parent;
-		procedures = new HashMap<Identifier, List<ProcedureDeclaration>>();
-		members = new HashMap<Identifier, Declaration>();
+		this.procedures = new HashMap<Identifier, List<ProcedureDeclaration>>();
+		this.members = new HashMap<Identifier, Declaration>();
 	}
 
 	/** Get the parent scope in nesting hierarchy.
 	 * <p>
 	 * This method acts as the 'pop()'-operation in the scope-stack analogy.
-	 * 
+	 *
 	 * @return the parent scope */
 	public Scope getParentScope() {
-		return parent;
+		return this.parent;
 	}
 
-	/** Resolve an identifier for a declaration.
-	 * <p>
-	 * First the declarations of this scope are searched. If the not successful the search continues recursively in the
-	 * parent scope.
-	 * 
-	 * @param identifier
-	 *            the identifier to resolve
-	 * @return the declaration */
-	public Declaration resolve(ResolvableIdentifier identifier) {
-		Declaration declaration = members.get(identifier);
+    /**
+     * Returns a new Scope which has the current scope as parent.
+     *
+     * @param name The new scope's name
+     * @return The new Scope
+     */
+    public Scope enter(String name) {
+        return new Scope(name, this);
+    }
+
+    /**
+     * Returns a new {@link ClassScope} which has the current scope as parent.
+     *
+     * @param name The new scope's name.
+     *
+     * @return The new ClassScope.
+     */
+    public ClassScope enterClass(String name) {
+        return new ClassScope(name, this);
+    }
+
+    /**
+     * Returns the parent scope.
+     *
+     * @return The parent scope.
+     */
+    public Scope leave() {
+        return this.parent;
+    }
+
+    /**
+     * Creates a copy of this scope. The result will contain the same
+     * definitions as this store and will have the same parent. Modifications to
+     * the copy of the scope will *not* be reflected to this scope. However,
+     * modifications to the copy's parent will have influence on this scope as
+     * the parent is not copied.
+     *
+     * @return A copy of this scope.
+     */
+    public Scope copy() {
+        final Scope result = new Scope(this.name, this.parent);
+        copyThis(result, false);
+        return result;
+    }
+
+    /**
+     * Creates a deep copy of this scope. In contrast to {@link #copy()}, this
+     * method does create copies of all parent scopes.
+     *
+     * @return A deep copy.
+     * @see #copy()
+     */
+    public Scope deepCopy() {
+        final Scope copyParent = this.parent == null
+                ? null
+                : this.parent.deepCopy();
+        final Scope result = new Scope(this.name, copyParent);
+        copyThis(result, true);
+        return result;
+    }
+
+    protected void copyThis(Scope to, boolean deep) {
+        to.members.putAll(this.members);
+        for (final Entry<Identifier, List<ProcedureDeclaration>> e : this.procedures.entrySet()) {
+            final List<ProcedureDeclaration> listCopy = new ArrayList<>(e.getValue());
+            to.procedures.put(e.getKey(), listCopy);
+        }
+    }
+
+    public Declaration resolveFromType(Type type) {
+        final ResolvableIdentifier name = new ResolvableIdentifier(
+                type.getName().getSymbol());
+        if (type instanceof ClassType) {
+            return resolveType(type, name);
+        } else if (type instanceof Function) {
+            final List<ProcedureDeclaration> procedures = resolveProcedure(type, name);
+            final Collection<ProcedureDeclaration> matches = new ArrayList<>();
+
+            for (final ProcedureDeclaration proc : procedures) {
+                final Function declared = Function.from(proc);
+                if (Unification.of(type).with(declared).isSuccessful()) {
+                    matches.add(proc);
+                }
+            }
+
+            if (matches.isEmpty()) {
+                throw new RuntimeException();
+            } else if (matches.size() > 1) {
+                // TODO: best fit
+                throw new RuntimeException();
+            } else {
+                return matches.iterator().next();
+            }
+        } else {
+            // TODO: proper error handling
+            throw new RuntimeException();
+        }
+    }
+
+	            /**
+     * Resolve an identifier for a declaration.
+     * <p>
+     * First the declarations of this scope are searched. If the not successful
+     * the search continues recursively in the parent scope. * @param
+     * positionHint The node from which the procedure should be resolved. Will
+     * be used as position in error message. * @param positionHint The node from
+     * which the type should be resolved. Will be used as position in error
+     * message.
+     *
+     * @param positionHint The node from which the type should be resolved. Will
+     *            be used as position in error message.*
+     * @param identifier the identifier to resolve
+     * @return the declaration
+     */
+    public Declaration resolve(Location positionHint, ResolvableIdentifier identifier) {
+		Declaration declaration = this.members.get(identifier);
 
 		if (declaration != null) {
 			return declaration;
 		}
-		if (parent != null) {
-			return parent.resolve(identifier);
+		if (this.parent != null) {
+            return this.parent.resolve(positionHint, identifier);
 		}
-		throw new UnknownIdentifierException(identifier);
+        throw new UnknownIdentifierException(positionHint, identifier);
 	}
 
-	/** Resolve an identifier for a type declaration.
-	 * 
-	 * @param identifier
-	 *            the identifier to resolve
-	 * @return the declaration */
-	public TypeDeclaration resolveType(ResolvableIdentifier identifier) {
+	        /**
+     * Resolve an identifier for a type declaration.
+     *
+     * @param positionHint The node from which the type should be resolved. Will
+     *            be used as position in error message.
+     * @param identifier the identifier to resolve
+     * @return the declaration
+     */
+    public TypeDeclaration resolveType(Location positionHint,
+            ResolvableIdentifier identifier) {
 		try {
-			Declaration declaration = resolve(identifier);
+            Declaration declaration = resolve(positionHint, identifier);
 			if (declaration instanceof TypeDeclaration) {
 				return (TypeDeclaration) declaration;
 			}
@@ -125,34 +254,38 @@ public class Scope {
 		}
 	}
 
-	/** Resolve an identifier for list of overloaded procedures or functions.
-	 * 
-	 * @param identifier
-	 *            the identifier to resolve
-	 * @return the list of procedure declarations */
-	public List<ProcedureDeclaration> resolveProcedure(ResolvableIdentifier identifier) {
+	    /**
+     * Resolve an identifier for list of overloaded procedures or functions.
+     *
+     * @param positionHint The node from which the procedure should be resolved.
+     *            Will be used as position in error message.
+     * @param identifier the identifier to resolve
+     * @return the list of procedure declarations
+     */
+    public List<ProcedureDeclaration> resolveProcedure(Location positionHint,
+            ResolvableIdentifier identifier) {
 		List<ProcedureDeclaration> result = new ArrayList<ProcedureDeclaration>();
 
-		if (procedures.containsKey(identifier)) {
-			result.addAll(procedures.get(identifier));
+		if (this.procedures.containsKey(identifier)) {
+			result.addAll(this.procedures.get(identifier));
 		}
-		if (parent != null) {
+		if (this.parent != null) {
 			try {
-				result.addAll(parent.resolveProcedure(identifier));
+                result.addAll(this.parent.resolveProcedure(positionHint, identifier));
 			} catch (UnknownIdentifierException e) {
 			}
 		}
 		if (result.isEmpty()) {
-			throw new UnknownIdentifierException(identifier);
+            throw new UnknownIdentifierException(positionHint, identifier);
 		}
 		return result;
 	}
 
 	/** Associate an identifier with a declaration.
-	 * 
+	 *
 	 * This method uses define(Identifier, ProcedureDeclaration) if the given declaration is a procedure or function
 	 * declaration.
-	 * 
+	 *
 	 * @param identifier
 	 *            the identifier
 	 * @param declaration
@@ -162,10 +295,10 @@ public class Scope {
 	public void define(Identifier identifier, Declaration declaration) throws RedeclarationException {
 		if (declaration instanceof ProcedureDeclaration) {
 			define(identifier, (ProcedureDeclaration) declaration);
-		} else if (members.get(identifier) != null) {
+		} else if (this.members.get(identifier) != null) {
 			throw new RedeclarationException(declaration, identifier.getSymbol());
 		} else {
-			members.put(identifier, declaration);
+			this.members.put(identifier, declaration);
 		}
 	}
 
@@ -173,7 +306,7 @@ public class Scope {
 	 * <p>
 	 * This differs from define(Identifier, Declaration) as this method uses the declaration's Identifier-attribute to
 	 * call define(Identifier, Declaration)
-	 * 
+	 *
 	 * @param declaration
 	 *            the declaration
 	 * @throws RedeclarationException
@@ -183,10 +316,10 @@ public class Scope {
 	}
 
 	/** Associate an identifier with a procedure or function declaration.
-	 * 
+	 *
 	 * This takes overloading into account and throws a RedeclarationException if the declaration is an instance of
 	 * invalid overloading.
-	 * 
+	 *
 	 * @param identifier
 	 *            the identifier
 	 * @param declaration
@@ -194,9 +327,14 @@ public class Scope {
 	 * @throws RedeclarationException
 	 *             if this is invalid overloading */
 	public void define(Identifier identifier, ProcedureDeclaration declaration) throws RedeclarationException {
-		if (!procedures.containsKey(identifier)) {
-			procedures.put(identifier, new ArrayList<ProcedureDeclaration>());
+		if (!this.procedures.containsKey(identifier)) {
+			this.procedures.put(identifier, new ArrayList<ProcedureDeclaration>());
 		}
-		procedures.get(identifier).add(declaration);
+		this.procedures.get(identifier).add(declaration);
 	}
+
+    @Override
+    public String toString() {
+        return this.name;
+    }
 }

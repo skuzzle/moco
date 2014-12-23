@@ -44,7 +44,6 @@ import java.util.List;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.Block;
-import de.uni.bremen.monty.moco.ast.ClassScope;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Package;
@@ -54,40 +53,40 @@ import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.TypeVariable;
+import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration.DeclarationType;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration.DeclarationType;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
 import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
+import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.exception.InvalidPlaceToDeclareException;
 import de.uni.bremen.monty.moco.exception.MontyBaseException;
+import de.uni.bremen.monty.moco.util.ASTUtil;
 
 /** This visitor must traverse the entire AST, set up scopes and define declarations.
  * <p>
  * For every node that opens a new scope this scope must be created and assigned:
- * 
+ *
  * <pre>
  * currentScope = node.setScope(new Scope(currentScope));
  * </pre>
- * 
+ *
  * For every other node the associated scope must be set:
- * 
+ *
  * <pre>
  * node.setScope(currentScope);
  * </pre>
- * 
+ *
  * Every declaration must be defined using the currentScope. */
 public class DeclarationVisitor extends BaseVisitor {
 
 	/** The current scope for the ast node. */
-	private Scope currentScope = new Scope(null);
+    private Scope currentScope = new Scope("$parentScope", null);
 
 	// Declaration
 
-	/** {@inheritDoc} */
 	@Override
 	public void visit(ModuleDeclaration node) {
 		if (!(node.getParentNode() instanceof Package)) {
@@ -97,7 +96,6 @@ public class DeclarationVisitor extends BaseVisitor {
 		super.visit(node);
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public void visit(ClassDeclaration node) {
 		if (!(node.getParentNode().getParentNode() instanceof ModuleDeclaration)) {
@@ -106,7 +104,7 @@ public class DeclarationVisitor extends BaseVisitor {
 		Block classBlock = node.getBlock();
 
 		this.currentScope.define(node);
-		this.currentScope = new ClassScope(this.currentScope);
+        this.currentScope = this.currentScope.enterClass(node.getIdentifier().getSymbol());
 
 		// These are not boxed yet. So they cant inherit from object and cant have initializers.
 		List<ClassDeclaration> treatSpecial =
@@ -127,34 +125,39 @@ public class DeclarationVisitor extends BaseVisitor {
 		super.visit(node);
 
 		node.setScope(classBlock.getScope());
-		this.currentScope = this.currentScope.getParentScope();
+        this.currentScope = this.currentScope.leave();
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public void visit(FunctionDeclaration node) {
+
 		this.currentScope.define(node);
-		if (TypeVariable.isNameATypeVariable(node.getReturnTypeIdentifier())) {
-			final TypeVariable tv = new TypeVariable(node.getPosition(), node.getReturnTypeIdentifier());
-			this.currentScope.define(tv);
-		}
-		this.currentScope = new Scope(this.currentScope);
+        this.currentScope = this.currentScope.enter(node.getIdentifier().getSymbol());
+
 		super.visit(node);
 		node.setScope(node.getBody().getScope());
-		this.currentScope = this.currentScope.getParentScope();
+
+        this.currentScope = this.currentScope.leave();
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public void visit(ProcedureDeclaration node) {
-		this.currentScope.define(node);
-		this.currentScope = new Scope(this.currentScope);
-		super.visit(node);
-		node.setScope(node.getBody().getScope());
-		this.currentScope = this.currentScope.getParentScope();
+
+        this.currentScope.define(node);
+        this.currentScope = this.currentScope.enter(node.getIdentifier().getSymbol());
+        super.visit(node);
+        node.setScope(node.getBody().getScope());
+
+        if (node.getIdentifier().getSymbol().equals("initializer")) {
+            final ClassDeclaration enclosingClass = ASTUtil.findAncestor(node, ClassDeclaration.class);
+            if (enclosingClass != null) {
+                node.setDeclarationType(DeclarationType.INITIALIZER);
+            }
+        }
+
+        this.currentScope = this.currentScope.leave();
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public void visit(VariableDeclaration node) {
 		// the parent is the Block of the ModuleDeclaration
@@ -162,38 +165,42 @@ public class DeclarationVisitor extends BaseVisitor {
 			node.setIsGlobal(true);
 		}
 		this.currentScope.define(node.getIdentifier(), node);
-		if (TypeVariable.isNameATypeVariable(node.getTypeIdentifier())) {
-
-			if (node.getDeclarationType() == DeclarationType.PARAMETER) {
-				throw new MontyBaseException(node, "Type inferrence not supported for parameters");
-			}
-
-			currentScope.define(new TypeVariable(node.getPosition(), node.getTypeIdentifier()));
-		}
 		super.visit(node);
 	}
 
 	// Other
 
-	/** {@inheritDoc} */
 	@Override
 	public void visit(Block node) {
 		boolean backToParentScope = false;
 
 		if (node.getParentNode() instanceof ClassDeclaration) {
-			this.currentScope = new ClassScope(this.currentScope);
+            final String parentName = ((ClassDeclaration) node.getParentNode()).getIdentifier().getSymbol();
+            this.currentScope = this.currentScope.enterClass(parentName);
+
 			backToParentScope = true;
 		} else if (!(node.getParentNode() instanceof ModuleDeclaration)) {
-			this.currentScope = new Scope(this.currentScope);
+            this.currentScope = this.currentScope.enter("block");
 			backToParentScope = true;
 		}
 
 		super.visit(node);
 
 		if (backToParentScope) {
-			this.currentScope = this.currentScope.getParentScope();
+            this.currentScope = this.currentScope.leave();
 		}
 	}
+
+    @Override
+    public void visit(ReturnStatement node) {
+        super.visit(node);
+        final ProcedureDeclaration parent = ASTUtil.findAncestor(node,
+                ProcedureDeclaration.class);
+        if (parent == null) {
+            throw new MontyBaseException(node, "Return statements must be enclosed by a procedure declaration");
+        }
+        parent.addReturnStatement(node);
+    }
 
 	@Override
 	protected void onEnterChildrenEachNode(ASTNode node) {

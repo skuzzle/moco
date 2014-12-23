@@ -55,14 +55,12 @@ import de.uni.bremen.monty.moco.util.Params;
 import de.uni.bremen.monty.moco.util.ParseTreePrinter;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 import de.uni.bremen.monty.moco.visitor.CodeGenerationVisitor;
-import de.uni.bremen.monty.moco.visitor.ControlFlowVisitor;
 import de.uni.bremen.monty.moco.visitor.DeclarationVisitor;
-import de.uni.bremen.monty.moco.visitor.NameManglingVisitor;
+import de.uni.bremen.monty.moco.visitor.DotVisitor;
 import de.uni.bremen.monty.moco.visitor.PrintVisitor;
-import de.uni.bremen.monty.moco.visitor.ResolveVisitor;
 import de.uni.bremen.monty.moco.visitor.SetParentVisitor;
-import de.uni.bremen.monty.moco.visitor.TypeCheckVisitor;
-import de.uni.bremen.monty.moco.visitor.UnwrapVisitor;
+import de.uni.bremen.monty.moco.visitor.typeinf.FirstPassTypeResolver;
+import de.uni.bremen.monty.moco.visitor.typeinf.SecondPassTypeResolver;
 
 public class Main {
 
@@ -88,10 +86,18 @@ public class Main {
 
 	private void visitVisitors(Params params, Package ast) throws IOException {
 
-		final BaseVisitor[] visitors =
-		        new BaseVisitor[] { new SetParentVisitor(), new DeclarationVisitor(), new ResolveVisitor(),
-		                new UnwrapVisitor(), new TypeCheckVisitor(), new ControlFlowVisitor(),
-		                new NameManglingVisitor() };
+        // final BaseVisitor[] visitors =
+        // new BaseVisitor[] { new SetParentVisitor(), new DeclarationVisitor(),
+        // new ResolveVisitor(),
+        // new TypeCheckVisitor(), new ControlFlowVisitor(),
+        // new NameManglingVisitor() };
+
+        final BaseVisitor[] visitors = new BaseVisitor[] {
+                new SetParentVisitor(),
+                new DeclarationVisitor(),
+                new FirstPassTypeResolver(),
+                new SecondPassTypeResolver()
+        };
 
 		boolean everyThingIsAwesome = true;
 
@@ -115,6 +121,11 @@ public class Main {
 
 		if (params.usePrintVisitor()) {
 			(new PrintVisitor()).visitDoubleDispatched(ast);
+            try (final DotVisitor v = DotVisitor.toFile(new File("ast.dot"))) {
+			    v.visitDoubleDispatched(ast);
+			} catch (IOException e) {
+			    System.out.println(e.getMessage());
+			}
 		} else if (everyThingIsAwesome) {
 			(new CodeGenerationVisitor(params)).visitDoubleDispatched(ast);
 			generateCode(params);

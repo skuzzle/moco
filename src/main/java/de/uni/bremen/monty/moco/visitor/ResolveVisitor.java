@@ -51,7 +51,6 @@ import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.CastExpression;
 import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
@@ -67,9 +66,6 @@ import de.uni.bremen.monty.moco.ast.expression.literal.BooleanLiteral;
 import de.uni.bremen.monty.moco.ast.expression.literal.CharacterLiteral;
 import de.uni.bremen.monty.moco.ast.expression.literal.FloatLiteral;
 import de.uni.bremen.monty.moco.ast.expression.literal.IntegerLiteral;
-import de.uni.bremen.monty.moco.ast.statement.Assignment;
-import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
-import de.uni.bremen.monty.moco.exception.TypeMismatchException;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 import de.uni.bremen.monty.moco.exception.UnknownTypeException;
 
@@ -144,18 +140,6 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		node.setType(scope.resolveType(node.getTypeIdentifier()));
 	}
 
-	@Override
-	public void visit(Assignment node) {
-		super.visit(node);
-
-		if (node.getLeft().getType() instanceof TypeVariable) {
-			final TypeVariable tv = (TypeVariable) node.getLeft().getType();
-			if (!tv.isResolved()) {
-				tv.setResolvedType(node.getRight().getType());
-			}
-		}
-	}
-
 	/** {@inheritDoc} */
 	@Override
 	public void visit(VariableAccess node) {
@@ -216,9 +200,9 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	@Override
 	public void visit(MemberAccess node) {
 		visitDoubleDispatched(node.getLeft());
-		final TypeDeclaration unwrapped = node.getLeft().getType().unwrapVariable();
-		if (unwrapped instanceof ClassDeclaration) {
-			node.getRight().setScope(unwrapped.getScope());
+
+        if (node.getLeft().getType() instanceof ClassDeclaration) {
+            node.getRight().setScope(node.getLeft().getScope());
 		}
 		visitDoubleDispatched(node.getRight());
 
@@ -284,31 +268,6 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		super.visit(node);
 	}
 
-	@Override
-	public void visit(ReturnStatement node) {
-		super.visit(node);
-
-		final ProcedureDeclaration proc = findEnclosingProcedure(node);
-		if (proc instanceof FunctionDeclaration) {
-			final FunctionDeclaration function = (FunctionDeclaration) proc;
-			final TypeDeclaration type = function.getReturnType();
-
-			if (type instanceof TypeVariable) {
-				final TypeVariable tv = (TypeVariable) type;
-				if (!tv.isResolved()) {
-					tv.setResolvedType(node.getParameter().getType());
-				} else if (!node.getParameter().getType().matchesType(type)) {
-				    
-				    // TODO: try to find best matching common super type 
-				    
-					throw new TypeMismatchException(node, String.format(
-					        "Return type already resolved to %s",
-					        tv.getResolvedType().getIdentifier().getSymbol()));
-				}
-			}
-		}
-	}
-
 	/** {@inheritDoc} */
 	@Override
 	public void visit(FunctionCall node) {
@@ -334,7 +293,6 @@ public class ResolveVisitor extends VisitOnceVisitor {
 				FunctionDeclaration function = (FunctionDeclaration) procedure;
 				visitDoubleDispatched(function);
 
-				propagateParamTypes(node, function);
 				node.setType(function.getReturnType());
 			} else {
 				node.setType(CoreClasses.voidType());
@@ -343,7 +301,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	}
 
 	/** Find an enclosing class of this node.
-	 * 
+	 *
 	 * If the search is not successful this method returns CoreClasses.voidType(). */
 	private ClassDeclaration findEnclosingClass(ASTNode node) {
 		for (ASTNode parent = node; parent != null; parent = parent.getParentNode()) {
@@ -354,18 +312,9 @@ public class ResolveVisitor extends VisitOnceVisitor {
 		return CoreClasses.voidType();
 	}
 
-	private ProcedureDeclaration findEnclosingProcedure(ASTNode node) {
-		for (ASTNode parent = node; parent != null; parent = parent.getParentNode()) {
-			if (parent instanceof ProcedureDeclaration) {
-				return (ProcedureDeclaration) parent;
-			}
-		}
-		return null;
-	}
-
 	/** Searches the given class declaration in order to find a initializer declaration that matches the signature of the
 	 * given initializer node.
-	 * 
+	 *
 	 * @param node
 	 *            a function call node representing a initializer
 	 * @param classDeclaration
@@ -397,7 +346,7 @@ public class ResolveVisitor extends VisitOnceVisitor {
 	}
 
 	/** Searches the given list of procedures in order to find one that matches the signature of the given function call.
-	 * 
+	 *
 	 * @param node
 	 *            a function call node representing the function call
 	 * @param procedures
@@ -426,24 +375,5 @@ public class ResolveVisitor extends VisitOnceVisitor {
 			}
 		}
 		return procedures.get(0);
-	}
-
-	private void propagateParamTypes(FunctionCall call, ProcedureDeclaration procedure) {
-		// replace variable substitutions
-		// invariant: all actual and formal parameters are already compatible
-		for (int i = 0; i < call.getArguments().size(); i++) {
-			final Expression actualParam = call.getArguments().get(i);
-			final VariableDeclaration formalParam = procedure.getParameter().get(i);
-			if (actualParam.getType() instanceof TypeVariable) {
-				final TypeVariable tv = (TypeVariable) actualParam.getType();
-
-				if (tv.isResolved()) {
-					// this variable is already resolved. Now choose the type
-					// which is more concrete
-				} else {
-					tv.setResolvedType(formalParam.getType());
-				}
-			}
-		}
 	}
 }

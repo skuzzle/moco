@@ -82,7 +82,6 @@ import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration.DeclarationType;
-import de.uni.bremen.monty.moco.ast.declaration.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.CastExpression;
 import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
@@ -174,7 +173,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	public ASTNode visitVariableDeclaration(@NotNull VariableDeclarationContext ctx) {
 		final String typeName;
 		if (ctx.type().ClassIdentifier() == null) {
-			typeName = TypeVariable.nextName();
+            typeName = "?";
 		} else {
 			typeName = ctx.type().ClassIdentifier().toString();
 		}
@@ -283,7 +282,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			returnTypeName = typeContext.ClassIdentifier().getText();
 		} else {
 			// type var
-			returnTypeName = TypeVariable.nextName();
+            returnTypeName = "?";
 		}
 
 		buildDefaultProcedures(

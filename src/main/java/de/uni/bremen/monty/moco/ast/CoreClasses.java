@@ -39,24 +39,30 @@
 
 package de.uni.bremen.monty.moco.ast;
 
-import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
-
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.CoreTypes;
+import de.uni.bremen.monty.moco.ast.declaration.Type;
 
 public class CoreClasses {
 
-	private static Map<String, ClassDeclaration> coreClasses = new HashMap<String, ClassDeclaration>();
+    private static final Map<String, ClassDeclaration> coreClasses =
+            new HashMap<String, ClassDeclaration>();
 
 	static {
 		// TODO find name for void that is not a valid identifier
 		String[] classNames = new String[] { "Object", "Char", "String", "Int", "Float", "Bool", "Array", "__void" };
 		for (String name : classNames) {
-			CoreClasses.setCoreClass(name, new ClassDeclaration(new Position("Dummy_" + name, 0, 0), new Identifier(
-			        name), Collections.<ResolvableIdentifier> emptyList(), new Block(
-			        new Position("Dummy_" + name, 1, 0))));
+            final Type type = CoreTypes.get(name);
+		    final ClassDeclaration coreClass = new ClassDeclaration(new Position("Dummy_" + name, 0, 0), new Identifier(
+                    name), Collections.<ResolvableIdentifier> emptyList(), new Block(
+                    new Position("Dummy_" + name, 1, 0)));
+
+            CoreClasses.setCoreClass(name, coreClass);
 		}
 	}
 
@@ -65,6 +71,8 @@ public class CoreClasses {
 	}
 
 	public static void setCoreClass(String name, ClassDeclaration classDeclaration) {
+        final Type coreType = CoreTypes.get(name);
+        classDeclaration.setType(coreType);
 		coreClasses.put(name, classDeclaration);
 	}
 

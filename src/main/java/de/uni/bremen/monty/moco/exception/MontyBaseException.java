@@ -39,21 +39,21 @@
 
 package de.uni.bremen.monty.moco.exception;
 
-import de.uni.bremen.monty.moco.ast.ASTNode;
+import de.uni.bremen.monty.moco.ast.Location;
 
 public class MontyBaseException extends RuntimeException {
-	protected ASTNode node;
+    protected Location location;
 
 	public MontyBaseException(String message) {
 		super(message);
 	}
 
-	public MontyBaseException(ASTNode node, String message) {
+    public MontyBaseException(Location location, String message) {
 		super(message);
-		this.node = node;
+        this.location = location;
 	}
 
-	public ASTNode getNode() {
-		return node;
+    public Location getLocation() {
+        return this.location;
 	}
 }

@@ -38,10 +38,13 @@
  */
 package de.uni.bremen.monty.moco.ast.declaration;
 
-import de.uni.bremen.monty.moco.ast.*;
-import de.uni.bremen.monty.moco.visitor.BaseVisitor;
-
 import java.util.List;
+
+import de.uni.bremen.monty.moco.ast.Block;
+import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
+import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 /** A FunctionDeclaration represents the declaration of a function in the AST.
  * <p>
@@ -49,11 +52,11 @@ import java.util.List;
 public class FunctionDeclaration extends ProcedureDeclaration {
 
 	/** The return returnType. */
-	private ResolvableIdentifier returnTypeIdentifier;
-	private TypeDeclaration returnType;
+	private final ResolvableIdentifier returnTypeIdentifier;
+    private Type returnType;
 
 	/** Constructor.
-	 * 
+	 *
 	 * @param position
 	 *            Position of this node
 	 * @param identifier
@@ -76,30 +79,11 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 		this(position, identifier, body, parameter, ProcedureDeclaration.DeclarationType.UNBOUND, returnTypeIdentifier);
 	}
 
-	/** Constructor
-	 * 
-	 * @param position
-	 *            * Position of this node
-	 * @param identifier
-	 *            the identifier
-	 * @param body
-	 *            the body of this function
-	 * @param parameter
-	 *            the parameter of this function
-	 * @param returnType
-	 *            the return returnType */
-	public FunctionDeclaration(Position position, Identifier identifier, Block body,
-	        List<VariableDeclaration> parameter, ClassDeclaration returnType) {
-		super(position, identifier, body, parameter);
-		this.returnType = returnType;
-		this.returnTypeIdentifier = ResolvableIdentifier.convert(returnType.getIdentifier());
-	}
-
 	/** get the return returnType.
-	 * 
+	 *
 	 * @return the return returnType */
 	public ResolvableIdentifier getReturnTypeIdentifier() {
-		return returnTypeIdentifier;
+		return this.returnTypeIdentifier;
 	}
 
 	/** {@inheritDoc} */
@@ -115,22 +99,22 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 	}
 
 	/** get the returnType.
-	 * 
+	 *
 	 * @return the returnType */
-	public TypeDeclaration getReturnType() {
-		return returnType;
+    public Type getReturnType() {
+		return this.returnType;
 	}
 
 	/** set the returnType
-	 * 
+	 *
 	 * @param returnType */
-	public void setReturnType(TypeDeclaration returnType) {
+    public void setReturnType(Type returnType) {
 		this.returnType = returnType;
 	}
 
 	/** Check equality of two types taking into account the AST object hierachy.
 	 * <p>
-	 * 
+	 *
 	 * @param other
 	 *            the other TypeDeclaration to check against
 	 * @return if equal */
@@ -143,6 +127,6 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 			return true;
 		}
 		FunctionDeclaration function = (FunctionDeclaration) other;
-		return returnType.matchesType(function.getReturnType());
+		return this.returnType.matchesType(function.getReturnType());
 	}
 }

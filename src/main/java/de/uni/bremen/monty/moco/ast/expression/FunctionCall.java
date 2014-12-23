@@ -38,19 +38,22 @@
  */
 package de.uni.bremen.monty.moco.ast.expression;
 
+import java.util.List;
+
+import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
-import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.Type;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
-
-import java.util.List;
 
 public class FunctionCall extends Expression implements Statement {
 	private final ResolvableIdentifier identifier;
 	private final List<Expression> arguments;
 	private ProcedureDeclaration declaration;
+    private List<List<Type>> signatureTypes;
+    private boolean constructorCall;
 
 	public FunctionCall(Position position, ResolvableIdentifier identifier, List<Expression> arguments) {
 		super(position);
@@ -58,18 +61,34 @@ public class FunctionCall extends Expression implements Statement {
 		this.arguments = arguments;
 	}
 
+    public void setSignatureTypes(List<List<Type>> signatureTypes) {
+        this.signatureTypes = signatureTypes;
+    }
+
+    public List<List<Type>> getSignatureTypes() {
+        return this.signatureTypes;
+    }
+
+    public void setConstructorCall(boolean constructorCall) {
+        this.constructorCall = constructorCall;
+    }
+
+    public boolean isConstructorCall() {
+        return this.constructorCall;
+    }
+
 	/** get the identifier.
-	 * 
+	 *
 	 * @return the identifier */
 	public ResolvableIdentifier getIdentifier() {
-		return identifier;
+		return this.identifier;
 	}
 
 	/** get the List of paramter
-	 * 
+	 *
 	 * @return the paramters */
 	public List<Expression> getArguments() {
-		return arguments;
+		return this.arguments;
 	}
 
 	/** {@inheritDoc} */
@@ -81,14 +100,14 @@ public class FunctionCall extends Expression implements Statement {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
-		for (Expression expression : arguments) {
+		for (Expression expression : this.arguments) {
 			visitor.visitDoubleDispatched(expression);
 		}
 	}
 
 	/** @return the declaration */
 	public ProcedureDeclaration getDeclaration() {
-		return declaration;
+		return this.declaration;
 	}
 
 	/** @param declaration
@@ -98,9 +117,9 @@ public class FunctionCall extends Expression implements Statement {
 	}
 
 	/** Get mangled identifier
-	 * 
+	 *
 	 * @return the mangled identifier */
 	public Identifier getMangledIdentifier() {
-		return declaration.getMangledIdentifier();
+		return this.declaration.getMangledIdentifier();
 	}
 }

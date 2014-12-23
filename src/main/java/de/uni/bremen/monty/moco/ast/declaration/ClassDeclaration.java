@@ -38,14 +38,15 @@
  */
 package de.uni.bremen.monty.moco.ast.declaration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.uni.bremen.monty.moco.ast.Block;
+import de.uni.bremen.monty.moco.ast.ClassScope;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
-
-import java.util.List;
-import java.util.ArrayList;
 
 /** A ClassDeclaration represents the declaration of a class in the AST.
  * <p>
@@ -65,14 +66,14 @@ public class ClassDeclaration extends TypeDeclaration {
 	private final Block block;
 
 	/** The virtal method table for this class */
-	private List<ProcedureDeclaration> virtualMethodTable = new ArrayList<>();
+	private final List<ProcedureDeclaration> virtualMethodTable = new ArrayList<>();
 
 	/** The last index for the attributes of this class. This counter starts at `1` as index 0 is reserved for a pointer
 	 * to the vmt. */
 	private int lastAttributeIndex = 1;
 
 	/** Constructor.
-	 * 
+	 *
 	 * @param position
 	 *            Position of this node
 	 * @param identifier
@@ -88,31 +89,40 @@ public class ClassDeclaration extends TypeDeclaration {
 		this.superClassIdentifiers.addAll(superClasses);
 	}
 
+    public void addSuperClassDeclaration(ClassDeclaration superClass) {
+        this.superClassDeclarations.add(superClass);
+    }
+
+    @Override
+    public ClassScope getScope() {
+        return (ClassScope) super.getScope();
+    }
+
 	/** Get the list of declarations and assignments.
-	 * 
+	 *
 	 * @return the block with declarations and assignments */
 	public Block getBlock() {
-		return block;
+		return this.block;
 	}
 
 	/** Get the list of identifiers of direct superclasses
-	 * 
+	 *
 	 * @return the identifier of superclasses */
 	public List<ResolvableIdentifier> getSuperClassIdentifiers() {
-		return superClassIdentifiers;
+		return this.superClassIdentifiers;
 	}
 
 	/** Get the list of direct superclasses this class inherits from.
-	 * 
+	 *
 	 * @return the superclasses */
 	public List<TypeDeclaration> getSuperClassDeclarations() {
-		return superClassDeclarations;
+		return this.superClassDeclarations;
 	}
 
 	/** Get a list of all the declarations of superclasses and this one. */
 	public List<ClassDeclaration> getSuperClassDeclarationsRecursive() {
 		List<ClassDeclaration> allSuperClassDeclarations = new ArrayList<>();
-		for (TypeDeclaration superClass : superClassDeclarations) {
+		for (TypeDeclaration superClass : this.superClassDeclarations) {
 			if (superClass instanceof ClassDeclaration) {
 				allSuperClassDeclarations.addAll(((ClassDeclaration) superClass).getSuperClassDeclarationsRecursive());
 			}
@@ -122,7 +132,7 @@ public class ClassDeclaration extends TypeDeclaration {
 	}
 
 	/** set the last attribute index.
-	 * 
+	 *
 	 * @param lastAttributeIndex
 	 *            the last attribute index */
 	public void setLastAttributeIndex(int lastAttributeIndex) {
@@ -130,28 +140,28 @@ public class ClassDeclaration extends TypeDeclaration {
 	}
 
 	/** get the last attribute index
-	 * 
+	 *
 	 * @return the last attribute index */
 	public int getLastAttributeIndex() {
-		return lastAttributeIndex;
+		return this.lastAttributeIndex;
 	}
 
 	/** Get the VMT.
-	 * 
+	 *
 	 * @return the VMT */
 	public List<ProcedureDeclaration> getVirtualMethodTable() {
-		return virtualMethodTable;
+		return this.virtualMethodTable;
 	}
 
 	/** Get the default initializer.
-	 * 
+	 *
 	 * @return the default initializer */
 	public ProcedureDeclaration getDefaultInitializer() {
 		return this.defaultInitializer;
 	}
 
 	/** Set the default initializer.
-	 * 
+	 *
 	 * @param defaultInitializer
 	 *            the new default initializer */
 	public void setDefaultInitializer(ProcedureDeclaration defaultInitializer) {
@@ -167,7 +177,7 @@ public class ClassDeclaration extends TypeDeclaration {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
-		visitor.visitDoubleDispatched(block);
+		visitor.visitDoubleDispatched(this.block);
 	}
 
 	/** {@inheritDoc} */
@@ -177,7 +187,7 @@ public class ClassDeclaration extends TypeDeclaration {
 			return true;
 		}
 		if (other instanceof ClassDeclaration) {
-			for (TypeDeclaration parentClass : superClassDeclarations) {
+			for (TypeDeclaration parentClass : this.superClassDeclarations) {
 				if (parentClass.matchesType(other)) {
 					return true;
 				}

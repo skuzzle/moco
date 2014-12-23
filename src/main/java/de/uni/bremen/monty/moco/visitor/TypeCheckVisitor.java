@@ -43,11 +43,12 @@ import java.util.List;
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.Type;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.CastExpression;
 import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
@@ -66,7 +67,7 @@ import de.uni.bremen.monty.moco.exception.InvalidExpressionException;
 import de.uni.bremen.monty.moco.exception.TypeMismatchException;
 
 /** This visitor must traverse the entire AST and perform type-safety checks.
- * 
+ *
  * This visitor does neither resolve nor set a type. It just checks. */
 public class TypeCheckVisitor extends BaseVisitor {
 
@@ -79,13 +80,6 @@ public class TypeCheckVisitor extends BaseVisitor {
 			}
 		}
 		super.visit(node);
-	}
-
-	@Override
-	public void visit(TypeVariable node) {
-		if (!node.isResolved()) {
-			throw new TypeMismatchException(node, "Could not infer type");
-		}
 	}
 
 	/** {@inheritDoc} */
@@ -102,7 +96,7 @@ public class TypeCheckVisitor extends BaseVisitor {
 	@Override
 	public void visit(SelfExpression node) {
 		super.visit(node);
-		if (node.getType() == CoreClasses.voidType()) {
+        if (node.getType() == CoreClasses.voidType().getType()) {
 			throw new TypeMismatchException(node, "No enclosing class found.");
 		}
 	}
@@ -123,11 +117,14 @@ public class TypeCheckVisitor extends BaseVisitor {
 	@Override
 	public void visit(CastExpression node) {
 		super.visit(node);
-		TypeDeclaration expressionType = node.getExpression().getType();
-		if (!(expressionType instanceof ClassDeclaration)) {
+        final Type expressionType = node.getExpression().getType();
+        if (!(expressionType instanceof ClassType)) {
 			throw new TypeMismatchException(node, "It is not possible to cast something different than a class.");
 		}
-		if (!(node.getType().matchesType(expressionType) || expressionType.matchesType(node.getType()))) {
+        final ClassType expressionCT = (ClassType) expressionType;
+        final ClassType nodeType = (ClassType) node.getType();
+
+        if (!(nodeType.isA(expressionType) || expressionCT.isA(nodeType))) {
 			throw new TypeMismatchException(node, "Impossible cast");
 		}
 	}
@@ -136,7 +133,7 @@ public class TypeCheckVisitor extends BaseVisitor {
 	@Override
 	public void visit(IsExpression node) {
 		super.visit(node);
-		if (!(node.getExpression().getType() instanceof ClassDeclaration)) {
+        if (!(node.getExpression().getType() instanceof ClassType)) {
 			throw new TypeMismatchException(node,
 			        "It is not possible to check something different than an instance of a class.");
 		}
@@ -146,7 +143,7 @@ public class TypeCheckVisitor extends BaseVisitor {
 	@Override
 	public void visit(MemberAccess node) {
 		super.visit(node);
-		if (!(node.getLeft().getType() instanceof ClassDeclaration)) {
+        if (!(node.getLeft().getType() instanceof ClassType)) {
 			throw new TypeMismatchException(node, "Left part is not an instance of a class declaration.");
 		} else if (node.getLeft() instanceof VariableAccess) {
 			VariableAccess varAcc = (VariableAccess) node.getLeft();
@@ -226,8 +223,7 @@ public class TypeCheckVisitor extends BaseVisitor {
 	@Override
 	public void visit(FunctionDeclaration node) {
 		super.visit(node);
-		final TypeDeclaration returnType =
-		        node.getReturnType() instanceof TypeVariable ? ((TypeVariable) node.getReturnType()).getResolvedType() : node.getReturnType();
+        final TypeDeclaration returnType = node.getReturnType();
 
 		if (!(returnType instanceof ClassDeclaration)) {
 			throw new TypeMismatchException(node, "Must return a class type.");

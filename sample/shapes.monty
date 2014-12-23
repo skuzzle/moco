@@ -1,0 +1,38 @@
+test():
+    ? s1 := Circle()
+    ? s2 := Rectangle()
+    
+    ? enclosing := enclosingRect(s1, s2)
+
+? enclosingRect(Circle circle, Shape shape):
+    Shape shape2 := Rectangle()
+    ? foo := enclosingRect(shape2, circle) 
+    
+    if 5<0:
+        return circle
+    else:
+        return enclosingRect(foo, circle)
+    
+? enclosingRect(Shape shape1, Shape shape2):
+    return shape1
+    
+
+    
+    
+class Shape:
+    + String name
+
+    + initializer(String pName):
+        self.name := pName
+    
+    
+    
+class Circle inherits Shape:
+
+    + initializer():
+        parent(Shape).initializer("Circle")
+        
+class Rectangle inherits Shape:
+
+    + initializer():
+        parent(Shape).initializer("Rectangle")

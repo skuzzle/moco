@@ -38,14 +38,13 @@
  */
 package de.uni.bremen.monty.moco.ast.expression.literal;
 
-import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class StringLiteral extends LiteralExpression<String> {
+
 	public StringLiteral(Position position, String value) {
 		super(position, value.replaceAll("\"", ""));
-		setType(CoreClasses.stringType());
 	}
 
 	@Override

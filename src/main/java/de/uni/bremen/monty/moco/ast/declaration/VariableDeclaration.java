@@ -38,16 +38,18 @@
  */
 package de.uni.bremen.monty.moco.ast.declaration;
 
-import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
-public class VariableDeclaration extends Declaration {
+public class VariableDeclaration extends Declaration implements Typed {
 	public enum DeclarationType {
-		VARIABLE, PARAMETER, ATTRIBUTE
+        VARIABLE, PARAMETER, ATTRIBUTE, RETURN
 	}
 
-	private ResolvableIdentifier typeIdentifier;
-	private TypeDeclaration type;
+	private final ResolvableIdentifier typeIdentifier;
 	private DeclarationType declarationType;
 	private boolean isGlobal;
 
@@ -64,7 +66,7 @@ public class VariableDeclaration extends Declaration {
 		super(position, identifier);
 		this.typeIdentifier = typeIdentifier;
 		this.declarationType = DeclarationType.VARIABLE;
-		attributeIndex = -1;
+		this.attributeIndex = -1;
 	}
 
 	/** set the declaration type */
@@ -73,54 +75,40 @@ public class VariableDeclaration extends Declaration {
 	}
 
 	/** get the declaration type
-	 * 
+	 *
 	 * @return the declaration type */
 	public DeclarationType getDeclarationType() {
-		return declarationType;
+		return this.declarationType;
 	}
 
 	public boolean isVariable() {
-		return declarationType == DeclarationType.VARIABLE;
+		return this.declarationType == DeclarationType.VARIABLE;
 	}
 
 	public boolean isParameter() {
-		return declarationType == DeclarationType.PARAMETER;
+		return this.declarationType == DeclarationType.PARAMETER;
 	}
 
 	public boolean isAttribute() {
-		return declarationType == DeclarationType.ATTRIBUTE;
+		return this.declarationType == DeclarationType.ATTRIBUTE;
 	}
 
 	/** get the identifier of the type.
-	 * 
+	 *
 	 * @return the type identifier */
 	public ResolvableIdentifier getTypeIdentifier() {
-		return typeIdentifier;
-	}
-
-	/** get the type.
-	 * 
-	 * @return the type */
-	public TypeDeclaration getType() {
-		return type;
-	}
-
-	/** set the type
-	 * 
-	 * @param type */
-	public void setType(TypeDeclaration type) {
-		this.type = type;
+		return this.typeIdentifier;
 	}
 
 	/** get if this variable is global.
-	 * 
+	 *
 	 * @return if global */
 	public boolean getIsGlobal() {
-		return isGlobal;
+		return this.isGlobal;
 	}
 
 	/** set if this variable is global.
-	 * 
+	 *
 	 * @param isGlobal
 	 *            if global */
 	public void setIsGlobal(boolean isGlobal) {
@@ -129,7 +117,7 @@ public class VariableDeclaration extends Declaration {
 
 	/** Get the attributeIndex. */
 	public int getAttributeIndex() {
-		return attributeIndex;
+		return this.attributeIndex;
 	}
 
 	/** Set the attributeIndex. */

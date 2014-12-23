@@ -38,6 +38,7 @@
  */
 package de.uni.bremen.monty.moco.ast;
 
+
 /** Baseclass for every node in the AST. */
 public abstract class BasicASTNode implements ASTNode {
 
@@ -51,7 +52,7 @@ public abstract class BasicASTNode implements ASTNode {
 	private Scope scope;
 
 	/** Constructor.
-	 * 
+	 *
 	 * @param position
 	 *            Position of this node */
 	public BasicASTNode(Position position) {
@@ -65,15 +66,15 @@ public abstract class BasicASTNode implements ASTNode {
 	}
 
 	/** Get parent node.
-	 * 
+	 *
 	 * @return the parent node */
 	@Override
 	public ASTNode getParentNode() {
-		return parentNode;
+		return this.parentNode;
 	}
 
 	/** Set parent node.
-	 * 
+	 *
 	 * @param parentNode
 	 *            the parent node */
 	@Override
@@ -82,15 +83,15 @@ public abstract class BasicASTNode implements ASTNode {
 	}
 
 	/** Get the sourcecode position.
-	 * 
+	 *
 	 * @return the position */
 	@Override
 	public Position getPosition() {
-		return position;
+		return this.position;
 	}
 
 	/** Set the associated scope.
-	 * 
+	 *
 	 * @param scope
 	 *            the associated scope */
 	@Override
@@ -99,11 +100,11 @@ public abstract class BasicASTNode implements ASTNode {
 	}
 
 	/** Get the accociated scope.
-	 * 
+	 *
 	 * @return the scope */
 	@Override
 	public Scope getScope() {
-		return scope;
+		return this.scope;
 	}
 
 }

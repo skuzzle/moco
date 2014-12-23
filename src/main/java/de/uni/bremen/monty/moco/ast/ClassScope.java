@@ -38,16 +38,18 @@
  */
 package de.uni.bremen.monty.moco.ast;
 
-import de.uni.bremen.monty.moco.ast.declaration.*;
-import de.uni.bremen.monty.moco.exception.*;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+
+import de.uni.bremen.monty.moco.ast.declaration.Declaration;
+import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 
 /** A scope in which identifier are associated with declarations.
  * <p>
  * To nest scopes or build a stack the parent scope is passed as an argument to the construtor. So you use it like this
  * <p>
- * 
+ *
  * <pre>
  * {@code
  * // create a new scope and nest the old one
@@ -65,33 +67,65 @@ import java.util.ArrayList;
 public class ClassScope extends Scope {
 
 	/** The parent class in inheritance hierachy. */
-	private List<ClassScope> parentClassesScopes;
+	private final List<ClassScope> parentClassesScopes;
 
-	/** Constructor.
-	 * 
-	 * @param parent
-	 *            the parent scope in nesting hierachy */
-	public ClassScope(Scope parent) {
-		super(parent);
+	    /**
+     * Constructor.
+     *
+     * @param name The scope's name.
+     * @param parent the parent scope in nesting hierachy
+     */
+    public ClassScope(String name, Scope parent) {
+        super(name, parent);
 		this.parentClassesScopes = new ArrayList<>();
 	}
 
+    @Override
+    public ClassScope copy() {
+        final ClassScope result = new ClassScope(this.name, this.parent);
+        copyThis(result, false);
+        return result;
+    }
+
+    @Override
+    public ClassScope deepCopy() {
+        final Scope copyParent = this.parent == null
+                ? null
+                : this.parent.deepCopy();
+        final ClassScope result = new ClassScope(this.name, copyParent);
+        copyThis(result, true);
+        return result;
+    }
+
+    @Override
+    protected void copyThis(Scope to, boolean deep) {
+        final ClassScope cs = (ClassScope) to;
+        super.copyThis(cs, deep);
+        if (deep) {
+            for (final ClassScope parentClassScope : this.parentClassesScopes) {
+                cs.parentClassesScopes.add(parentClassScope.deepCopy());
+            }
+        } else {
+            cs.parentClassesScopes.addAll(this.parentClassesScopes);
+        }
+    }
+
 	public void addParentClassScope(ClassScope scope) {
-		parentClassesScopes.add(scope);
+		this.parentClassesScopes.add(scope);
 	}
 
 	/** Resolve an identifier in inherited scopes.
-	 * 
+	 *
 	 * @param identifier
 	 *            the identifier
 	 * @return the declaration or null if nothing is found */
 	protected Declaration resolveMember(ResolvableIdentifier identifier) {
-		Declaration declaration = members.get(identifier);
+		Declaration declaration = this.members.get(identifier);
 
 		if (declaration != null) {
 			return declaration;
 		}
-		for (ClassScope scope : parentClassesScopes) {
+		for (ClassScope scope : this.parentClassesScopes) {
 			declaration = scope.resolveMember(identifier);
 			if (declaration != null) {
 				return declaration;
@@ -101,58 +135,62 @@ public class ClassScope extends Scope {
 	}
 
 	/** Resolve an identifier for list of overloaded procedures or functions in inherited scope.
-	 * 
+	 *
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the list of procedure declarations */
 	protected List<ProcedureDeclaration> resolveProcedureMember(ResolvableIdentifier identifier) {
 		List<ProcedureDeclaration> result = new ArrayList<ProcedureDeclaration>();
 
-		if (procedures.containsKey(identifier)) {
-			result.addAll(procedures.get(identifier));
+		if (this.procedures.containsKey(identifier)) {
+			result.addAll(this.procedures.get(identifier));
 		}
-		for (ClassScope scope : parentClassesScopes) {
+		for (ClassScope scope : this.parentClassesScopes) {
 			result.addAll(scope.resolveProcedureMember(identifier));
 		}
 		return result;
 	}
 
-	/** Resolve an identifier for a declaration
-	 * <p>
-	 * It first searches its associations, the parent classes in inheritance hierachy and only then the parent scope.
-	 * 
-	 * @param identifier
-	 *            the identifier to resolve
-	 * @return the declaration or null if nothing is found */
+	        /**
+     * Resolve an identifier for a declaration
+     * <p>
+     * It first searches its associations, the parent classes in inheritance
+     * hierarchy and only then the parent scope.
+     *
+     * @param location The location from which the declaration is resolved.
+     * @param identifier the identifier to resolve
+     * @return the declaration or null if nothing is found
+     */
 	@Override
-	public Declaration resolve(ResolvableIdentifier identifier) {
+    public Declaration resolve(Location location, ResolvableIdentifier identifier) {
 		Declaration declaration = resolveMember(identifier);
 
 		if (declaration != null) {
 			return declaration;
 		}
-		return super.resolve(identifier);
+        return super.resolve(location, identifier);
 	}
 
 	/** Resolve an identifier for list of overloaded procedures or functions.
 	 * <p>
 	 * It first searches its associations, the parent classes in inheritance hierachy and only then the parent scope.
-	 * 
+	 *
 	 * @param identifier
 	 *            the identifier to resolve
 	 * @return the list of procedure declarations */
 	@Override
-	public List<ProcedureDeclaration> resolveProcedure(ResolvableIdentifier identifier) {
+    public List<ProcedureDeclaration> resolveProcedure(Location location,
+            ResolvableIdentifier identifier) {
 		List<ProcedureDeclaration> result = new ArrayList<ProcedureDeclaration>();
 		result.addAll(resolveProcedureMember(identifier));
-		if (parent != null) {
+		if (this.parent != null) {
 			try {
-				result.addAll(parent.resolveProcedure(identifier));
+                result.addAll(this.parent.resolveProcedure(location, identifier));
 			} catch (UnknownIdentifierException e) {
 			}
 		}
 		if (result.isEmpty()) {
-			throw new UnknownIdentifierException(identifier);
+            throw new UnknownIdentifierException(location, identifier);
 		}
 		return result;
 	}

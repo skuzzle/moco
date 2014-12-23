@@ -38,9 +38,13 @@
  */
 package de.uni.bremen.monty.moco.ast.declaration;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.Block;
+import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 /** A ProcedureDeclaration represents the declaration of a procedure in the AST.
@@ -57,13 +61,16 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	/** The parameters of this declaration. */
 	private final List<VariableDeclaration> parameter;
 
+    /** The return statements which occurred within the body of this declaration */
+    private final List<ReturnStatement> returnStatements;
+
 	private DeclarationType declarationType;
 
 	/** Index of the procedure in the vmt if it is a procedure in the class struct */
 	private int vmtIndex;
 
 	/** Constructor.
-	 * 
+	 *
 	 * @param position
 	 *            Position of this node
 	 * @param identifier
@@ -75,6 +82,7 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	public ProcedureDeclaration(Position position, Identifier identifier, Block body,
 	        List<VariableDeclaration> parameter, DeclarationType declarationType) {
 		super(position, identifier);
+        this.returnStatements = new ArrayList<>();
 		this.body = body;
 		this.parameter = parameter;
 		this.declarationType = declarationType;
@@ -86,18 +94,31 @@ public class ProcedureDeclaration extends TypeDeclaration {
 		this(position, identifier, body, parameter, DeclarationType.UNBOUND);
 	}
 
+    /**
+     * Adds a return statement.
+     *
+     * @param stmt The statement.
+     */
+    public void addReturnStatement(ReturnStatement stmt) {
+        this.returnStatements.add(stmt);
+    }
+
+    public List<ReturnStatement> getReturnStatements() {
+        return this.returnStatements;
+    }
+
 	/** Get the body block.
-	 * 
+	 *
 	 * @return the body */
 	public Block getBody() {
-		return body;
+		return this.body;
 	}
 
 	/** Get the list of parameter.
-	 * 
+	 *
 	 * @return the paramter */
 	public List<VariableDeclaration> getParameter() {
-		return parameter;
+		return this.parameter;
 	}
 
 	/** set the declaration type */
@@ -106,22 +127,22 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	}
 
 	/** get the declaration type
-	 * 
+	 *
 	 * @return the declaration type */
 	public DeclarationType getDeclarationType() {
-		return declarationType;
+		return this.declarationType;
 	}
 
 	public boolean isInitializer() {
-		return declarationType == DeclarationType.INITIALIZER;
+		return this.declarationType == DeclarationType.INITIALIZER;
 	}
 
 	public boolean isMethod() {
-		return declarationType == DeclarationType.METHOD;
+		return this.declarationType == DeclarationType.METHOD;
 	}
 
 	public boolean isUnbound() {
-		return declarationType == DeclarationType.UNBOUND;
+		return this.declarationType == DeclarationType.UNBOUND;
 	}
 
 	public ClassDeclaration getDefiningClass() {
@@ -133,7 +154,7 @@ public class ProcedureDeclaration extends TypeDeclaration {
 
 	/** Get the vmtIndex. */
 	public int getVMTIndex() {
-		return vmtIndex;
+		return this.vmtIndex;
 	}
 
 	/** Set the vmtIndex. */
@@ -150,15 +171,15 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
-		for (VariableDeclaration variableDeclaration : parameter) {
+		for (VariableDeclaration variableDeclaration : this.parameter) {
 			visitor.visitDoubleDispatched(variableDeclaration);
 		}
-		visitor.visitDoubleDispatched(body);
+		visitor.visitDoubleDispatched(this.body);
 	}
 
 	/** Check equality of two types taking into account the AST object hierachy.
 	 * <p>
-	 * 
+	 *
 	 * @param other
 	 *            the other TypeDeclaration to check against
 	 * @return if equal */
@@ -171,14 +192,15 @@ public class ProcedureDeclaration extends TypeDeclaration {
 			return false;
 		}
 		List<VariableDeclaration> otherParameter = ((ProcedureDeclaration) other).getParameter();
-		if (parameter.size() != otherParameter.size()) {
+		if (this.parameter.size() != otherParameter.size()) {
 			return false;
 		}
-		for (int i = 0; i < parameter.size(); i++) {
-			if (!parameter.get(i).getType().matchesType(otherParameter.get(i).getType())) {
+		for (int i = 0; i < this.parameter.size(); i++) {
+			if (!this.parameter.get(i).getType().matchesType(otherParameter.get(i).getType())) {
 				return false;
 			}
 		}
 		return true;
 	}
+
 }
