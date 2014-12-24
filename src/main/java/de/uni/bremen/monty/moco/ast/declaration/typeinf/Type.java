@@ -20,15 +20,6 @@ public abstract class Type implements Location {
         return result;
     }
 
-    protected static final Position UNKNOWN_POSITION = new Position("unknown", 0, 0);
-    public static final Location UNKNOWN_LOCATION = new Location() {
-
-        @Override
-        public Position getPosition() {
-            return UNKNOWN_POSITION;
-        }
-    };
-
     private final Identifier name;
     private final Position positionHint;
 
@@ -59,13 +50,6 @@ public abstract class Type implements Location {
      */
     public abstract boolean isVariable();
 
-    /**
-     * Applies the given unification to this type. If the unification contains a
-     * substitute for this type, the substitute will be returned.
-     *
-     * @param unification The unification to apply.
-     * @return The substitute type.
-     */
     abstract Type apply(Unification unification);
 
     @Override

@@ -39,7 +39,7 @@
 package de.uni.bremen.monty.moco.ast;
 
 /** Represents a position in the source code. */
-public class Position {
+public class Position implements Location {
 
 	/** The source file name. */
 	private String fileName = "";
@@ -56,7 +56,7 @@ public class Position {
 	}
 
 	/** Constructor.
-	 * 
+	 *
 	 * @param fileName
 	 *            the source file name
 	 * @param lineNumber
@@ -69,28 +69,34 @@ public class Position {
 		this.charNumber = charNumber;
 	}
 
-	public String toString() {
-		return String.format("file: %s, line: %d, char: %d", fileName, lineNumber, charNumber);
+	@Override
+    public String toString() {
+		return String.format("file: %s, line: %d, char: %d", this.fileName, this.lineNumber, this.charNumber);
 	}
 
+    @Override
+    public Position getPosition() {
+        return this;
+    }
+
 	/** Get the source file name.
-	 * 
+	 *
 	 * @return the source file name */
 	public String getFileName() {
-		return fileName;
+		return this.fileName;
 	}
 
 	/** Get the source file line number.
-	 * 
+	 *
 	 * @return the souce file line number */
 	public int getLineNumber() {
-		return lineNumber;
+		return this.lineNumber;
 	}
 
 	/** Get the source file char number.
-	 * 
+	 *
 	 * @return the source file char number */
 	public int getCharNumber() {
-		return charNumber;
+		return this.charNumber;
 	}
 }

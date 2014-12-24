@@ -149,10 +149,6 @@ public class Function extends Type {
 
     @Override
     Function apply(Unification unification) {
-        if (unification == null) {
-            throw new IllegalArgumentException("unification is null");
-        }
-
         final Type newReturnType = unification.getSubstitute(this.returnType);
         final List<Type> newParameters = new ArrayList<>(this.parameterTypes.size());
         for (final Type parameterType : this.parameterTypes) {

@@ -57,6 +57,10 @@ public final class Unification {
          * @return The Unification.
          */
         public Unification with(Type second) {
+            if (second == null) {
+                throw new IllegalArgumentException("second is null");
+            }
+
             final TypePair pair = new TypePair(this.first, second);
             Unification unification = UNIFICATION_CACHE.get(pair);
             if (unification == null) {
@@ -79,6 +83,10 @@ public final class Unification {
      * @return Builder object to specify the right hand type of the unification.
      */
     public static UnificationBuilder of(Type first) {
+        if (first == null) {
+            throw new IllegalArgumentException("first is null");
+        }
+
         return new UnificationBuilder(first);
     }
 
@@ -178,6 +186,12 @@ public final class Unification {
      */
     @SuppressWarnings("unchecked")
     public <T extends Type> T apply(T term) {
+        if (term == null) {
+            throw new IllegalArgumentException("term is null");
+        } else if (!isSuccessful()) {
+            throw new IllegalStateException("can not apply non-successful unification");
+        }
+
         return (T) term.apply(this);
     }
 
@@ -189,7 +203,7 @@ public final class Unification {
      * @param other The type to find the substitute for.
      * @return The substitute type of {@code other} if no substitute was found.
      */
-    public Type getSubstitute(Type other) {
+    Type getSubstitute(Type other) {
         if (!isSuccessful()) {
             throw new IllegalStateException(
                     "Can't obtain substitute from unsuccessful unification");
