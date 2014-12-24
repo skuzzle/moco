@@ -61,10 +61,22 @@ public class FunctionCall extends Expression implements Statement {
 		this.arguments = arguments;
 	}
 
+    /**
+     * Sets the signature types.
+     *
+     * @param signatureTypes The signature types.
+     */
     public void setSignatureTypes(List<List<Type>> signatureTypes) {
         this.signatureTypes = signatureTypes;
     }
 
+    /**
+     * Gets all possible signature types. That is, the Cartesian product of the
+     * types of actual parameters of this call. These types are set during first
+     * pass of type resolving.
+     *
+     * @return The signature types.
+     */
     public List<List<Type>> getSignatureTypes() {
         return this.signatureTypes;
     }
