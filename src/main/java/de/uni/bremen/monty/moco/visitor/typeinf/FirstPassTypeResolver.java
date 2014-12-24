@@ -13,16 +13,16 @@ import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
-import de.uni.bremen.monty.moco.ast.declaration.Function;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration.DeclarationType;
-import de.uni.bremen.monty.moco.ast.declaration.Type;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
@@ -311,7 +311,7 @@ public class FirstPassTypeResolver extends BaseVisitor {
                 // When types are compatible, we found a possible type of this
                 // call
                 if (unification.isSuccessful()) {
-                    final Function type = possibleType.apply(unification);
+                    final Function type = unification.apply(possibleType);
                     node.addType(type.getReturnType()).withConstraint(unification);
                 }
             }

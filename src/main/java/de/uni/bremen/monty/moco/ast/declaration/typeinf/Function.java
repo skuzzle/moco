@@ -1,4 +1,4 @@
-package de.uni.bremen.monty.moco.ast.declaration;
+package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,7 +9,9 @@ import java.util.List;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 
 public class Function extends Type {
 
@@ -146,7 +148,7 @@ public class Function extends Type {
     }
 
     @Override
-    public Function apply(Unification unification) {
+    Function apply(Unification unification) {
         if (unification == null) {
             throw new IllegalArgumentException("unification is null");
         }

@@ -44,6 +44,7 @@ import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 /** A FunctionDeclaration represents the declaration of a function in the AST.

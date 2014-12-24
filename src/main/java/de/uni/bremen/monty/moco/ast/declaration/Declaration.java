@@ -48,6 +48,7 @@ import de.uni.bremen.monty.moco.ast.AccessModifier;
 import de.uni.bremen.monty.moco.ast.BasicASTNode;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 

@@ -4,12 +4,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import de.uni.bremen.monty.moco.ast.declaration.ClassType;
-import de.uni.bremen.monty.moco.ast.declaration.CoreTypes;
-import de.uni.bremen.monty.moco.ast.declaration.Function;
-import de.uni.bremen.monty.moco.ast.declaration.Type;
-import de.uni.bremen.monty.moco.ast.declaration.TypeVariable;
-
 final class Unifier {
 
     private final Map<Type, Integer> typeToClass;

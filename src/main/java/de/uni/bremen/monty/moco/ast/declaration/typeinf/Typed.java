@@ -2,8 +2,6 @@ package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 
 import java.util.List;
 
-import de.uni.bremen.monty.moco.ast.declaration.Type;
-
 public interface Typed {
 
     public interface AddTypeBuilder {

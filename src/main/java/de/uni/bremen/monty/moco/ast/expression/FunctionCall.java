@@ -44,7 +44,7 @@ import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.Type;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 

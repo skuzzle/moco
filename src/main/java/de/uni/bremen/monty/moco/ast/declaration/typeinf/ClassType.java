@@ -1,4 +1,4 @@
-package de.uni.bremen.monty.moco.ast.declaration;
+package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,7 +7,8 @@ import java.util.List;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 
 public class ClassType extends Type {
 
@@ -128,7 +129,7 @@ public class ClassType extends Type {
     }
 
     @Override
-    public Type apply(Unification unification) {
+    Type apply(Unification unification) {
         return this;
     }
 

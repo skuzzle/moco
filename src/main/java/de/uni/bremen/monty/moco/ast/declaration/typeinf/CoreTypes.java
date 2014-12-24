@@ -1,4 +1,4 @@
-package de.uni.bremen.monty.moco.ast.declaration;
+package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,7 +6,6 @@ import java.util.Map;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 
 public final class CoreTypes {

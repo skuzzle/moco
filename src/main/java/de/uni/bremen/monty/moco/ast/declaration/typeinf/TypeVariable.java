@@ -1,8 +1,7 @@
-package de.uni.bremen.monty.moco.ast.declaration;
+package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 
 public class TypeVariable extends Type {
 
@@ -28,7 +27,7 @@ public class TypeVariable extends Type {
     }
 
     @Override
-    public Type apply(Unification unification) {
+    Type apply(Unification unification) {
         return unification.getSubstitute(this);
     }
 }

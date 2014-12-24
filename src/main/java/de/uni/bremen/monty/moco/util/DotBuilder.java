@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
-import de.uni.bremen.monty.moco.ast.declaration.Type;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 
 public class DotBuilder implements Closeable {

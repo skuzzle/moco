@@ -40,7 +40,7 @@ package de.uni.bremen.monty.moco.ast.expression;
 
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
-import de.uni.bremen.monty.moco.ast.declaration.Type;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class ParentExpression extends Expression {

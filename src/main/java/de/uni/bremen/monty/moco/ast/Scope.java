@@ -45,12 +45,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import de.uni.bremen.monty.moco.ast.declaration.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
-import de.uni.bremen.monty.moco.ast.declaration.Function;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.Type;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.exception.RedeclarationException;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;

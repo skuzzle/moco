@@ -1,4 +1,4 @@
-package de.uni.bremen.monty.moco.ast.declaration;
+package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,8 +6,6 @@ import java.util.List;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 
 public abstract class Type implements Location {
 
@@ -68,7 +66,7 @@ public abstract class Type implements Location {
      * @param unification The unification to apply.
      * @return The substitute type.
      */
-    public abstract Type apply(Unification unification);
+    abstract Type apply(Unification unification);
 
     @Override
     public String toString() {

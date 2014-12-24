@@ -3,9 +3,7 @@ package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import de.uni.bremen.monty.moco.ast.declaration.Type;
-import de.uni.bremen.monty.moco.ast.declaration.TypeVariable;
+import java.util.Map.Entry;
 
 public final class Unification {
 
@@ -114,7 +112,7 @@ public final class Unification {
 
     private Unification(boolean success, Map<TypeVariable, Type> subst) {
         this.success = success;
-        this.subst = subst;
+        this.subst = Collections.unmodifiableMap(subst);
     }
 
     /**
@@ -124,6 +122,63 @@ public final class Unification {
      */
     public boolean isSuccessful() {
         return this.success;
+    }
+
+    /**
+     * Builds the composition of this Unification with the given {@code other}.
+     * Applying the resulting Unification to a {@link Type} {@code S} yields the
+     * same result as if first applying {@code other} to {@code S}, and then
+     * applying {@code this} to the resulting term. If
+     *
+     * <pre>
+     * Unification delta = ...
+     * Unification gamma = ...
+     * Type S = ...
+     * </pre>
+     *
+     * then
+     *
+     * <pre>
+     * delta.apply(gamma).apply(S) = delta.apply(gamma.apply(S))
+     * </pre>
+     *
+     * @param other The Unification to compose with.
+     * @return A new Unification representing the composition.
+     */
+    public Unification apply(Unification other) {
+        if (other == null) {
+            throw new IllegalArgumentException("other is null");
+        } else if (other == this) {
+            throw new IllegalArgumentException("can not apply to self");
+        } else if (!other.isSuccessful()) {
+            throw new IllegalStateException("can not apply unsuccesful unification");
+        } else if (!isSuccessful()) {
+            throw new IllegalStateException("can not apply on unsuccessful unification");
+        }
+        final Map<TypeVariable, Type> resultMap = new HashMap<>(this.subst.size());
+        for (final Entry<TypeVariable, Type> e : other.subst.entrySet()) {
+            resultMap.put(e.getKey(), e.getKey().apply(this));
+        }
+        for (final Entry<TypeVariable, Type> e : this.subst.entrySet()) {
+            if (!other.subst.containsKey(e.getKey())) {
+                resultMap.put(e.getKey(), e.getValue());
+            }
+        }
+        return successful(resultMap);
+    }
+
+    /**
+     * Applies this Unification to the given {@link Type}. The result is a new
+     * {@linkplain Type}, in which all occurrences of {@link TypeVariable type
+     * variables} which occur in the domain of this Unification are replaced by
+     * their respective substitute.
+     *
+     * @param term The type to which this Unification should be applied.
+     * @return A new Type.
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends Type> T apply(T term) {
+        return (T) term.apply(this);
     }
 
     /**

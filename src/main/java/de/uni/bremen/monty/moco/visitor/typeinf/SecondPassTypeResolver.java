@@ -12,12 +12,12 @@ import java.util.Set;
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
-import de.uni.bremen.monty.moco.ast.declaration.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
-import de.uni.bremen.monty.moco.ast.declaration.Function;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.Type;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
@@ -101,7 +101,7 @@ public class SecondPassTypeResolver extends BaseVisitor {
             for (final Type candidate : node.getTypes()) {
                 final Unification unification = Unification.of(func).with(candidate);
                 if (unification.isSuccessful()) {
-                    candidates.add(func.apply(unification));
+                    candidates.add(unification.apply(func));
                 }
             }
         }
@@ -164,7 +164,7 @@ public class SecondPassTypeResolver extends BaseVisitor {
             for (final Type rhs : node.getRight().getTypes()) {
                 final Unification unification = Unification.of(lhs).with(rhs);
                 if (unification.isSuccessful()) {
-                    candidates.add(lhs.apply(unification));
+                    candidates.add(unification.apply(lhs));
                 }
             }
         }

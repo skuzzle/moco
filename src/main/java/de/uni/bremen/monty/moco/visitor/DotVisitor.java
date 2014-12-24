@@ -203,7 +203,7 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
     @Override
     public void visit(FunctionCall node) {
         this.dotBuilder.printNode(node,
-                "Call " + node.getIdentifier(),
+                String.format("Call '%s'", node.getIdentifier()),
                 node.getPosition().toString());
 
         super.visit(node);
@@ -301,7 +301,7 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
 
     @Override
     public void visit(VariableAccess node) {
-        this.dotBuilder.printNode(node, "Var " + node.getIdentifier(),
+        this.dotBuilder.printNode(node, String.format("Var '%s'", node.getIdentifier()),
                 node.getPosition().toString(),
                 "L-Value:" + node.getLValue());
     }
