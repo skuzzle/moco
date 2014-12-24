@@ -38,14 +38,15 @@
  */
 package de.uni.bremen.monty.moco.ast.expression;
 
-import de.uni.bremen.monty.moco.ast.*;
-import de.uni.bremen.monty.moco.ast.declaration.*;
+import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
+import de.uni.bremen.monty.moco.ast.declaration.Type;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class ParentExpression extends Expression {
 
-	private ResolvableIdentifier parentIdentifier;
-	private ClassDeclaration selfType;
+	private final ResolvableIdentifier parentIdentifier;
+    private Type selfType;
 
 	public ParentExpression(Position position, ResolvableIdentifier parentIdentifier) {
 		super(position);
@@ -53,14 +54,14 @@ public class ParentExpression extends Expression {
 	}
 
 	public ResolvableIdentifier getParentIdentifier() {
-		return parentIdentifier;
+		return this.parentIdentifier;
 	}
 
-	public ClassDeclaration getSelfType() {
-		return selfType;
+    public Type getSelfType() {
+		return this.selfType;
 	}
 
-	public void setSelfType(ClassDeclaration selfType) {
+    public void setSelfType(Type selfType) {
 		this.selfType = selfType;
 	}
 

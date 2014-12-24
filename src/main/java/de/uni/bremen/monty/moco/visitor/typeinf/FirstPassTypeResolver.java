@@ -27,6 +27,7 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
+import de.uni.bremen.monty.moco.ast.expression.ParentExpression;
 import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
 import de.uni.bremen.monty.moco.ast.expression.literal.ArrayLiteral;
@@ -241,6 +242,19 @@ public class FirstPassTypeResolver extends BaseVisitor {
     }
 
     @Override
+    public void visit(ParentExpression node) {
+        if (shouldVisit(node)) {
+            final TypeDeclaration typeDecl = node.getScope().resolveType(node,
+                    node.getParentIdentifier());
+            node.addType(typeDecl.getType());
+            final ClassDeclaration enclosing = ASTUtil.findAncestor(node,
+                    ClassDeclaration.class);
+            node.setSelfType(enclosing.getType());
+        }
+        super.visit(node);
+    }
+
+    @Override
     public void visit(FunctionCall node) {
         if (!shouldVisit(node)) {
             return;
@@ -308,7 +322,6 @@ public class FirstPassTypeResolver extends BaseVisitor {
     public void visit(MemberAccess node) {
         visitDoubleDispatched(node.getLeft());
 
-        final Scope leftScope = node.getLeft().getScope();
         for (final Type lhsType : node.getLeft().getTypes()) {
             if (lhsType instanceof ClassType) {
                 final ClassDeclaration cd = (ClassDeclaration) node.getScope().resolveFromType(lhsType);
