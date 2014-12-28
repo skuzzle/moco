@@ -32,8 +32,9 @@ public class UnificationTest {
 
     @Test
     public void testUnifySubtyping() throws Exception {
-        final Unification unification = Unification.of(this.intIntToB)
-                .with(this.objObjToA);
+        final Unification unification = Unification
+                .testIf(this.intIntToB)
+                .isA(this.objObjToA);
         assertTrue(unification.isSuccessful());
 
         final Type substitute = unification.getSubstitute(this.A);

@@ -82,6 +82,33 @@ public final class Unification {
         }
     }
 
+    public static final class TestIfBuilder {
+        private final Type first;
+
+        private TestIfBuilder(Type first) {
+            this.first = first;
+        }
+
+        public Unification isA(Type second) {
+            if (second == null) {
+                throw new IllegalArgumentException("second is null");
+            }
+
+            final TypePair pair = new TypePair(this.first, second);
+            Unification unification = UNIFICATION_CACHE.get(pair);
+            if (unification == null) {
+                final Unifier unifier = new Unifier();
+                unification = unifier.unify(this.first, second);
+                UNIFICATION_CACHE.put(pair, unification);
+            }
+            return unification;
+        }
+    }
+
+    public static TestIfBuilder testIf(Type first) {
+        return new TestIfBuilder(first);
+    }
+
     /**
      * Creates a unification from two types. Usage:
      *
@@ -92,6 +119,7 @@ public final class Unification {
      * @param first The left hand type of the unification.
      * @return Builder object to specify the right hand type of the unification.
      */
+    @Deprecated
     public static UnificationBuilder of(Type first) {
         if (first == null) {
             throw new IllegalArgumentException("first is null");

@@ -288,7 +288,7 @@ public class FirstPassTypeResolver extends BaseVisitor {
 
             final Function possibleType = Function.named(node.getIdentifier())
                     .atLocation(node)
-                    .returning(TypeVariable.createAnonymous(node.getPosition()))
+                    .returning(TypeVariable.anonymous().atLocation(node).createType())
                     .andParameters(signature)
                     .createType();
 
@@ -309,7 +309,7 @@ public class FirstPassTypeResolver extends BaseVisitor {
 
             for (final Function declaredType : declaredTypes) {
                 final Unification unification = Unification
-                        .of(possibleType).with(declaredType);
+                        .testIf(declaredType).isA(possibleType);
 
                 // When types are compatible, we found a possible type of this
                 // call
@@ -397,7 +397,7 @@ public class FirstPassTypeResolver extends BaseVisitor {
 
     private Type resolveType(ASTNode node, ResolvableIdentifier name) {
         if (name.getSymbol().equals(TYPE_VAR)) {
-            return TypeVariable.createAnonymous(node.getPosition());
+            return TypeVariable.anonymous().atLocation(node).createType();
         } else {
             final Scope scope = node.getScope();
             final TypeDeclaration declaredType = scope.resolveType(node, name);

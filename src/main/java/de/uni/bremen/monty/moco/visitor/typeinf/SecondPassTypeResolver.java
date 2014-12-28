@@ -100,7 +100,9 @@ public class SecondPassTypeResolver extends BaseVisitor {
                     .createType();
 
             for (final TypeContext candidate : node.getTypes()) {
-                final Unification unification = Unification.of(func).with(candidate.getType());
+                final Unification unification = Unification
+                        .testIf(candidate.getType()).isA(func);
+
                 if (unification.isSuccessful()) {
                     candidates.add(unification.apply(func));
                 }
@@ -165,8 +167,8 @@ public class SecondPassTypeResolver extends BaseVisitor {
         final List<Type> candidates = new ArrayList<>();
         for (final TypeContext lhsCtx : node.getLeft().getTypes()) {
             for (final TypeContext rhsCtx : node.getRight().getTypes()) {
-                final Unification unification = Unification.of(lhsCtx.getType())
-                        .with(rhsCtx.getType());
+                final Unification unification = Unification.testIf(lhsCtx.getType())
+                        .isA(rhsCtx.getType());
                 if (unification.isSuccessful()) {
                     candidates.add(unification.apply(lhsCtx.getType()));
                 }
@@ -245,12 +247,14 @@ public class SecondPassTypeResolver extends BaseVisitor {
                     if (inner == outer) {
                         continue;
                     }
-                    final Collection<TypeContext> innerTypes = inner.getParameter().getTypes();
+                    final Collection<TypeContext> innerTypes =
+                            inner.getParameter().getTypes();
 
                     boolean match = false;
                     for (final TypeContext innerType : innerTypes) {
-                        match = Unification.of(outerType.getType())
-                                .with(innerType.getType())
+                        match = Unification
+                                .testIf(outerType.getType())
+                                .isA(innerType.getType())
                                 .isSuccessful();
                         if (match) {
                             break;
