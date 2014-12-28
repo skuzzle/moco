@@ -18,6 +18,7 @@ import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed.TypeContext;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
@@ -98,8 +99,8 @@ public class SecondPassTypeResolver extends BaseVisitor {
                     .andParameters(signature)
                     .createType();
 
-            for (final Type candidate : node.getTypes()) {
-                final Unification unification = Unification.of(func).with(candidate);
+            for (final TypeContext candidate : node.getTypes()) {
+                final Unification unification = Unification.of(func).with(candidate.getType());
                 if (unification.isSuccessful()) {
                     candidates.add(unification.apply(func));
                 }
@@ -124,13 +125,15 @@ public class SecondPassTypeResolver extends BaseVisitor {
             // member access is a statement, so there is no parent which could
             // have pushed down its type
             if (node.getTypes().size() == 1) {
-                node.setType(node.getTypes().get(0));
+                node.setType(node.getTypes().get(0).getType());
             } else {
-                throw new MontyBaseException(node, "Ambiguous types");
+                throw new MontyBaseException(node, "Ambiguous types: " + node.getTypes());
             }
         }
 
-        node.getRight().setType(node.getType());
+        final TypeContext ctx = node.getContextFor(node.getType());
+        node.getLeft().setType(ctx.getQualification());
+        node.getRight().setType(ctx.getType());
         super.visit(node);
     }
 
@@ -141,8 +144,8 @@ public class SecondPassTypeResolver extends BaseVisitor {
     @Override
     public void visit(ConditionalStatement node) {
         boolean boolType = false;
-        for (final Type type : node.getCondition().getTypes()) {
-            boolType = type == CoreClasses.boolType().getType();
+        for (final TypeContext ctx : node.getCondition().getTypes()) {
+            boolType = ctx.getType() == CoreClasses.boolType().getType();
             if (boolType) {
                 break;
             }
@@ -160,11 +163,12 @@ public class SecondPassTypeResolver extends BaseVisitor {
     @Override
     public void visit(Assignment node) {
         final List<Type> candidates = new ArrayList<>();
-        for (final Type lhs : node.getLeft().getTypes()) {
-            for (final Type rhs : node.getRight().getTypes()) {
-                final Unification unification = Unification.of(lhs).with(rhs);
+        for (final TypeContext lhsCtx : node.getLeft().getTypes()) {
+            for (final TypeContext rhsCtx : node.getRight().getTypes()) {
+                final Unification unification = Unification.of(lhsCtx.getType())
+                        .with(rhsCtx.getType());
                 if (unification.isSuccessful()) {
-                    candidates.add(unification.apply(lhs));
+                    candidates.add(unification.apply(lhsCtx.getType()));
                 }
             }
         }
@@ -232,20 +236,22 @@ public class SecondPassTypeResolver extends BaseVisitor {
         final List<Type> returnTypes = new ArrayList<>(returnStmts.size());
 
         for (final ReturnStatement outer : returnStmts) {
-            final Collection<Type> outerTypes = outer.getParameter().getTypes();
+            final Collection<TypeContext> outerTypes = outer.getParameter().getTypes();
 
-            for (final Type outerType : outerTypes) {
+            for (final TypeContext outerType : outerTypes) {
                 // check whether outer exists in all others too
                 boolean matchAll = true;
                 for (final ReturnStatement inner : returnStmts) {
                     if (inner == outer) {
                         continue;
                     }
-                    final Collection<Type> innerTypes = inner.getParameter().getTypes();
+                    final Collection<TypeContext> innerTypes = inner.getParameter().getTypes();
 
                     boolean match = false;
-                    for (final Type innerType : innerTypes) {
-                        match = Unification.of(outerType).with(innerType).isSuccessful();
+                    for (final TypeContext innerType : innerTypes) {
+                        match = Unification.of(outerType.getType())
+                                .with(innerType.getType())
+                                .isSuccessful();
                         if (match) {
                             break;
                         }
@@ -258,7 +264,7 @@ public class SecondPassTypeResolver extends BaseVisitor {
 
                 if (matchAll) {
                     // this is a type which occurred in each return statement
-                    returnTypes.add(outerType);
+                    returnTypes.add(outerType.getType());
                 }
             }
         }

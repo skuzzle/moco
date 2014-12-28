@@ -23,6 +23,7 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed.TypeContext;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
@@ -62,42 +63,42 @@ public class FirstPassTypeResolver extends BaseVisitor {
     @Override
     public void visit(BooleanLiteral node) {
         if (shouldVisit(node)) {
-            node.addType(CoreClasses.boolType().getType());
+            node.addTypeOf(CoreClasses.boolType());
         }
     }
 
     @Override
     public void visit(CharacterLiteral node) {
         if (shouldVisit(node)) {
-            node.addType(CoreClasses.charType().getType());
+            node.addTypeOf(CoreClasses.charType());
         }
     }
 
     @Override
     public void visit(FloatLiteral node) {
         if (shouldVisit(node)) {
-            node.addType(CoreClasses.floatType().getType());
+            node.addTypeOf(CoreClasses.floatType());
         }
     }
 
     @Override
     public void visit(StringLiteral node) {
         if (shouldVisit(node)) {
-            node.addType(CoreClasses.stringType().getType());
+            node.addTypeOf(CoreClasses.stringType());
         }
     }
 
     @Override
     public void visit(ArrayLiteral node) {
         if (shouldVisit(node)) {
-            node.addType(CoreClasses.arrayType().getType());
+            node.addTypeOf(CoreClasses.arrayType());
         }
     }
 
     @Override
     public void visit(IntegerLiteral node) {
         if (shouldVisit(node)) {
-            node.addType(CoreClasses.intType().getType());
+            node.addTypeOf(CoreClasses.intType());
         }
     }
 
@@ -114,6 +115,7 @@ public class FirstPassTypeResolver extends BaseVisitor {
         final ClassScope scope = node.getScope();
         final List<ClassType> superTypes = new ArrayList<>(
                 node.getSuperClassIdentifiers().size());
+        // Resolve super types first
         for (final ResolvableIdentifier superTypeName : node.getSuperClassIdentifiers()) {
             final ClassDeclaration decl = (ClassDeclaration) node.getScope()
                     .resolveType(node, superTypeName);
@@ -158,6 +160,7 @@ public class FirstPassTypeResolver extends BaseVisitor {
 
         final Type returnType;
         if (node.getDeclarationType() == DeclarationType.INITIALIZER) {
+            // This is a constructor call
             final ClassDeclaration enclosingClass = ASTUtil.findAncestor(node, ClassDeclaration.class);
             returnType = enclosingClass.getType();
         } else {
@@ -228,7 +231,7 @@ public class FirstPassTypeResolver extends BaseVisitor {
             // ensure that the variable's type has been resolved
             visitDoubleDispatched(varDecl);
 
-            node.addType(varDecl.getType());
+            node.addTypeOf(varDecl);
         }
     }
 
@@ -237,7 +240,7 @@ public class FirstPassTypeResolver extends BaseVisitor {
         if (shouldVisit(node)) {
             final ClassDeclaration enclosing = ASTUtil.findAncestor(node,
                     ClassDeclaration.class);
-            node.addType(enclosing.getType());
+            node.addTypeOf(enclosing);
         }
     }
 
@@ -246,7 +249,7 @@ public class FirstPassTypeResolver extends BaseVisitor {
         if (shouldVisit(node)) {
             final TypeDeclaration typeDecl = node.getScope().resolveType(node,
                     node.getParentIdentifier());
-            node.addType(typeDecl.getType());
+            node.addTypeOf(typeDecl);
             final ClassDeclaration enclosing = ASTUtil.findAncestor(node,
                     ClassDeclaration.class);
             node.setSelfType(enclosing.getType());
@@ -312,7 +315,8 @@ public class FirstPassTypeResolver extends BaseVisitor {
                 // call
                 if (unification.isSuccessful()) {
                     final Function type = unification.apply(possibleType);
-                    node.addType(type.getReturnType()).withConstraint(unification);
+                    node.addType(type.getReturnType())
+                            .withConstraint(unification);
                 }
             }
         }
@@ -322,26 +326,32 @@ public class FirstPassTypeResolver extends BaseVisitor {
     public void visit(MemberAccess node) {
         visitDoubleDispatched(node.getLeft());
 
-        for (final Type lhsType : node.getLeft().getTypes()) {
-            if (lhsType instanceof ClassType) {
-                final ClassDeclaration cd = (ClassDeclaration) node.getScope().resolveFromType(lhsType);
+        final Set<TypeContext> handledTypes = new HashSet<>();
+        for (final TypeContext lhsTypeCtx : node.getLeft().getTypes()) {
+            if (lhsTypeCtx.getType() instanceof ClassType) {
+                final ClassDeclaration cd = (ClassDeclaration) node.getScope()
+                        .resolveFromType(lhsTypeCtx.getType());
 
                 // Visit right node in the context of each possible left type
                 node.getRight().setScope(cd.getScope());
                 try {
                     node.getRight().visit(this);
+
+                    // Check whether new types have been added to the rhs during
+                    // this run
+                    for (final TypeContext ctx : node.getRight().getTypes()) {
+                        if (handledTypes.add(ctx)) {
+                            // this is a type which is valid only in the context
+                            // of lhsTypeCtx
+                            node.addType(ctx.getType()).qualifiedBy(cd.getType());
+                        }
+                    }
                 } catch (MontyBaseException ignore) {
                     // Error while resolving type of right hand side in the
                     // scope of left hand side. Thus current tested left hand
                     // side type can be sort out of possible types
                 }
             }
-            // If the left hand type is a variable, it is not possible to
-            // determine the scope in which the right hand side should be
-            // checked
-        }
-        for (final Type type : node.getRight().getTypes()) {
-            node.addType(type);
         }
     }
 
@@ -349,7 +359,9 @@ public class FirstPassTypeResolver extends BaseVisitor {
         final List<List<Type>> parameterTypes = new ArrayList<>(actual.size());
         for (final Expression parameter : actual) {
             final List<Type> types = new ArrayList<>();
-            types.addAll(parameter.getTypes());
+            for (final TypeContext ctx : parameter.getTypes()) {
+                types.add(ctx.getType());
+            }
             parameterTypes.add(types);
         }
         return cartesianProduct(parameterTypes);

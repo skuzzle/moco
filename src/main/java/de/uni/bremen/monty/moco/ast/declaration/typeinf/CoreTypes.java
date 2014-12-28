@@ -24,6 +24,11 @@ public final class CoreTypes {
         public Type apply(Unification unification) {
                     return this;
         }
+
+                @Override
+                public boolean equals(Object obj) {
+                    return obj == VOID;
+                }
     };
 
     private static final Map<String, Type> CORE_TYPES;

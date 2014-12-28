@@ -132,9 +132,8 @@ public class ClassType extends Type {
                 return true;
             }
 
-            ClassType ct = (ClassType) other;
-            for (final ClassType superType : ct.superClasses) {
-                if (isA(superType)) {
+            for (final ClassType superType : this.superClasses) {
+                if (superType.isA(other)) {
                     return true;
                 }
             }

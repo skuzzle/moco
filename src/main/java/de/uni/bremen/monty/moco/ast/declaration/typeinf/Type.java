@@ -52,6 +52,17 @@ public abstract class Type implements Location {
 
     abstract Type apply(Unification unification);
 
+    /**
+     * Determines exact equality of two Types. This does not take any
+     * inheritance into account. Type compatibility must always be checked using
+     * the {@link Unification} class.
+     *
+     * @param obj The object to compare to.
+     * @return Whether the types are exactly equal.
+     */
+    @Override
+    public abstract boolean equals(Object obj);
+
     @Override
     public String toString() {
         return this.name.getSymbol();

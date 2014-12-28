@@ -256,4 +256,11 @@ public final class Unification {
         resultMap.putAll(other.subst);
         return Unification.successful(resultMap);
     }
+
+    @Override
+    public String toString() {
+        return this.subst.isEmpty()
+                ? ""
+                : this.subst.toString();
+    }
 }

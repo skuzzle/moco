@@ -163,6 +163,18 @@ public class Function extends Type {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        } else if (!(obj instanceof Function)) {
+            return false;
+        }
+        final Function other = (Function) obj;
+        return this.returnType.equals(other.returnType) &&
+                this.parameterTypes.equals(other.parameterTypes);
+    }
+
+    @Override
     public String toString() {
         final StringBuilder b = new StringBuilder();
         b.append(getName().getSymbol()).append(": ");
