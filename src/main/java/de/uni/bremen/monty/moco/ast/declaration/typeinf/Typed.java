@@ -12,12 +12,12 @@ public interface Typed {
          * @param unification The unification which constrains type variables to
          *            certain substitutions.
          */
-        public void withConstraint(Unification unification);
+        void withConstraint(Unification unification);
     }
 
     /**
      * Returns whether an unique type has been resolved for this object.
-     * 
+     *
      * @return Whether an unique type has been resolved for this object.
      */
     boolean isTypeResolved();
@@ -52,5 +52,5 @@ public interface Typed {
      *
      * @return The associated types.
      */
-    public List<Type> getTypes();
+    List<Type> getTypes();
 }

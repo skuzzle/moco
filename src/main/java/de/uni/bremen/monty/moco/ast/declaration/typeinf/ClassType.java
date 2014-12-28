@@ -7,8 +7,6 @@ import java.util.List;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 
 public class ClassType extends Type {
 
@@ -80,21 +78,6 @@ public class ClassType extends Type {
         }
 
         return named(other.getName()).atLocation(other);
-    }
-
-    @Deprecated
-    public static ClassType from(ClassDeclaration declaration) {
-        if (declaration == null) {
-            throw new IllegalArgumentException("declaration is null");
-        }
-        final List<ClassType> superTypes = new ArrayList<>(declaration.getSuperClassDeclarations().size());
-        for (final Declaration decl : declaration.getSuperClassDeclarations()) {
-            superTypes.add(from((ClassDeclaration) decl));
-        }
-        return named(declaration.getIdentifier())
-                .atLocation(declaration)
-                .withSuperClasses(superTypes)
-                .createType();
     }
 
     private final List<ClassType> superClasses;

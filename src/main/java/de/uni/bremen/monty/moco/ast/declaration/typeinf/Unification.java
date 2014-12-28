@@ -5,6 +5,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+/**
+ * Unification is the process of determining structural equality of two
+ * {@link Type type expressions}. This class represents the result of unifying
+ * one type with another. If the unification of two types is successful
+ * (&lt;=&gt; the types are compatible), then the resulting Unification object
+ * holds substitutions for type variables which occurred in either of the type
+ * expressions.
+ *
+ * @author Simon Taddiken
+ */
 public final class Unification {
 
     private static final class TypePair {

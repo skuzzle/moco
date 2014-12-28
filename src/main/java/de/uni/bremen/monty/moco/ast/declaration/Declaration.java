@@ -38,52 +38,22 @@
  */
 package de.uni.bremen.monty.moco.ast.declaration;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import de.uni.bremen.monty.moco.ast.AbstractTypedASTNode;
 import de.uni.bremen.monty.moco.ast.AccessModifier;
-import de.uni.bremen.monty.moco.ast.BasicASTNode;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 
 /** The baseclass of every declaration.
  * <p>
  * A declaration has an identifier, the name under which this declaration is known. */
-public abstract class Declaration extends BasicASTNode implements Typed {
+public abstract class Declaration extends AbstractTypedASTNode {
 
-    private class AddTypeBuilderImpl implements AddTypeBuilder {
-
-        private final Type addedType;
-
-        public AddTypeBuilderImpl(Type addedType) {
-            this.addedType = addedType;
-        }
-
-        @Override
-        public void withConstraint(Unification unification) {
-            Declaration.this.constraints.put(this.addedType, unification);
-        }
-    }
 
 	/** The identifier. */
 	private final Identifier identifier;
 
 	/** The mangled identifier. */
 	private Identifier mangledIdentifier;
-
-    /** The declaration's type */
-    private Type type;
-
-    /** Possible types of this declaration */
-    private final List<Type> types;
-
-    private final Map<Type, Unification> constraints;
 
 	private AccessModifier access;
 
@@ -97,55 +67,17 @@ public abstract class Declaration extends BasicASTNode implements Typed {
 		super(position);
 		this.identifier = identifier;
 		this.access = AccessModifier.PUBLIC;
-        this.types = new ArrayList<>();
-        this.constraints = new HashMap<>();
 	}
 
 	public Declaration(Position position, Identifier identifier, AccessModifier access) {
 		super(position);
 		this.identifier = identifier;
 		this.access = access;
-        this.types = new ArrayList<>();
-        this.constraints = new HashMap<>();
 	}
 
 	public void setAccessModifier(AccessModifier access) {
 		this.access = access;
 	}
-
-    @Override
-    public boolean isTypeResolved() {
-        return this.type != null;
-    }
-
-    @Override
-    public void setType(Type type) {
-        if (type == null) {
-            throw new IllegalArgumentException("type is null");
-        }
-
-        this.type = type;
-    }
-
-    @Override
-    public Type getType() {
-        return this.type;
-    }
-
-    @Override
-    public AddTypeBuilder addType(Type type) {
-        if (type == null) {
-            throw new IllegalArgumentException("type is null");
-        }
-
-        this.types.add(type);
-        return new AddTypeBuilderImpl(type);
-    }
-
-    @Override
-    public List<Type> getTypes() {
-        return Collections.unmodifiableList(this.types);
-    }
 
 	/** Get the mangled Identifier.
 	 *
