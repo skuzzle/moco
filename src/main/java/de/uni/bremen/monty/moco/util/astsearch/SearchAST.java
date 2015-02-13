@@ -29,6 +29,13 @@ public final class SearchAST {
         return StreamSupport.stream(splitIt, false);
     }
 
+    public static Stream<ASTNode> parentStream(ASTNode root) {
+        final Iterator<ASTNode> nodeIterator = new ParentIterator(root);
+        final Spliterator<ASTNode> splitIt = Spliterators.spliterator(nodeIterator,
+                Long.MAX_VALUE, Spliterator.NONNULL);
+        return StreamSupport.stream(splitIt, false);
+    }
+
     /**
      * Specifies the node type to search for. This will match the exact type as
      * well as sub types of the specified type.
