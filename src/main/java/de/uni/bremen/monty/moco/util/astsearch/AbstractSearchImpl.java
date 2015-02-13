@@ -22,14 +22,15 @@ abstract class AbstractSearchImpl<C extends ASTNode> implements WhereClause<C>,
 
     protected boolean allPredicatesMatch(ASTNode node) {
         if (this.typeEq.test(node)) {
-        final C n = this.type.cast(node);
-        for (final Predicate<C> pred : this.predicates) {
-            if (!pred.test(n)) {
-                return false;
+            final C n = this.type.cast(node);
+            for (final Predicate<C> pred : this.predicates) {
+                if (!pred.test(n)) {
+                    return false;
+                }
             }
+            return true;
         }
-        }
-        return true;
+        return false;
     }
 
     @Override

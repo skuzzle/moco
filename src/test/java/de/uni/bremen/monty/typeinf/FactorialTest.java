@@ -13,7 +13,7 @@ import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 
 public class FactorialTest extends AbstractTypeInferenceTest {
 
-    protected FactorialTest() {
+    public FactorialTest() {
         super("factorial.monty");
     }
 
