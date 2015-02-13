@@ -103,6 +103,22 @@ final class Unifier {
                 }
             }
             return true;
+        } else if (s instanceof Product && t instanceof Product) {
+            union(s, t, subst);
+            final Product ps = (Product) s;
+            final Product pt = (Product) t;
+
+            if (ps.getComponents().size() != pt.getComponents().size()) {
+                return false;
+            }
+
+            final Iterator<Type> pIt = pt.getComponents().iterator();
+            for (final Type ts : ps.getComponents()) {
+                if (!unifyInternal(ts, pIt.next(), subst)) {
+                    return false;
+                }
+            }
+            return true;
         } else if (s instanceof TypeVariable || t instanceof TypeVariable) {
             union(s, t, subst);
             return true;
