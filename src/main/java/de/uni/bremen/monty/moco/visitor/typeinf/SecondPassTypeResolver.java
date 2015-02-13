@@ -178,7 +178,7 @@ public class SecondPassTypeResolver extends BaseVisitor {
         if (candidates.isEmpty()) {
             throw new TypeMismatchException(node, "Incompatible assignment types");
         } else if (candidates.size() > 1) {
-            throw new TypeMismatchException(node, "Ambiguous types");
+            throw new TypeMismatchException(node, "Ambiguous types: " + candidates);
         } else {
             final Type unique = candidates.get(0);
             node.getLeft().setType(unique);
