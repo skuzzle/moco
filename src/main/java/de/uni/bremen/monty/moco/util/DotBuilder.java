@@ -45,7 +45,7 @@ public class DotBuilder implements Closeable {
         this.out.print("[shape=Mrecord, fontname=\"Consolas\", label=\"{");
 
         final List<String> attributeList = new ArrayList<>(Arrays.asList(attributes));
-        attributeList.add(String.format("Scope: %s", node.getScope().getParentScope()));
+        attributeList.add(String.format("Scope: %s", node.getScope()));
         if (node instanceof Typed) {
             final Typed typed = (Typed) node;
             final Type unique = typed.getType();

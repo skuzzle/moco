@@ -2,6 +2,12 @@ package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 
 import java.util.List;
 
+/**
+ * Interface for AST nodes that have a type assigned to them. Typed nodes may
+ * have a set of multiple possible types and a unique resolved type.
+ *
+ * @author Simon Taddiken
+ */
 public interface Typed {
 
     public interface TypeContextBuilder {

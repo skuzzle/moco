@@ -1,0 +1,11 @@
+class Foo:
+
+    + main():
+        ? x := fak(2)
+        Int y := fak(2)
+
+    + ? fak(Int n):
+        if n > 1:
+            return n * fak(n - 1)
+        else:
+            return 1

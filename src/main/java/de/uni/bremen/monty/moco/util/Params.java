@@ -61,59 +61,69 @@ public class Params {
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i];
 			if (arg.equals("-p")) {
-				usePrintVisitor = true;
+				this.usePrintVisitor = true;
 			} else if (arg.equals("-ll")) {
-				generateOnlyLLVM = true;
+				this.generateOnlyLLVM = true;
 			} else if (arg.equals("-o")) {
-				outputFile = args[++i];
+				this.outputFile = args[++i];
 			} else if (arg.equals("-k")) {
-				keepLLVMCode = true;
+				this.keepLLVMCode = true;
 			} else if (arg.equals("-s")) {
-				debugParseTree = true;
+				this.debugParseTree = true;
 			} else if (arg.equals("-e")) {
-				stopOnFirstError = true;
+				this.stopOnFirstError = true;
 			} else {
 				if (new File(args[i]).isDirectory()) {
-					inputFolder = args[i];
-				} else if (inputFolder != null) {
-					mainModule = args[i];
+					this.inputFolder = args[i];
+				} else if (this.inputFolder != null) {
+					this.mainModule = args[i];
 				} else {
-					inputFile = args[i];
+					this.inputFile = args[i];
 				}
 			}
 		}
 
-		if (inputFile == null && (inputFolder == null || mainModule == null)) {
+		if (this.inputFile == null && (this.inputFolder == null || this.mainModule == null)) {
 			printHelp();
 		}
 	}
 
+    public Params() {}
+
+    public void setInputFile(String inputFile) {
+        this.inputFile = inputFile;
+    }
+
+    public void setInputFolder(String inputFolder) {
+        this.inputFolder = inputFolder;
+    }
+
 	public String getInputFile() {
-		return inputFile;
+		return this.inputFile;
 	}
 
 	public String getOutputFile() {
-		return outputFile;
+		return this.outputFile;
 	}
 
 	public boolean usePrintVisitor() {
-		return usePrintVisitor;
+		return this.usePrintVisitor;
 	}
 
 	public boolean isGenerateOnlyLLVM() {
-		return generateOnlyLLVM;
+		return this.generateOnlyLLVM;
 	}
 
 	public boolean isKeepLLVMCode() {
-		return keepLLVMCode;
+		return this.keepLLVMCode;
 	}
 
 	public boolean isStopOnFirstError() {
-		return stopOnFirstError;
+		return this.stopOnFirstError;
 	}
 
 	public boolean isDebugParseTree() {
-		return debugParseTree;
+		return this.debugParseTree;
 	}
 
 	public void printHelp() {
@@ -133,14 +143,14 @@ public class Params {
 	}
 
 	public String getLlFile() {
-		return llFile;
+		return this.llFile;
 	}
 
 	public String getInputFolder() {
-		return inputFolder;
+		return this.inputFolder;
 	}
 
 	public String getMainModule() {
-		return mainModule;
+		return this.mainModule;
 	}
 }

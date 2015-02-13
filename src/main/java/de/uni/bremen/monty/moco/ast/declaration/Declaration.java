@@ -41,12 +41,13 @@ package de.uni.bremen.monty.moco.ast.declaration;
 import de.uni.bremen.monty.moco.ast.AbstractTypedASTNode;
 import de.uni.bremen.monty.moco.ast.AccessModifier;
 import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.NamedNode;
 import de.uni.bremen.monty.moco.ast.Position;
 
 /** The baseclass of every declaration.
  * <p>
  * A declaration has an identifier, the name under which this declaration is known. */
-public abstract class Declaration extends AbstractTypedASTNode {
+public abstract class Declaration extends AbstractTypedASTNode implements NamedNode {
 
 
 	/** The identifier. */
@@ -96,7 +97,8 @@ public abstract class Declaration extends AbstractTypedASTNode {
 	/** Get the identifier.
 	 *
 	 * @return the identifier */
-	public Identifier getIdentifier() {
+	@Override
+    public Identifier getIdentifier() {
 		return this.identifier;
 	}
 }

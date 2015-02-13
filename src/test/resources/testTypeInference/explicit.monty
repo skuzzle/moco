@@ -1,0 +1,8 @@
+class Simple:
+    + String bar := "hallo"
+    
+    + Int add(Int a, Int b):
+        return a + b
+        
+    + noop(String a):
+        pass
