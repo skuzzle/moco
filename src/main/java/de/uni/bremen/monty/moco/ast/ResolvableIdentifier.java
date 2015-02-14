@@ -43,8 +43,15 @@ package de.uni.bremen.monty.moco.ast;
  * During context-analysis this is resolved to a declaration using a scope. */
 public class ResolvableIdentifier extends Identifier {
 
+    public static ResolvableIdentifier of(String symbol) {
+        if (symbol == null) {
+            throw new IllegalArgumentException("symbol is null");
+        }
+        return new ResolvableIdentifier(symbol);
+    }
+
 	/** Constructor.
-	 * 
+	 *
 	 * @param symbol
 	 *            the name of the declaration */
 	public ResolvableIdentifier(String symbol) {

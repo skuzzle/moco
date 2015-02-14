@@ -22,13 +22,17 @@ independentDeclaration
   ;
 
 classDeclaration
-  : 'abstract'? 'class' ClassIdentifier ('inherits' typeList)?
+  : 'abstract'? 'class' ClassIdentifier ('<' typeParamDeclaration '>')? ('inherits' typeList)?
     ':' EndOfLine
     Indent
         (memberDeclaration+ | 'pass' EndOfLine)
     Dedent
   ;
 
+typeParamDeclaration
+  : ConstantIdentifier (',' ConstantIdentifier)*
+  ;
+  
 memberDeclaration
   : accessModifier independentDeclaration
   ;

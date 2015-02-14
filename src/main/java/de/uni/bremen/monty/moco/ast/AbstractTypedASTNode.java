@@ -105,6 +105,9 @@ public abstract class AbstractTypedASTNode extends BasicASTNode implements Typed
 
     @Override
     public Type getType() {
+        if (!isTypeResolved()) {
+            throw new IllegalStateException("type not resolved");
+        }
         return this.type;
     }
 

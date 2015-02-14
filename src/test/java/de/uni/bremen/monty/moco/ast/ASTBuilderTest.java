@@ -38,32 +38,69 @@
  */
 package de.uni.bremen.monty.moco.ast;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.List;
+
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.apache.commons.io.FileUtils;
+import org.junit.Test;
+
 import de.uni.bremen.monty.moco.CompileTestProgramsTest;
 import de.uni.bremen.monty.moco.antlr.MontyLexer;
 import de.uni.bremen.monty.moco.antlr.MontyParser;
-import de.uni.bremen.monty.moco.ast.declaration.*;
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
 import de.uni.bremen.monty.moco.ast.expression.literal.IntegerLiteral;
 import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.apache.commons.io.FileUtils;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-
-import static de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration.DeclarationType;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertTrue;
+import de.uni.bremen.monty.moco.util.astsearch.Predicates;
+import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 
 public class ASTBuilderTest {
+
+    @Test
+    public void testGenericDeclaration() throws Exception {
+        final ModuleDeclaration ast = buildASTfrom("genericClass");
+        final VariableDeclaration decl = SearchAST.forNode(VariableDeclaration.class)
+                .where(Predicates.hasName("a"))
+                .in(ast)
+                .get();
+
+        assertTrue(decl.hasTypeArguments());
+        final List<ResolvableIdentifier> expected = Arrays.asList(
+                ResolvableIdentifier.of("Int"),
+                ResolvableIdentifier.of("String"));
+        assertEquals(expected, decl.getActualTypeArguments());
+    }
+
+    @Test
+    public void testGenericClass() throws Exception {
+        ModuleDeclaration ast = buildASTfrom("genericClass");
+        final ClassDeclaration decl = SearchAST.forNode(ClassDeclaration.class)
+                .where(Predicates.hasName("Ab"))
+                .in(ast)
+                .get();
+
+        assertTrue("Class is expected to be generic", decl.isGeneric());
+        final List<Identifier> expected = Arrays.asList(
+                Identifier.of("A"), Identifier.of("B"));
+        assertEquals(expected, decl.getTypeParameters());
+    }
 
 	@Test
 	public void shouldConvertVariableInitialisation() throws Exception {

@@ -59,6 +59,9 @@ public class ClassDeclaration extends TypeDeclaration {
 	/** Superclasses. */
 	private final List<TypeDeclaration> superClassDeclarations = new ArrayList<>();
 
+    /** Identifier of type parameters to this declaration */
+    private final List<Identifier> typeParameters = new ArrayList<>();
+
 	/** The generated default initializer to be called from every user defined initializer. */
 	private ProcedureDeclaration defaultInitializer;
 
@@ -91,6 +94,24 @@ public class ClassDeclaration extends TypeDeclaration {
 
     public void addSuperClassDeclaration(ClassDeclaration superClass) {
         this.superClassDeclarations.add(superClass);
+    }
+
+    public void addTypeParameter(Identifier name) {
+        this.typeParameters.add(name);
+    }
+
+    public List<Identifier> getTypeParameters() {
+        return this.typeParameters;
+    }
+
+    /**
+     * Whether this is a generic declaration. That is, there is at least one
+     * type parameter.
+     * 
+     * @return Whether this is a generic class.
+     */
+    public boolean isGeneric() {
+        return !this.typeParameters.isEmpty();
     }
 
     @Override

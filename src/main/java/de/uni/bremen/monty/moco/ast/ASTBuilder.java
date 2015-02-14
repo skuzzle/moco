@@ -178,8 +178,18 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			typeName = ctx.type().ClassIdentifier().toString();
 		}
 		ResolvableIdentifier type = new ResolvableIdentifier(typeName);
-		return new VariableDeclaration(position(ctx.getStart()), new Identifier(getText(ctx.Identifier())), type,
+        final VariableDeclaration decl = new VariableDeclaration(
+                position(ctx.getStart()), new Identifier(getText(ctx.Identifier())), type,
 		        this.currentVariableContext);
+
+        if (ctx.type().typeList() != null) {
+            for (final TypeContext t : ctx.type().typeList().type()) {
+                final ResolvableIdentifier ri = ResolvableIdentifier.of(t.getText());
+                decl.addActualTypeArgument(ri);
+            }
+
+        }
+        return decl;
 	}
 
 	@Override
@@ -347,6 +357,13 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		ClassDeclaration cl =
 		        new ClassDeclaration(position(ctx.getStart()), new Identifier(ctx.ClassIdentifier().getText()),
 		                superClasses, new Block(position(ctx.getStart())));
+
+        if (ctx.typeParamDeclaration() != null) {
+            for (final TerminalNode param : ctx.typeParamDeclaration().ConstantIdentifier()) {
+                final Identifier id = new Identifier(param.getText());
+                cl.addTypeParameter(id);
+            }
+        }
 
 		this.currentBlocks.push(cl.getBlock());
 		for (MemberDeclarationContext member : ctx.memberDeclaration()) {

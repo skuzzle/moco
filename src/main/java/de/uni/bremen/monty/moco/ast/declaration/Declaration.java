@@ -49,7 +49,6 @@ import de.uni.bremen.monty.moco.ast.Position;
  * A declaration has an identifier, the name under which this declaration is known. */
 public abstract class Declaration extends AbstractTypedASTNode implements NamedNode {
 
-
 	/** The identifier. */
 	private final Identifier identifier;
 

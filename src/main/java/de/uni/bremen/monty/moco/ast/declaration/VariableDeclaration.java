@@ -38,6 +38,9 @@
  */
 package de.uni.bremen.monty.moco.ast.declaration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
@@ -50,6 +53,7 @@ public class VariableDeclaration extends Declaration implements Typed {
 	}
 
 	private final ResolvableIdentifier typeIdentifier;
+    private final List<ResolvableIdentifier> actualTypeArguments;
 	private DeclarationType declarationType;
 	private boolean isGlobal;
 
@@ -67,7 +71,20 @@ public class VariableDeclaration extends Declaration implements Typed {
 		this.typeIdentifier = typeIdentifier;
 		this.declarationType = DeclarationType.VARIABLE;
 		this.attributeIndex = -1;
+        this.actualTypeArguments = new ArrayList<>();
 	}
+
+    public void addActualTypeArgument(ResolvableIdentifier name) {
+        this.actualTypeArguments.add(name);
+    }
+
+    public List<ResolvableIdentifier> getActualTypeArguments() {
+        return this.actualTypeArguments;
+    }
+
+    public boolean hasTypeArguments() {
+        return !this.actualTypeArguments.isEmpty();
+    }
 
 	/** set the declaration type */
 	public void setDeclarationType(DeclarationType type) {

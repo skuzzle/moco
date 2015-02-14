@@ -43,11 +43,19 @@ package de.uni.bremen.monty.moco.ast;
  * During context-analysis the identifier with an associated declaration is stored in a scope. */
 public class Identifier {
 
+    public static Identifier of(String symbol) {
+        if (symbol == null) {
+            throw new IllegalArgumentException("symbol is null");
+        }
+
+        return new Identifier(symbol);
+    }
+
 	/** The name of the declaration. */
 	private final String symbol;
 
 	/** Constructor.
-	 * 
+	 *
 	 * @param symbol
 	 *            the name of the declaration */
 	public Identifier(String symbol) {
@@ -55,10 +63,10 @@ public class Identifier {
 	}
 
 	/** Get the name of the declaration.
-	 * 
+	 *
 	 * @return the name */
 	public String getSymbol() {
-		return symbol;
+		return this.symbol;
 	}
 
 	@Override
@@ -79,12 +87,12 @@ public class Identifier {
 
 	@Override
 	public int hashCode() {
-		return symbol.hashCode();
+		return this.symbol.hashCode();
 	}
 
 	@Override
 	public String toString() {
-		return symbol;
+		return this.symbol;
 	}
 
 	public static Identifier convert(ResolvableIdentifier identifier) {

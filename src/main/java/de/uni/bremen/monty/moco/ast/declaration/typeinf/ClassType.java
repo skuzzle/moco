@@ -2,6 +2,7 @@ package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import de.uni.bremen.monty.moco.ast.Identifier;
@@ -14,11 +15,13 @@ public class ClassType extends Type {
         private final String name;
         private Location location;
         private final List<ClassType> superClasses;
+        private final List<TypeVariable> typeParameters;
 
         private Named(String name) {
             this.name = name;
             this.location = UNKNOWN_LOCATION;
             this.superClasses = new ArrayList<>();
+            this.typeParameters = new ArrayList<>();
         }
 
         public Named atLocation(Location location) {
@@ -26,6 +29,22 @@ public class ClassType extends Type {
                 throw new IllegalArgumentException("location is null");
             }
             this.location = location;
+            return this;
+        }
+
+        public Named addTypeParameter(TypeVariable... var) {
+            if (var == null) {
+                throw new IllegalArgumentException("var is null");
+            }
+            this.typeParameters.addAll(Arrays.asList(var));
+            return this;
+        }
+
+        public Named addTypeParameters(Collection<TypeVariable> vars) {
+            if (vars == null) {
+                throw new IllegalArgumentException("vars is null");
+            }
+            this.typeParameters.addAll(vars);
             return this;
         }
 
@@ -54,7 +73,7 @@ public class ClassType extends Type {
 
         public ClassType createType() {
             return new ClassType(new Identifier(this.name), this.location.getPosition(),
-                    this.superClasses);
+                    this.superClasses, this.typeParameters);
         }
     }
 
@@ -81,16 +100,20 @@ public class ClassType extends Type {
     }
 
     private final List<ClassType> superClasses;
+    private final List<TypeVariable> typeParameters;
     private final int distanceToObject;
 
-    private ClassType(Identifier name, Position positionHint,
-            List<ClassType> superClasses) {
+    ClassType(Identifier name, Position positionHint,
+            List<ClassType> superClasses, List<TypeVariable> typeParameters) {
         super(name, positionHint);
         if (superClasses == null) {
             throw new IllegalArgumentException("superClasses is null");
+        } else if (typeParameters == null) {
+            throw new IllegalArgumentException("typeParameters is null");
         }
 
         this.superClasses = superClasses;
+        this.typeParameters = typeParameters;
         this.distanceToObject = calcDistanceToObject(this);
     }
 
@@ -143,6 +166,10 @@ public class ClassType extends Type {
 
     public List<ClassType> getSuperClasses() {
         return this.superClasses;
+    }
+
+    public List<TypeVariable> getTypeParameters() {
+        return this.typeParameters;
     }
 
     @Override
