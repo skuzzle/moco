@@ -76,6 +76,5 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
         assertTrue(Unification.testIf(decl.getType()).isA(expected1).isSuccessful());
         assertTrue(Unification.testIf(decl.getType()).isA(expected2).isSuccessful());
-
     }
 }

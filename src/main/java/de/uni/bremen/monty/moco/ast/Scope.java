@@ -256,9 +256,9 @@ public class Scope {
 			if (declaration instanceof TypeDeclaration) {
 				return (TypeDeclaration) declaration;
 			}
-			throw new UnknownTypeException(identifier);
+            throw new UnknownTypeException(positionHint, identifier);
 		} catch (UnknownIdentifierException e) {
-			throw new UnknownTypeException(identifier);
+            throw new UnknownTypeException(positionHint, identifier);
 		}
 	}
 

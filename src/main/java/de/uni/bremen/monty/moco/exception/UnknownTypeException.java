@@ -38,6 +38,7 @@
  */
 package de.uni.bremen.monty.moco.exception;
 
+import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 
 public class UnknownTypeException extends MontyBaseException {
@@ -45,4 +46,8 @@ public class UnknownTypeException extends MontyBaseException {
 	public UnknownTypeException(ResolvableIdentifier identifier) {
 		super("Type is not defined: " + identifier);
 	}
+
+    public UnknownTypeException(Location positionHint, ResolvableIdentifier identifier) {
+        super(positionHint, "Type is not defined: " + identifier);
+    }
 }

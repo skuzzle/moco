@@ -9,8 +9,10 @@ import java.io.IOException;
 import java.net.URL;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
+import de.uni.bremen.monty.moco.ast.AbstractTypedASTNode;
 import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.PackageBuilder;
+import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.exception.MontyBaseException;
@@ -104,7 +106,10 @@ public class AbstractTypeInferenceTest {
                 bv.setStopOnFirstError(true);
                 bv.visitDoubleDispatched(root);
             } catch (MontyBaseException e) {
-                final String message = e.getLocation().getPosition() + " :\n"
+                final Position pos = e.getLocation() != null
+                        ? e.getLocation().getPosition()
+                        : AbstractTypedASTNode.UNKNOWN_POSITION;
+                final String message = pos + " :\n"
                         + e.getMessage();
                 throw new Exception(message, e);
             }
