@@ -13,6 +13,7 @@ import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.PackageBuilder;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
+import de.uni.bremen.monty.moco.exception.MontyBaseException;
 import de.uni.bremen.monty.moco.util.Params;
 import de.uni.bremen.monty.moco.util.astsearch.InClause;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
@@ -73,11 +74,11 @@ public class AbstractTypeInferenceTest {
         return SearchAST.forNode(type).where(Predicates.inFile(this.testFileName));
     }
 
-    public ASTNode getTypeCheckedAST() throws IOException {
+    public ASTNode getTypeCheckedAST() throws Exception {
         return getTypeCheckedAST(this.testFileName);
     }
 
-    private ASTNode getTypeCheckedAST(String fileName) throws IOException {
+    private ASTNode getTypeCheckedAST(String fileName) throws Exception {
         final File file = asFile(fileName);
         final File inputFolder = file.getParentFile();
         final Params params = new Params();
@@ -91,7 +92,7 @@ public class AbstractTypeInferenceTest {
     }
 
     private void executeVisitorChain(String testFileName, ASTNode root)
-            throws IOException {
+            throws Exception {
         final BaseVisitor[] visitors = new BaseVisitor[] {
                 new SetParentVisitor(),
                 new DeclarationVisitor(),
@@ -100,10 +101,12 @@ public class AbstractTypeInferenceTest {
         };
         for (final BaseVisitor bv : visitors) {
             try {
+                bv.setStopOnFirstError(true);
                 bv.visitDoubleDispatched(root);
-            } catch (RuntimeException e) {
-                bv.logError(e);
-                break;
+            } catch (MontyBaseException e) {
+                final String message = e.getLocation().getPosition() + " :\n"
+                        + e.getMessage();
+                throw new Exception(message, e);
             }
         }
         writeDotFile(testFileName, root);

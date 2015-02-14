@@ -2,20 +2,20 @@ package de.uni.bremen.monty.moco.visitor.typeinf;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
-import de.uni.bremen.monty.moco.ast.declaration.Declaration;
+import de.uni.bremen.monty.moco.ast.Location;
+import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
+import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
+import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed.TypeContext;
@@ -33,10 +33,24 @@ import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class SecondPassTypeResolver extends BaseVisitor {
 
+    private final Set<ASTNode> visited;
+
+    public SecondPassTypeResolver() {
+        this.visited = new HashSet<>();
+        setStopOnFirstError(true);
+    }
+
+    private boolean shouldVisit(ASTNode node) {
+        return this.visited.add(node);
+    }
+
     // Declarations
 
     @Override
     public void visit(FunctionDeclaration node) {
+        if (!shouldVisit(node)) {
+            return;
+        }
         final Type returnType;
         if (node.getReturnType().isVariable()) {
             // build the section of all return types
@@ -45,7 +59,7 @@ public class SecondPassTypeResolver extends BaseVisitor {
                 throw new TypeMismatchException(node,
                         "Could not infer a common return type");
             } else if (possibleTypes.size() > 1) {
-                returnType = findCommonSupertype(node, possibleTypes);
+                returnType = TypeHelper.findCommonSuperType(possibleTypes);
             } else {
                 returnType = possibleTypes.get(0);
             }
@@ -71,6 +85,10 @@ public class SecondPassTypeResolver extends BaseVisitor {
 
     @Override
     public void visit(ReturnStatement node) {
+        if (!shouldVisit(node)) {
+            return;
+        }
+
         final ProcedureDeclaration procedure = ASTUtil.findAncestor(node,
                 ProcedureDeclaration.class);
 
@@ -87,33 +105,51 @@ public class SecondPassTypeResolver extends BaseVisitor {
 
     @Override
     public void visit(FunctionCall node) {
+        if (!shouldVisit(node)) {
+            return;
+        }
         // at this point, the unique type of the called function should have
         // already been resolved
 
         // find candidates with resolved return type
         final List<Function> candidates = new ArrayList<>(node.getSignatureTypes().size());
+        final Collection<Function> lhsTypes;
+        if (node.isConstructorCall()) {
+            final TypeDeclaration typeDecl = node.getScope().resolveType(node,
+                    node.getIdentifier());
+            lhsTypes = resolveTypes(typeDecl.getScope(),
+                    new ResolvableIdentifier("initializer"), node);
+        } else {
+            lhsTypes = resolveTypes(node.getScope(), node.getIdentifier(), node);
+        }
+
         for (final List<Type> signature : node.getSignatureTypes()) {
-            final Function func = Function.named(node.getIdentifier())
-                    .atLocation(node)
-                    .returning(node.getType())
-                    .andParameters(signature)
-                    .createType();
+            for (final TypeContext retType : node.getTypes()) {
+                final Function func = Function.named(node.getIdentifier())
+                        .atLocation(node)
+                        .returning(retType.getType())
+                        .andParameters(signature)
+                        .createType();
 
-            for (final TypeContext candidate : node.getTypes()) {
-                final Unification unification = Unification
-                        .testIf(candidate.getType()).isA(func);
+                for (final Function lhsType : lhsTypes) {
+                    final Unification unification = Unification.testIf(func).isA(lhsType);
 
-                if (unification.isSuccessful()) {
-                    candidates.add(unification.apply(func));
+                    if (unification.isSuccessful()) {
+                        candidates.add(unification.apply(func));
+                    }
                 }
+
             }
         }
         if (candidates.size() == 1) {
-            final Function type = candidates.get(0);
-            final Declaration decl = node.getScope().resolveFromType(type);
-            node.setDeclaration((ProcedureDeclaration) decl);
+            final Function candidate = candidates.get(0);
+            final ProcedureDeclaration decl = (ProcedureDeclaration) node.getScope().resolveFromType(candidate);
+            visitDoubleDispatched(decl);
+            node.setDeclaration(decl);
 
-            final Iterator<Type> it = type.getParameterTypes().iterator();
+            final Function declaredType = (Function) decl.getType();
+            node.setType(declaredType.getReturnType());
+            final Iterator<Type> it = declaredType.getParameterTypes().iterator();
             for (final Expression actual : node.getArguments()) {
                 // push down types
                 actual.setType(it.next());
@@ -121,8 +157,32 @@ public class SecondPassTypeResolver extends BaseVisitor {
         }
     }
 
+    /**
+     * Resolves all possible types of the given call.
+     *
+     * @param call The call.
+     * @return Collection of function types.
+     */
+    private Collection<Function> resolveTypes(Scope scope,
+            ResolvableIdentifier identifier, Location location) {
+        final List<ProcedureDeclaration> declarations = scope.resolveProcedure(location,
+                identifier);
+        final List<Function> result = new ArrayList<>(declarations.size());
+
+        for (final ProcedureDeclaration decl : declarations) {
+            // ensure that declaration's type has been resolved
+            visitDoubleDispatched(decl);
+
+            result.add((Function) decl.getType());
+        }
+        return result;
+    }
+
     @Override
     public void visit(MemberAccess node) {
+        if (!shouldVisit(node)) {
+            return;
+        }
         if (node.getParentNode() instanceof Block) {
             // member access is a statement, so there is no parent which could
             // have pushed down its type
@@ -145,6 +205,9 @@ public class SecondPassTypeResolver extends BaseVisitor {
 
     @Override
     public void visit(ConditionalStatement node) {
+        if (!shouldVisit(node)) {
+            return;
+        }
         boolean boolType = false;
         for (final TypeContext ctx : node.getCondition().getTypes()) {
             boolType = ctx.getType() == CoreClasses.boolType().getType();
@@ -164,68 +227,47 @@ public class SecondPassTypeResolver extends BaseVisitor {
 
     @Override
     public void visit(Assignment node) {
-        final List<Type> candidates = new ArrayList<>();
-        for (final TypeContext lhsCtx : node.getLeft().getTypes()) {
-            for (final TypeContext rhsCtx : node.getRight().getTypes()) {
-                final Unification unification = Unification.testIf(lhsCtx.getType())
-                        .isA(rhsCtx.getType());
-                if (unification.isSuccessful()) {
-                    candidates.add(unification.apply(lhsCtx.getType()));
+        if (!shouldVisit(node)) {
+            return;
+        }
+
+        final Type targetType;
+        if (node.getRight().isTypeResolved() && node.getLeft().isTypeResolved()) {
+            final Type left = node.getLeft().getType();
+            final Type right = node.getRight().getType();
+            if (!Unification.testIf(right).isA(left).isSuccessful()) {
+                throw new TypeMismatchException(node,
+                        String.format("%s not assignable to %s", right, left));
+            }
+            targetType = left;
+        } else if (node.getLeft().isTypeResolved()) {
+            targetType = node.getLeft().getType();
+        } else if (node.getRight().isTypeResolved()) {
+            targetType = node.getRight().getType();
+        } else {
+            final List<Type> candidates = new ArrayList<>();
+            for (final TypeContext lhsCtx : node.getLeft().getTypes()) {
+                for (final TypeContext rhsCtx : node.getRight().getTypes()) {
+                    final Unification unification = Unification.testIf(lhsCtx.getType())
+                            .isA(rhsCtx.getType());
+                    if (unification.isSuccessful()) {
+                        candidates.add(unification.apply(lhsCtx.getType()));
+                    }
                 }
             }
+
+            if (candidates.isEmpty()) {
+                throw new TypeMismatchException(node, "Incompatible assignment types");
+            } else if (candidates.size() > 1) {
+                throw new TypeMismatchException(node, "Ambiguous types: " + candidates);
+            } else {
+                targetType = candidates.get(0);
+            }
         }
 
-        if (candidates.isEmpty()) {
-            throw new TypeMismatchException(node, "Incompatible assignment types");
-        } else if (candidates.size() > 1) {
-            throw new TypeMismatchException(node, "Ambiguous types: " + candidates);
-        } else {
-            final Type unique = candidates.get(0);
-            node.getLeft().setType(unique);
-            node.getRight().setType(unique);
-        }
-
+        node.getLeft().setType(targetType);
+        node.getRight().setType(targetType);
         super.visit(node);
-    }
-
-
-    private Type findCommonSupertype(ASTNode positionHint, List<Type> types) {
-        final Map<Type, Set<ClassType>> superTypeMap = new HashMap<>();
-        // For each type, collect super types
-        final Set<ClassType> commonTypes = new HashSet<>();
-        for (final Type type : types) {
-            final Set<ClassType> superTypes = new HashSet<>();
-            traverseSuperTypes((ClassType) type, superTypes);
-            superTypeMap.put(type, superTypes);
-            commonTypes.addAll(superTypes);
-        }
-
-        // build section of all encountered super types
-        for (final Set<ClassType> superTypes : superTypeMap.values()) {
-            commonTypes.retainAll(superTypes);
-        }
-        if (commonTypes.isEmpty()) {
-            throw new TypeMismatchException(positionHint, String.format(
-                    "The types %s do not share a common super type", types));
-        }
-
-        // Chose the most concrete type (
-        ClassType minDistanceType = null;
-        for (final ClassType type : commonTypes) {
-            int dist = type.distanceToObject();
-            if (minDistanceType == null || dist > minDistanceType.distanceToObject()) {
-                minDistanceType = type;
-            }
-        }
-        return minDistanceType;
-    }
-
-    private void traverseSuperTypes(ClassType current, Set<ClassType> types) {
-        if (types.add(current)) {
-            for (final ClassType parent : current.getSuperClasses()) {
-                traverseSuperTypes(parent, types);
-            }
-        }
     }
 
     /**

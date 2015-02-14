@@ -38,10 +38,12 @@
  */
 package de.uni.bremen.monty.moco.exception;
 
-import de.uni.bremen.monty.moco.ast.ASTNode;
+import de.uni.bremen.monty.moco.ast.Location;
 
 public class TypeMismatchException extends MontyBaseException {
-	public TypeMismatchException(ASTNode node, String message) {
+    private static final long serialVersionUID = 1L;
+
+    public TypeMismatchException(Location node, String message) {
 		super(node, message);
 	}
 }

@@ -51,6 +51,7 @@ import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.exception.RedeclarationException;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
@@ -85,6 +86,8 @@ public class Scope {
 	/** The map to store the remaining associations. */
     protected final Map<Identifier, Declaration> members;
 
+    protected final Map<TypeVariable, Type> typeMap;
+
 	        /**
      * Constructor.
      *
@@ -96,6 +99,7 @@ public class Scope {
 		this.parent = parent;
 		this.procedures = new HashMap<Identifier, List<ProcedureDeclaration>>();
 		this.members = new HashMap<Identifier, Declaration>();
+        this.typeMap = new HashMap<>();
 	}
 
 	/** Get the parent scope in nesting hierarchy.
@@ -186,14 +190,14 @@ public class Scope {
             final Collection<ProcedureDeclaration> matches = new ArrayList<>();
 
             for (final ProcedureDeclaration proc : procedures) {
-                final Function declared = Function.from(proc);
+                final Function declared = (Function) proc.getType();
                 if (Unification.of(type).with(declared).isSuccessful()) {
                     matches.add(proc);
                 }
             }
 
             if (matches.isEmpty()) {
-                throw new RuntimeException();
+                throw new RuntimeException(type.toString());
             } else if (matches.size() > 1) {
                 // TODO: best fit
                 throw new RuntimeException();
@@ -204,6 +208,10 @@ public class Scope {
             // TODO: proper error handling
             throw new RuntimeException();
         }
+    }
+
+    private int compare(ClassType t1, ClassType t2) {
+        return Math.abs(t1.distanceToObject() - t2.distanceToObject());
     }
 
 	            /**
@@ -244,7 +252,7 @@ public class Scope {
     public TypeDeclaration resolveType(Location positionHint,
             ResolvableIdentifier identifier) {
 		try {
-            Declaration declaration = resolve(positionHint, identifier);
+            final Declaration declaration = resolve(positionHint, identifier);
 			if (declaration instanceof TypeDeclaration) {
 				return (TypeDeclaration) declaration;
 			}
@@ -264,8 +272,9 @@ public class Scope {
      */
     public List<ProcedureDeclaration> resolveProcedure(Location positionHint,
             ResolvableIdentifier identifier) {
-		List<ProcedureDeclaration> result = new ArrayList<ProcedureDeclaration>();
+        final List<ProcedureDeclaration> result = new ArrayList<ProcedureDeclaration>();
 
+        // important: add current scope's procedures first!
 		if (this.procedures.containsKey(identifier)) {
 			result.addAll(this.procedures.get(identifier));
 		}
@@ -301,6 +310,21 @@ public class Scope {
 			this.members.put(identifier, declaration);
 		}
 	}
+
+    public void define(TypeVariable var, Type type) {
+        this.typeMap.put(var, type);
+    }
+
+    public Type resolve(TypeVariable var) {
+        Type result = this.typeMap.get(var);
+        if (result == null && this.parent != null) {
+            result = this.parent.resolve(var);
+        }
+        if (result == null) {
+            result = var;
+        }
+        return result;
+    }
 
 	/** Associate an identifier with a declaration.
 	 * <p>

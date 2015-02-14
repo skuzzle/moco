@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed.TypeContext;
 
@@ -48,10 +47,9 @@ public class DotBuilder implements Closeable {
         attributeList.add(String.format("Scope: %s", node.getScope()));
         if (node instanceof Typed) {
             final Typed typed = (Typed) node;
-            final Type unique = typed.getType();
             attributeList.add(String.format("Type: %s",
                     typed.isTypeResolved()
-                            ? unique
+                            ? typed.getType()
                             : "unknown"));
 
             for (final TypeContext type : typed.getTypes()) {

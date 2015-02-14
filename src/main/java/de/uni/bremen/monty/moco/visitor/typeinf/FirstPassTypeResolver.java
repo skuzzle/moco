@@ -50,6 +50,7 @@ public class FirstPassTypeResolver extends BaseVisitor {
 
     public FirstPassTypeResolver() {
         this.visited = new HashSet<>();
+        setStopOnFirstError(true);
     }
 
     private boolean shouldVisit(ASTNode node) {
@@ -282,10 +283,6 @@ public class FirstPassTypeResolver extends BaseVisitor {
         // create all possible types given the actual parameter types
         final List<Function> possibleTypes = new ArrayList<>();
         for (final List<Type> signature : signatureTypes) {
-            /*final Type returnType = typeDecl instanceof ClassDeclaration
-                    ? ((ClassDeclaration) typeDecl).getType()
-                    : TypeVariable.createAnonymous(node.getPosition());*/
-
             final Function possibleType = Function.named(node.getIdentifier())
                     .atLocation(node)
                     .returning(TypeVariable.anonymous().atLocation(node).createType())
@@ -294,7 +291,6 @@ public class FirstPassTypeResolver extends BaseVisitor {
 
             possibleTypes.add(possibleType);
         }
-
 
         // Find actual declared functions with the given name
         final Collection<Function> declaredTypes;
@@ -305,8 +301,8 @@ public class FirstPassTypeResolver extends BaseVisitor {
             declaredTypes = resolveTypes(node.getScope(), node.getIdentifier(), node);
         }
 
+        // eliminate all types for which there is no matching declaration
         for (final Function possibleType : possibleTypes) {
-
             for (final Function declaredType : declaredTypes) {
                 final Unification unification = Unification
                         .testIf(declaredType).isA(possibleType);

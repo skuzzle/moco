@@ -89,6 +89,10 @@ public class Function extends Type {
         }
     }
 
+    public static Named anonymous() {
+        return named("<anonymous>");
+    }
+
     public static Named named(String name) {
         if (name == null) {
             throw new IllegalArgumentException("name is null");
@@ -109,6 +113,13 @@ public class Function extends Type {
                 .atLocation(function);
     }
 
+    /**
+     * Converts the given {@link ProcedureDeclaration} or
+     * {@link FunctionDeclaration} into a {@link Function}.
+     *
+     * @param procedure The declaration to convert.
+     * @return The resulting type.
+     */
     public static Function from(ProcedureDeclaration procedure) {
         final List<Type> parameters = new ArrayList<>(procedure.getParameter().size());
         for (final VariableDeclaration decl : procedure.getParameter()) {
