@@ -188,19 +188,21 @@ public class FirstPassTypeResolver extends BaseVisitor {
             scope.addParentClassScope(decl.getScope());
         }
 
-        final List<Type> typeParams = new ArrayList<>(node.getTypeParameters().size());
-        for (final Identifier typeParam : node.getTypeParameters()) {
-            final TypeVariable tv = TypeVariable.named(typeParam)
-                    .atLocation(node)
+        if (!node.isTypeResolved()) {
+            // Types of core classes are already resolved!
+            final List<Type> typeParams = new ArrayList<>(node.getTypeParameters().size());
+            for (final Identifier typeParam : node.getTypeParameters()) {
+                final TypeVariable tv = TypeVariable.named(typeParam)
+                        .atLocation(node)
+                        .createType();
+                typeParams.add(tv);
+            }
+            final ClassType type = ClassType.named(node.getIdentifier())
+                    .withSuperClasses(superTypes)
+                    .addTypeParameters(typeParams)
                     .createType();
-            typeParams.add(tv);
+            node.setType(type);
         }
-        final ClassType type = ClassType.named(node.getIdentifier())
-                .withSuperClasses(superTypes)
-                .addTypeParameters(typeParams)
-                .createType();
-        node.setType(type);
-
         visitDoubleDispatched(node.getBlock());
     }
 

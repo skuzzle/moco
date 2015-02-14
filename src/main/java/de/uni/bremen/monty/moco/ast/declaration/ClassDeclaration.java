@@ -198,6 +198,7 @@ public class ClassDeclaration extends TypeDeclaration {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
+
         for (final TypeInstantiation superClass : this.superClassIdentifiers) {
             visitor.visitDoubleDispatched(superClass);
         }

@@ -1,8 +1,23 @@
-class Ab<Aa, Bb>:
-    pass
+foo():
+    Pair<Int, String> pair := Pair(2, "5")
 
-class Bc inherits Ab<Char, String>:
+class Pair<First, Second>:
+
+    -First t1
+    -Second t2 
+    
+    +initializer(First f, Second s):
+        t1 := f
+        t2 := s
+    
+    +First get1():
+        return t1
+
+    +Second get2():
+        return t2
+
+class Bc inherits Pair<Char, String>:
     pass
     
-class Recursive<Aa> inherits Ab<Aa, String>:
+class Recursive<Aa> inherits Pair<Aa, String>:
     pass

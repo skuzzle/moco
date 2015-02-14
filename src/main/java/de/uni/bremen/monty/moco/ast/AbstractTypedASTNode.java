@@ -152,7 +152,7 @@ public abstract class AbstractTypedASTNode extends BasicASTNode implements Typed
         }
 
         for (final TypeContext ctx : getTypes()) {
-            if (ctx.getType() == type) {
+            if (ctx.getType().equals(type)) {
                 return ctx;
             }
         }
