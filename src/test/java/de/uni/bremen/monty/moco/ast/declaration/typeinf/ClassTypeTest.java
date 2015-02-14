@@ -1,7 +1,6 @@
 package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -21,13 +20,5 @@ public class ClassTypeTest {
         assertEquals(0, this.object.distanceToObject());
         assertEquals(2, this.Int.distanceToObject());
         assertEquals(1, this.foo.distanceToObject());
-    }
-
-    @Test
-    public void testIsA() throws Exception {
-        assertTrue(this.object.isA(this.object));
-        assertTrue(this.number.isA(this.object));
-        assertTrue(this.Int.isA(this.object));
-        assertTrue(this.Int.isA(this.number));
     }
 }

@@ -74,6 +74,7 @@ import de.uni.bremen.monty.moco.antlr.MontyParser.StatementBlockContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.StatementContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.TryStatementContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.TypeContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.TypeListContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.VariableDeclarationContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.WhileStatementContext;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
@@ -82,6 +83,8 @@ import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration.DeclarationType;
+import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
+import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation.Builder;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.CastExpression;
 import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
@@ -184,8 +187,9 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 
         if (ctx.type().typeList() != null) {
             for (final TypeContext t : ctx.type().typeList().type()) {
-                final ResolvableIdentifier ri = ResolvableIdentifier.of(t.getText());
-                decl.addActualTypeArgument(ri);
+                final Builder builder = TypeInstantiation.forTypeName(t.ClassIdentifier().getText());
+                collectTypeArgs(builder, t.typeList());
+                decl.addActualTypeArgument(builder.create());
             }
 
         }
@@ -346,12 +350,27 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		return proc;
 	}
 
+    private void collectTypeArgs(Builder target, TypeListContext listCtx) {
+        if (listCtx == null) {
+            return;
+        }
+        for (final TypeContext typeParam : listCtx.type()) {
+            final Builder subBuilder = TypeInstantiation.forTypeName(typeParam.ClassIdentifier().getText());
+            collectTypeArgs(subBuilder, typeParam.typeList());
+            target.addTypeArgument(subBuilder.create());
+        }
+    }
+
 	@Override
 	public ASTNode visitClassDeclaration(ClassDeclarationContext ctx) {
-		List<ResolvableIdentifier> superClasses = new ArrayList<>();
+        List<TypeInstantiation> superClasses = new ArrayList<>();
 		if (ctx.typeList() != null) {
 			for (TypeContext type : ctx.typeList().type()) {
-				superClasses.add(new ResolvableIdentifier(type.ClassIdentifier().getText()));
+                final Builder builder = TypeInstantiation.forTypeName(type.ClassIdentifier().getText());
+
+                collectTypeArgs(builder, type.typeList());
+
+                superClasses.add(builder.create());
 			}
 		}
 		ClassDeclaration cl =
@@ -359,7 +378,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		                superClasses, new Block(position(ctx.getStart())));
 
         if (ctx.typeParamDeclaration() != null) {
-            for (final TerminalNode param : ctx.typeParamDeclaration().ConstantIdentifier()) {
+            for (final TerminalNode param : ctx.typeParamDeclaration().ClassIdentifier()) {
                 final Identifier id = new Identifier(param.getText());
                 cl.addTypeParameter(id);
             }

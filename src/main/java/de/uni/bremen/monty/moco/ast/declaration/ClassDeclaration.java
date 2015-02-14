@@ -45,7 +45,6 @@ import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.ClassScope;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 /** A ClassDeclaration represents the declaration of a class in the AST.
@@ -54,10 +53,10 @@ import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 public class ClassDeclaration extends TypeDeclaration {
 
 	/** Identifier of superclasses. */
-	private final List<ResolvableIdentifier> superClassIdentifiers = new ArrayList<>();
+    private final List<TypeInstantiation> superClassIdentifiers = new ArrayList<>();
 
 	/** Superclasses. */
-	private final List<TypeDeclaration> superClassDeclarations = new ArrayList<>();
+    private final List<TypeDeclaration> superClassDeclarations = new ArrayList<>();
 
     /** Identifier of type parameters to this declaration */
     private final List<Identifier> typeParameters = new ArrayList<>();
@@ -85,7 +84,8 @@ public class ClassDeclaration extends TypeDeclaration {
 	 *            a list of direct super-classes
 	 * @param block
 	 *            the block */
-	public ClassDeclaration(Position position, Identifier identifier, List<ResolvableIdentifier> superClasses,
+    public ClassDeclaration(Position position, Identifier identifier,
+            List<TypeInstantiation> superClasses,
 	        Block block) {
 		super(position, identifier);
 		this.block = block;
@@ -107,7 +107,7 @@ public class ClassDeclaration extends TypeDeclaration {
     /**
      * Whether this is a generic declaration. That is, there is at least one
      * type parameter.
-     * 
+     *
      * @return Whether this is a generic class.
      */
     public boolean isGeneric() {
@@ -129,7 +129,7 @@ public class ClassDeclaration extends TypeDeclaration {
 	/** Get the list of identifiers of direct superclasses
 	 *
 	 * @return the identifier of superclasses */
-	public List<ResolvableIdentifier> getSuperClassIdentifiers() {
+    public List<TypeInstantiation> getSuperClassIdentifiers() {
 		return this.superClassIdentifiers;
 	}
 
@@ -198,6 +198,9 @@ public class ClassDeclaration extends TypeDeclaration {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
+        for (final TypeInstantiation superClass : this.superClassIdentifiers) {
+            visitor.visitDoubleDispatched(superClass);
+        }
 		visitor.visitDoubleDispatched(this.block);
 	}
 

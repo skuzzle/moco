@@ -72,7 +72,7 @@ final class Unifier {
                 : Unification.failed();
     }
 
-    private boolean unifyInternal(Type m, Type n, Map<TypeVariable, Type> subst) {
+    boolean unifyInternal(Type m, Type n, Map<TypeVariable, Type> subst) {
         final Type s = find(m);
         final Type t = find(n);
 
@@ -80,7 +80,7 @@ final class Unifier {
             final ClassType cts = (ClassType) s;
             final ClassType ctt = (ClassType) t;
 
-            return cts.isA(ctt);
+            return isA(cts, ctt, subst);
         } else if (s == CoreTypes.VOID && t == CoreTypes.VOID) {
             return true;
         } else if (s instanceof Function && t instanceof Function) {
@@ -127,4 +127,35 @@ final class Unifier {
         }
     }
 
+    /**
+     * Defines the subtyping relation between to {@link ClassType ClassTypes}.
+     *
+     * @param is The first type.
+     * @param a The type to check whether the first is an instance of.
+     * @param subst Substitution map.
+     * @return Whether {@code is} is an instance of {@code a}.
+     */
+    private boolean isA(ClassType is, ClassType a, Map<TypeVariable, Type> subst) {
+        if (is == a) {
+            return true;
+        }
+        if (is.getName().equals(a.getName())) {
+
+            assert is.getTypeParameters().size() == a.getTypeParameters().size();
+
+            final Iterator<Type> otherIt = a.getTypeParameters().iterator();
+            for (final Type typeParam : is.getTypeParameters()) {
+                if (!unifyInternal(typeParam, otherIt.next(), subst)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        boolean result = false;
+        for (final ClassType superType : is.getSuperClasses()) {
+            result |= isA(superType, a, subst);
+        }
+        return result;
+    }
 }

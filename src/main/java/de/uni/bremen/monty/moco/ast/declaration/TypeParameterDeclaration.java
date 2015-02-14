@@ -11,7 +11,9 @@ public class TypeParameterDeclaration extends TypeDeclaration {
     }
 
     @Override
-    public void visit(BaseVisitor visitor) {}
+    public void visit(BaseVisitor visitor) {
+        visitor.visit(this);
+    }
 
     @Override
     public void visitChildren(BaseVisitor visitor) {}

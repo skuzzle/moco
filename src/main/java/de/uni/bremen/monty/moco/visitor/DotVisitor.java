@@ -10,12 +10,12 @@ import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.Import;
 import de.uni.bremen.monty.moco.ast.Package;
-import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.CastExpression;
 import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
@@ -103,10 +103,10 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
     @Override
     public void visit(ClassDeclaration node) {
         final StringBuilder superClasses = new StringBuilder();
-        final Iterator<ResolvableIdentifier> names = node.getSuperClassIdentifiers().iterator();
+        final Iterator<TypeInstantiation> names = node.getSuperClassIdentifiers().iterator();
 
         while (names.hasNext()) {
-            superClasses.append(names.next().getSymbol());
+            superClasses.append(names.next().getTypeName().getSymbol());
             if (names.hasNext()) {
                 superClasses.append(", ");
             }

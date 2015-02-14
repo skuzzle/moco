@@ -1,0 +1,15 @@
+foo():
+    Ab<Int, String> a := Ab()
+    Ab<Xy<Int>> b := Ab()
+
+class Ab<Aa, Bb>:
+    pass
+
+class Xy<Aa>:
+    pass
+    
+class Bc inherits Ab<Int, Xy<String>>:
+    pass
+    
+class Foo<Aa> inherits Xy<Aa>:
+    pass

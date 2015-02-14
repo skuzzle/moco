@@ -53,7 +53,7 @@ public class VariableDeclaration extends Declaration implements Typed {
 	}
 
 	private final ResolvableIdentifier typeIdentifier;
-    private final List<ResolvableIdentifier> actualTypeArguments;
+    private final List<TypeInstantiation> actualTypeArguments;
 	private DeclarationType declarationType;
 	private boolean isGlobal;
 
@@ -74,11 +74,11 @@ public class VariableDeclaration extends Declaration implements Typed {
         this.actualTypeArguments = new ArrayList<>();
 	}
 
-    public void addActualTypeArgument(ResolvableIdentifier name) {
+    public void addActualTypeArgument(TypeInstantiation name) {
         this.actualTypeArguments.add(name);
     }
 
-    public List<ResolvableIdentifier> getActualTypeArguments() {
+    public List<TypeInstantiation> getActualTypeArguments() {
         return this.actualTypeArguments;
     }
 

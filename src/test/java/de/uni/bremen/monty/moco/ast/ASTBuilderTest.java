@@ -41,6 +41,7 @@ package de.uni.bremen.monty.moco.ast;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -61,6 +62,7 @@ import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
@@ -74,6 +76,34 @@ import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 public class ASTBuilderTest {
 
     @Test
+    public void testInheritGeneric() throws Exception {
+        final ModuleDeclaration ast = buildASTfrom("genericClass");
+        final ClassDeclaration decl = SearchAST.forNode(ClassDeclaration.class)
+                .where(Predicates.hasName("Bc"))
+                .in(ast)
+                .get();
+
+        assertFalse(decl.isGeneric());
+        final TypeInstantiation superClass = decl.getSuperClassIdentifiers().get(0);
+        assertEquals("Int", superClass.getTypeArguments().get(0).getTypeName().getSymbol());
+        assertEquals("Xy", superClass.getTypeArguments().get(1).getTypeName().getSymbol());
+        assertEquals("String", superClass.getTypeArguments().get(1).getTypeArguments().get(0).getTypeName().getSymbol());
+    }
+
+    @Test
+    public void tesDeeptGenericDeclaration() throws Exception {
+        final ModuleDeclaration ast = buildASTfrom("genericClass");
+        final VariableDeclaration decl = SearchAST.forNode(VariableDeclaration.class)
+                .where(Predicates.hasName("b"))
+                .in(ast)
+                .get();
+
+        assertTrue(decl.hasTypeArguments());
+        assertEquals("Xy", decl.getActualTypeArguments().get(0).getTypeName().getSymbol());
+        assertEquals("Int", decl.getActualTypeArguments().get(0).getTypeArguments().get(0).getTypeName().getSymbol());
+    }
+
+    @Test
     public void testGenericDeclaration() throws Exception {
         final ModuleDeclaration ast = buildASTfrom("genericClass");
         final VariableDeclaration decl = SearchAST.forNode(VariableDeclaration.class)
@@ -82,10 +112,8 @@ public class ASTBuilderTest {
                 .get();
 
         assertTrue(decl.hasTypeArguments());
-        final List<ResolvableIdentifier> expected = Arrays.asList(
-                ResolvableIdentifier.of("Int"),
-                ResolvableIdentifier.of("String"));
-        assertEquals(expected, decl.getActualTypeArguments());
+        assertEquals("Int", decl.getActualTypeArguments().get(0).getTypeName().getSymbol());
+        assertEquals("String", decl.getActualTypeArguments().get(1).getTypeName().getSymbol());
     }
 
     @Test
@@ -98,7 +126,7 @@ public class ASTBuilderTest {
 
         assertTrue("Class is expected to be generic", decl.isGeneric());
         final List<Identifier> expected = Arrays.asList(
-                Identifier.of("A"), Identifier.of("B"));
+                Identifier.of("Aa"), Identifier.of("Bb"));
         assertEquals(expected, decl.getTypeParameters());
     }
 

@@ -45,6 +45,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.CoreTypes;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 
@@ -55,10 +56,11 @@ public class CoreClasses {
 
 	static {
 		// TODO find name for void that is not a valid identifier
-		String[] classNames = new String[] { "Object", "Char", "String", "Int", "Float", "Bool", "Array", "__void" };
+        String[] classNames = new String[] { "Object", "Char", "String", "Int", "Float",
+                "Bool", "Array", "__void" };
 		for (String name : classNames) {
 		    final ClassDeclaration coreClass = new ClassDeclaration(new Position("Dummy_" + name, 0, 0), new Identifier(
-                    name), Collections.<ResolvableIdentifier> emptyList(), new Block(
+                    name), Collections.<TypeInstantiation> emptyList(), new Block(
                     new Position("Dummy_" + name, 1, 0)));
 
             CoreClasses.setCoreClass(name, coreClass);

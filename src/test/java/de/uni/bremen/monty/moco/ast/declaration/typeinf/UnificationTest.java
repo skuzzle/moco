@@ -1,5 +1,7 @@
 package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -9,10 +11,16 @@ import org.junit.Test;
 public class UnificationTest {
 
     private final ClassType Object = ClassType.named("Object").createType();
-    private final ClassType Int = ClassType.named("Int").withSuperClass(this.Object).createType();
+    private final ClassType Number = ClassType.named("Number").withSuperClass(this.Object).createType();
+    private final ClassType Int = ClassType.named("Int").withSuperClass(this.Number).createType();
     private final ClassType String = ClassType.named("String").withSuperClass(this.Object).createType();
     private final Type A = TypeVariable.named("A").createType();
     private final Type B = TypeVariable.named("B").createType();
+    private final ClassType listDecl = ClassType.named("List").withSuperClass(this.Object).addTypeParameter(this.A).createType();
+    private final ClassType intListInst = ClassType.named("List").withSuperClass(this.Object).addTypeParameter(this.Int).createType();
+    private final ClassType stringListInst = ClassType.named("List").withSuperClass(this.Object).addTypeParameter(this.String).createType();
+    private final ClassType numberListInst = ClassType.named("List").withSuperClass(this.Object).addTypeParameter(this.Number).createType();
+    private final ClassType mySubType = ClassType.named("MyList").withSuperClass(this.intListInst).createType();
 
     private final Type objObjToA = Function.named("Object x Object -> A")
             .returning(this.A)
@@ -29,6 +37,38 @@ public class UnificationTest {
             .andParameters(this.A, this.A)
             .createType();
 
+    @Test
+    public void testUnifySubtypingWithIncompatibleParameters() throws Exception {
+        final Unification unification = Unification
+                .testIf(this.numberListInst)
+                .isA(this.stringListInst);
+        assertFalse(unification.isSuccessful());
+    }
+
+    @Test
+    public void testUnifySubtypingInParameterInheritance() throws Exception {
+        final Unification unification = Unification
+                .testIf(this.mySubType)
+                .isA(this.numberListInst);
+        assertTrue(unification.isSuccessful());
+    }
+
+    @Test
+    public void testUnifySubtypingInParameterInheritanceInferType() throws Exception {
+        final Unification unification = Unification
+                .testIf(this.mySubType)
+                .isA(this.listDecl);
+        assertTrue(unification.isSuccessful());
+        assertEquals(this.Int, unification.getSubstitute(this.A));
+    }
+
+    @Test
+    public void testUnifySubtypingInParameters() throws Exception {
+        final Unification unification = Unification
+                .testIf(this.intListInst)
+                .isA(this.numberListInst);
+        assertTrue(unification.isSuccessful());
+    }
 
     @Test
     public void testUnifySubtyping() throws Exception {
@@ -42,9 +82,18 @@ public class UnificationTest {
     }
 
     @Test
+    public void testUnifySubtypingWithParameters() throws Exception {
+        final Unification unification = Unification
+                .testIf(this.intListInst)
+                .isA(this.listDecl);
+        assertTrue(unification.isSuccessful());
+        assertEquals(this.Int, unification.getSubstitute(this.A));
+    }
+
+    @Test
     public void testUnifyFunctions() throws Exception {
-        final Unification unification = Unification.of(this.intIntToB)
-                .with(this.aAToString);
+        final Unification unification = Unification.testIf(this.intIntToB)
+                .isA(this.aAToString);
         assertTrue(unification.isSuccessful());
         assertSame(this.Int, unification.getSubstitute(this.A));
 

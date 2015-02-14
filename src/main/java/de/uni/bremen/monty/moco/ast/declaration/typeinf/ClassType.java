@@ -3,7 +3,9 @@ package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
@@ -15,7 +17,7 @@ public class ClassType extends Type {
         private final String name;
         private Location location;
         private final List<ClassType> superClasses;
-        private final List<TypeVariable> typeParameters;
+        private final List<Type> typeParameters;
 
         private Named(String name) {
             this.name = name;
@@ -32,7 +34,7 @@ public class ClassType extends Type {
             return this;
         }
 
-        public Named addTypeParameter(TypeVariable... var) {
+        public Named addTypeParameter(Type... var) {
             if (var == null) {
                 throw new IllegalArgumentException("var is null");
             }
@@ -40,7 +42,7 @@ public class ClassType extends Type {
             return this;
         }
 
-        public Named addTypeParameters(Collection<TypeVariable> vars) {
+        public Named addTypeParameters(Collection<Type> vars) {
             if (vars == null) {
                 throw new IllegalArgumentException("vars is null");
             }
@@ -100,11 +102,11 @@ public class ClassType extends Type {
     }
 
     private final List<ClassType> superClasses;
-    private final List<TypeVariable> typeParameters;
+    private final List<Type> typeParameters;
     private final int distanceToObject;
 
     ClassType(Identifier name, Position positionHint,
-            List<ClassType> superClasses, List<TypeVariable> typeParameters) {
+            List<ClassType> superClasses, List<Type> typeParameters) {
         super(name, positionHint);
         if (superClasses == null) {
             throw new IllegalArgumentException("superClasses is null");
@@ -135,30 +137,26 @@ public class ClassType extends Type {
     }
 
     @Override
-    Type apply(Unification unification) {
-        return this;
+    ClassType apply(Unification unification) {
+        final List<Type> newTypeParams = new ArrayList<>(this.typeParameters.size());
+        for (final Type param : this.typeParameters) {
+            newTypeParams.add(param.apply(unification));
+        }
+        final List<ClassType> newSuperClasses = new ArrayList<>(this.superClasses.size());
+        for (final ClassType superClass : this.superClasses) {
+            newSuperClasses.add(superClass.apply(unification));
+        }
+        return named(getName())
+                .atLocation(getPosition())
+                .withSuperClasses(newSuperClasses)
+                .addTypeParameters(newTypeParams)
+                .createType();
     }
 
-    /**
-     * Determines whether this type is assignment compatible with the given type
-     * {@code other}. That is, if a declaration has the type {@code other} then
-     * expressions with type {@code this} can be assigned to that declaration.
-     *
-     * @param other The target type to check against.
-     * @return Whether this is type is compatible with other.
-     */
-    public boolean isA(Type other) {
-        if (other == this) {
-            return true;
-        } else if (other instanceof ClassType) {
-            if (getName().equals(other.getName())) {
+    public boolean isTemplate() {
+        for (final Type type : this.typeParameters) {
+            if (type.isVariable()) {
                 return true;
-            }
-
-            for (final ClassType superType : this.superClasses) {
-                if (superType.isA(other)) {
-                    return true;
-                }
             }
         }
         return false;
@@ -168,7 +166,7 @@ public class ClassType extends Type {
         return this.superClasses;
     }
 
-    public List<TypeVariable> getTypeParameters() {
+    public List<Type> getTypeParameters() {
         return this.typeParameters;
     }
 
@@ -178,13 +176,46 @@ public class ClassType extends Type {
     }
 
     @Override
+    public String toString() {
+        final StringBuilder b = new StringBuilder();
+        b.append(getName().toString());
+        if (!this.typeParameters.isEmpty()) {
+            b.append("<");
+            final Iterator<Type> it = this.typeParameters.iterator();
+            while (it.hasNext()) {
+                b.append(it.next());
+                if (it.hasNext()) {
+                    b.append(", ");
+                }
+            }
+            b.append(">");
+        }
+        final List<ClassType> superClassesCopy = new ArrayList<>(this.superClasses);
+        superClassesCopy.remove(CoreTypes.get("Object"));
+        if (!superClassesCopy.isEmpty()) {
+            b.append(" inherits ");
+            final Iterator<ClassType> it = superClassesCopy.iterator();
+            while (it.hasNext()) {
+                b.append(it.next());
+                if (it.hasNext()) {
+                    b.append(", ");
+                }
+            }
+        }
+        return b.toString();
+    }
+
+    @Override
     public int hashCode() {
-        return getName().hashCode();
+        return Objects.hash(getName(), getSuperClasses(), getTypeParameters());
     }
 
     @Override
     public boolean equals(Object obj) {
+        final ClassType other;
         return obj == this || obj instanceof ClassType &&
-                getName().equals(((ClassType) obj).getName());
+                getName().equals((other = (ClassType) obj).getName()) &&
+                getTypeParameters().equals(other.getTypeParameters()) &&
+                getSuperClasses().equals(other.getSuperClasses());
     }
 }

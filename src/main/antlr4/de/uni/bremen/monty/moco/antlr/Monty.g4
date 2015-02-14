@@ -30,7 +30,7 @@ classDeclaration
   ;
 
 typeParamDeclaration
-  : ConstantIdentifier (',' ConstantIdentifier)*
+  : ClassIdentifier (',' ClassIdentifier)*
   ;
   
 memberDeclaration

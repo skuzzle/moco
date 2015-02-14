@@ -1,0 +1,8 @@
+class Ab<Aa, Bb>:
+    pass
+
+class Bc inherits Ab<Char, String>:
+    pass
+    
+class Recursive<Aa> inherits Ab<Aa, String>:
+    pass

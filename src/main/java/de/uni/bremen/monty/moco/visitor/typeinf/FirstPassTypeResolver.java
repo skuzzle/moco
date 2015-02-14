@@ -9,6 +9,7 @@ import java.util.Set;
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.ClassScope;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.Scope;
@@ -18,8 +19,11 @@ import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration.DeclarationType;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
+import de.uni.bremen.monty.moco.ast.declaration.TypeParameterDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType.Named;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
@@ -39,6 +43,7 @@ import de.uni.bremen.monty.moco.ast.expression.literal.IntegerLiteral;
 import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.exception.MontyBaseException;
+import de.uni.bremen.monty.moco.exception.TypeMismatchException;
 import de.uni.bremen.monty.moco.exception.UnknownTypeException;
 import de.uni.bremen.monty.moco.util.ASTUtil;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
@@ -106,6 +111,54 @@ public class FirstPassTypeResolver extends BaseVisitor {
 
     // Declarations
 
+    @Override
+    public void visit(TypeInstantiation node) {
+        if (!shouldVisit(node)) {
+            return;
+        }
+
+        final TypeDeclaration decl = node.getScope().resolveType(node, node.getTypeName());
+        assert decl instanceof TypeParameterDeclaration
+                || decl instanceof ClassDeclaration;
+        visitDoubleDispatched(decl);
+
+        node.setDeclaration(decl);
+
+        if (decl.getType().isVariable() && !node.getTypeArguments().isEmpty()) {
+            throw new TypeMismatchException(node, "Type variables can not be quantified");
+        } else if (decl.getType().isVariable()) {
+            node.setType(decl.getType());
+        } else {
+            final ClassType declType = (ClassType) decl.getType();
+            final Named builder = ClassType
+                    .named(decl.getIdentifier())
+                    .atLocation(decl)
+                    .withSuperClasses(declType.getSuperClasses());
+            super.visit(node);
+            for (final TypeInstantiation child : node.getTypeArguments()) {
+                builder.addTypeParameter(child.getDeclaration().getType());
+            }
+            final ClassType ct = builder.createType();
+            final Unification unification = Unification.testIf(ct).isA(declType);
+            if (unification.isSuccessful()) {
+                node.setType(unification.apply(ct));
+            } else {
+                throw new TypeMismatchException(node, "huh?!");
+            }
+        }
+    }
+
+    @Override
+    public void visit(TypeParameterDeclaration node) {
+        if (!shouldVisit(node)) {
+            return;
+        }
+        final TypeVariable type = TypeVariable
+                .named(node.getIdentifier())
+                .atLocation(node)
+                .createType();
+        node.setType(type);
+    }
 
     @Override
     public void visit(ClassDeclaration node) {
@@ -114,26 +167,37 @@ public class FirstPassTypeResolver extends BaseVisitor {
         }
 
         final ClassScope scope = node.getScope();
+
         final List<ClassType> superTypes = new ArrayList<>(
                 node.getSuperClassIdentifiers().size());
         // Resolve super types first
-        for (final ResolvableIdentifier superTypeName : node.getSuperClassIdentifiers()) {
-            final ClassDeclaration decl = (ClassDeclaration) node.getScope()
-                    .resolveType(node, superTypeName);
+        for (final TypeInstantiation superType : node.getSuperClassIdentifiers()) {
+            visitDoubleDispatched(superType);
+
+            final ClassDeclaration decl = (ClassDeclaration) superType.getDeclaration();
+            assert this.visited.contains(decl);
 
             node.addSuperClassDeclaration(decl);
-            visitDoubleDispatched(decl);
 
             if (!decl.isTypeResolved()) {
+                // this can only be the case if the same node is visited twice
                 throw new MontyBaseException(node, "Cyclic inheritance detected");
             }
 
-            superTypes.add((ClassType) decl.getType());
+            superTypes.add((ClassType) superType.getType());
             scope.addParentClassScope(decl.getScope());
         }
 
+        final List<Type> typeParams = new ArrayList<>(node.getTypeParameters().size());
+        for (final Identifier typeParam : node.getTypeParameters()) {
+            final TypeVariable tv = TypeVariable.named(typeParam)
+                    .atLocation(node)
+                    .createType();
+            typeParams.add(tv);
+        }
         final ClassType type = ClassType.named(node.getIdentifier())
                 .withSuperClasses(superTypes)
+                .addTypeParameters(typeParams)
                 .createType();
         node.setType(type);
 

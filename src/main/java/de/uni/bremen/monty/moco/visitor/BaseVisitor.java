@@ -48,6 +48,8 @@ import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
+import de.uni.bremen.monty.moco.ast.declaration.TypeParameterDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.CastExpression;
 import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
@@ -145,6 +147,28 @@ public class BaseVisitor {
 	}
 
 	// Declaration
+
+    /**
+     * Visitor method to visit a TypeInstantiation.
+     *
+     * @param node the node to visit
+     */
+    public void visit(TypeInstantiation node) {
+        onEnterChildrenEachNode(node);
+        node.visitChildren(this);
+        onExitChildrenEachNode(node);
+    }
+
+    /**
+     * Visitor method to visit a TypeParameterDeclaration.
+     *
+     * @param node the node to visit
+     */
+    public void visit(TypeParameterDeclaration node) {
+        onEnterChildrenEachNode(node);
+        node.visitChildren(this);
+        onExitChildrenEachNode(node);
+    }
 
 	/** Visitor method to visit a ModuleDeclaration.
 	 *
