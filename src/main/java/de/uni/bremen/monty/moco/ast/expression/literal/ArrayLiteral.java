@@ -39,25 +39,27 @@
 
 package de.uni.bremen.monty.moco.ast.expression.literal;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class ArrayLiteral extends Expression {
 
-	private List<Expression> entries;
+	private final List<Expression> entries;
 
 	/** Constructor.
-	 * 
+	 *
 	 * @param position
 	 *            Position of this node
 	 * @param entries */
 	public ArrayLiteral(Position position, ArrayList<Expression> entries) {
 		super(position);
 		this.entries = entries;
+        setType(CoreClasses.arrayType().getType());
 	}
 
 	@Override
@@ -67,12 +69,12 @@ public class ArrayLiteral extends Expression {
 
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
-		for (Expression entry : entries) {
+		for (Expression entry : this.entries) {
 			entry.visit(visitor);
 		}
 	}
 
 	public List<Expression> getEntries() {
-		return entries;
+		return this.entries;
 	}
 }

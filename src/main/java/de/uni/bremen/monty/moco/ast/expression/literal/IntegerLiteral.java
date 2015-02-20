@@ -38,6 +38,7 @@
  */
 package de.uni.bremen.monty.moco.ast.expression.literal;
 
+import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
@@ -45,6 +46,7 @@ public class IntegerLiteral extends LiteralExpression<Integer> {
 
 	public IntegerLiteral(Position position, Integer value) {
 		super(position, value);
+        setType(CoreClasses.intType().getType());
 	}
 
 	@Override
