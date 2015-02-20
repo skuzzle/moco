@@ -191,13 +191,13 @@ public class Scope {
 
             for (final ProcedureDeclaration proc : procedures) {
                 final Function declared = (Function) proc.getType();
-                if (Unification.of(type).with(declared).isSuccessful()) {
+                if (Unification.testIf(type).isA(declared).isSuccessful()) {
                     matches.add(proc);
                 }
             }
 
             if (matches.isEmpty()) {
-                throw new RuntimeException(type.toString());
+                throw new UnknownTypeException(name);
             } else if (matches.size() > 1) {
                 // TODO: best fit
                 throw new RuntimeException();
@@ -206,7 +206,7 @@ public class Scope {
             }
         } else {
             // TODO: proper error handling
-            throw new RuntimeException();
+            throw new RuntimeException(type.toString());
         }
     }
 
@@ -214,7 +214,7 @@ public class Scope {
         return Math.abs(t1.distanceToObject() - t2.distanceToObject());
     }
 
-	            /**
+    /**
      * Resolve an identifier for a declaration.
      * <p>
      * First the declarations of this scope are searched. If the not successful
@@ -225,7 +225,7 @@ public class Scope {
      * message.
      *
      * @param positionHint The node from which the type should be resolved. Will
-     *            be used as position in error message.*
+     *            be used as position in error message.
      * @param identifier the identifier to resolve
      * @return the declaration
      */
@@ -241,7 +241,7 @@ public class Scope {
         throw new UnknownIdentifierException(positionHint, identifier);
 	}
 
-	        /**
+    /**
      * Resolve an identifier for a type declaration.
      *
      * @param positionHint The node from which the type should be resolved. Will
@@ -262,7 +262,7 @@ public class Scope {
 		}
 	}
 
-	    /**
+    /**
      * Resolve an identifier for list of overloaded procedures or functions.
      *
      * @param positionHint The node from which the procedure should be resolved.
@@ -326,15 +326,17 @@ public class Scope {
         return result;
     }
 
-	/** Associate an identifier with a declaration.
-	 * <p>
-	 * This differs from define(Identifier, Declaration) as this method uses the declaration's Identifier-attribute to
-	 * call define(Identifier, Declaration)
-	 *
-	 * @param declaration
-	 *            the declaration
-	 * @throws RedeclarationException
-	 *             if the identifier is already defined or this is invalid overloading */
+	    /**
+     * Associate an identifier with a declaration.
+     * <p>
+     * This differs from define(Identifier, Declaration) as this method uses the
+     * declaration's Identifier-attribute to call define(Identifier,
+     * Declaration)
+     *
+     * @param declaration the declaration
+     * @throws RedeclarationException if the identifier is already defined or
+     *             this is invalid overloading
+     */
 	public void define(Declaration declaration) throws RedeclarationException {
 		define(declaration.getIdentifier(), declaration);
 	}

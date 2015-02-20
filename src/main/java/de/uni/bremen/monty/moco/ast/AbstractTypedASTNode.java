@@ -129,7 +129,6 @@ public abstract class AbstractTypedASTNode extends BasicASTNode implements Typed
             tci.qualification = typeContext.getQualification();
         }
         this.types.add(tci);
-        return;
     }
 
     @Override

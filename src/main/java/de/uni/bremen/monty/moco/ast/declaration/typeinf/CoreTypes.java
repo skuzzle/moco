@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.uni.bremen.monty.moco.ast.Identifier;
-import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 
@@ -12,24 +11,28 @@ public final class CoreTypes {
 
     private CoreTypes() {}
 
-    public static final Type VOID =
-            new Type(new Identifier("$void"), new Position("unknown", 1, 1)) {
+    private static class IdentityType extends Type {
 
-        @Override
-        public boolean isVariable() {
-            return false;
+        protected IdentityType(String name) {
+            super(Identifier.of(name), UNKNOWN_POSITION);
         }
 
         @Override
-        public Type apply(Unification unification) {
-                    return this;
+        public boolean equals(Object obj) {
+            return obj == this;
         }
 
-                @Override
-                public boolean equals(Object obj) {
-                    return obj == VOID;
-                }
-    };
+        @Override
+        Type apply(Unification unification) {
+            return this;
+        }
+    }
+
+    public static final Type TOP = new IdentityType("$top");
+
+    public static final Type BOT = new IdentityType("$bottom");
+
+    public static final Type VOID = new IdentityType("$void");
 
     private static final Map<String, Type> CORE_TYPES;
     static {

@@ -1,12 +1,15 @@
 package de.uni.bremen.monty.moco.ast.declaration;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import de.uni.bremen.monty.moco.ast.AbstractTypedASTNode;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class TypeInstantiation extends AbstractTypedASTNode {
@@ -69,7 +72,7 @@ public class TypeInstantiation extends AbstractTypedASTNode {
             List<TypeInstantiation> typeArguments) {
         super(position);
         this.typeName = typeName;
-        this.typeArguments = typeArguments;
+        this.typeArguments = Collections.unmodifiableList(typeArguments);
     }
 
     public void setDeclaration(TypeDeclaration declaration) {
@@ -86,6 +89,21 @@ public class TypeInstantiation extends AbstractTypedASTNode {
 
     public List<TypeInstantiation> getTypeArguments() {
         return this.typeArguments;
+    }
+
+    @Override
+    public TypeContextBuilder addType(Type type) {
+        throw new UnsupportedOperationException("node can not have multiple types");
+    }
+
+    @Override
+    public void addTypeContext(TypeContext typeContext) {
+        throw new UnsupportedOperationException("node can not have multiple types");
+    }
+
+    @Override
+    public TypeContextBuilder addTypeOf(Typed typed) {
+        throw new UnsupportedOperationException("node can not have multiple types");
     }
 
     @Override

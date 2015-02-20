@@ -18,10 +18,6 @@ public class ShapesTest extends AbstractTypeInferenceTest {
     private ClassType shape;
     private ClassType rectangle;
 
-    public ShapesTest() {
-        super("shapes.monty");
-    }
-
     @Before
     public void setup() {
         this.shape = ClassType.named("Shape").createType();
@@ -31,12 +27,12 @@ public class ShapesTest extends AbstractTypeInferenceTest {
 
     @Test
     public void testConstructorAssignments() throws Exception {
-        final ASTNode root = getTypeCheckedAST();
+        final ASTNode root = getASTFromResource("shapes.monty");
         final VariableDeclaration s1 = searchFor(VariableDeclaration.class)
-                .and(Predicates.hasName("s1"))
+                .where(Predicates.hasName("s1"))
                 .in(root).get();
         final VariableDeclaration s2 = searchFor(VariableDeclaration.class)
-                .and(Predicates.hasName("s2"))
+                .where(Predicates.hasName("s2"))
                 .in(root).get();
 
         assertUniqueTypeIs(ClassType.named("Circle").createType(), s1);
@@ -45,9 +41,9 @@ public class ShapesTest extends AbstractTypeInferenceTest {
 
     @Test
     public void testInferEnclosingRect1() throws Exception {
-        final ASTNode root = getTypeCheckedAST();
+        final ASTNode root = getASTFromResource("shapes.monty");
         final FunctionDeclaration decl = searchFor(FunctionDeclaration.class)
-                .and(Predicates.hasParameters(this.shape, this.shape))
+                .where(Predicates.hasParameters(this.shape, this.shape))
                 .in(root).get();
 
         final Function expected = Function.named("enclosingRect")
@@ -61,9 +57,9 @@ public class ShapesTest extends AbstractTypeInferenceTest {
 
     @Test
     public void testInferEnclosingRect2() throws Exception {
-        final ASTNode root = getTypeCheckedAST();
+        final ASTNode root = getASTFromResource("shapes.monty");
         final FunctionDeclaration decl = searchFor(FunctionDeclaration.class)
-                .and(Predicates.hasParameters(this.circle, this.shape))
+                .where(Predicates.hasParameters(this.circle, this.shape))
                 .in(root).get();
 
         final Function expected = Function.named("enclosingRect")

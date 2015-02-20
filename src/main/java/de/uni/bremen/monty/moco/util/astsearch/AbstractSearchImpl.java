@@ -49,7 +49,7 @@ abstract class AbstractSearchImpl<C extends ASTNode> implements WhereClause<C>,
     }
 
     @Override
-    public InClause<C> where(Searchable<?> subQuery) {
+    public InClause<C> where(SearchClause<?> subQuery) {
         if (subQuery == this) {
             throw new IllegalArgumentException();
         }
@@ -59,7 +59,7 @@ abstract class AbstractSearchImpl<C extends ASTNode> implements WhereClause<C>,
     }
 
     @Override
-    public InClause<C> and(Searchable<?> subQuery) {
+    public InClause<C> and(SearchClause<?> subQuery) {
         return where(subQuery);
     }
 

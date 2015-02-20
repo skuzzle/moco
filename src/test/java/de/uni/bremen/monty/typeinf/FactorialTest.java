@@ -13,15 +13,11 @@ import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 
 public class FactorialTest extends AbstractTypeInferenceTest {
 
-    public FactorialTest() {
-        super("factorial.monty");
-    }
-
     @Test
     public void testInferCallType() throws Exception {
-        final ASTNode root = getTypeCheckedAST();
+        final ASTNode root = getASTFromResource("factorial.monty");
         final VariableDeclaration decl = searchFor(VariableDeclaration.class)
-                .and(Predicates.hasName("x"))
+                .where(Predicates.hasName("x"))
                 .in(root)
                 .get();
 
@@ -30,9 +26,9 @@ public class FactorialTest extends AbstractTypeInferenceTest {
 
     @Test
     public void testExplicitTargetType() throws Exception {
-        final ASTNode root = getTypeCheckedAST();
+        final ASTNode root = getASTFromResource("factorial.monty");
         final VariableDeclaration decl = searchFor(VariableDeclaration.class)
-                .and(Predicates.hasName("y"))
+                .where(Predicates.hasName("y"))
                 .in(root)
                 .get();
 
@@ -41,9 +37,9 @@ public class FactorialTest extends AbstractTypeInferenceTest {
 
     @Test
     public void testInferReturnType() throws Exception {
-        final ASTNode root = getTypeCheckedAST();
+        final ASTNode root = getASTFromResource("factorial.monty");
         final FunctionDeclaration decl = searchFor(FunctionDeclaration.class)
-                .and(Predicates.hasName("fak"))
+                .where(Predicates.hasName("fak"))
                 .in(root)
                 .get();
 

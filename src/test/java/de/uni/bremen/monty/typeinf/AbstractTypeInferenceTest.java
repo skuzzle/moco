@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.function.Consumer;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.AbstractTypedASTNode;
@@ -16,10 +17,11 @@ import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.exception.MontyBaseException;
+import de.uni.bremen.monty.moco.util.CodeStringBuilder;
 import de.uni.bremen.monty.moco.util.Params;
 import de.uni.bremen.monty.moco.util.astsearch.InClause;
-import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
+import de.uni.bremen.monty.moco.util.astsearch.WhereClause;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 import de.uni.bremen.monty.moco.visitor.DeclarationVisitor;
 import de.uni.bremen.monty.moco.visitor.DotVisitor;
@@ -33,12 +35,6 @@ public class AbstractTypeInferenceTest {
     private static final String TEST_DIR = "testTypeInference/";
 
     private static final String DOT_OUT_PUT = "target/dot/type-inf/";
-
-    private final String testFileName;
-
-    protected AbstractTypeInferenceTest(String testFileName) {
-        this.testFileName = testFileName;
-    }
 
     /**
      * Asserts that the given node's unique type is equal to the given expected
@@ -72,24 +68,44 @@ public class AbstractTypeInferenceTest {
      * @param type Type of the node to search for. Also matches sub types.
      * @return A {@link InClause} for specializing the search.
      */
-    protected <C extends ASTNode> InClause<C> searchFor(Class<C> type) {
-        return SearchAST.forNode(type).where(Predicates.inFile(this.testFileName));
+    protected <C extends ASTNode> WhereClause<C> searchFor(Class<C> type) {
+        return SearchAST.forNode(type);
     }
 
-    public ASTNode getTypeCheckedAST() throws Exception {
-        return getTypeCheckedAST(this.testFileName);
+    /**
+     * Creates an AST by parsing the given {@code code}.
+     *
+     * @param testFileName Name for the generated dot file.
+     * @param code The code to parse.
+     * @return Root of the AST.
+     * @throws Exception
+     */
+    protected ASTNode getASTFromString(String testFileName, String code) throws Exception {
+        final Params params = new Params();
+        params.setInputCode(code);
+        return createAST(testFileName, params);
     }
 
-    private ASTNode getTypeCheckedAST(String fileName) throws Exception {
+    protected ASTNode getASTFromString(String testFileName,
+            Consumer<CodeStringBuilder> code) throws Exception {
+        final CodeStringBuilder csb = new CodeStringBuilder();
+        code.accept(csb);
+        return getASTFromString(testFileName, csb.toString());
+    }
+
+    protected ASTNode getASTFromResource(String fileName) throws Exception {
         final File file = asFile(fileName);
         final File inputFolder = file.getParentFile();
         final Params params = new Params();
         params.setInputFile(file.getAbsolutePath());
         params.setInputFolder(inputFolder.getAbsolutePath());
+        return createAST(fileName, params);
+    }
 
+    private ASTNode createAST(String testFilename, Params params) throws Exception {
         final PackageBuilder builder = new PackageBuilder(params);
         final Package mainPackage = builder.buildPackage();
-        executeVisitorChain(fileName, mainPackage);
+        executeVisitorChain(testFilename, mainPackage);
         return mainPackage;
     }
 
@@ -101,20 +117,31 @@ public class AbstractTypeInferenceTest {
                 new FirstPassTypeResolver(),
                 new SecondPassTypeResolver()
         };
+        Exception error = null;
         for (final BaseVisitor bv : visitors) {
             try {
                 bv.setStopOnFirstError(true);
                 bv.visitDoubleDispatched(root);
-            } catch (MontyBaseException e) {
-                final Position pos = e.getLocation() != null
-                        ? e.getLocation().getPosition()
-                        : AbstractTypedASTNode.UNKNOWN_POSITION;
+            } catch (Exception e) {
+                final Position pos;
+                if (e instanceof MontyBaseException) {
+                    final MontyBaseException mbe = (MontyBaseException) e;
+                    pos = mbe.getLocation() != null
+                            ? mbe.getLocation().getPosition()
+                            : AbstractTypedASTNode.UNKNOWN_POSITION;
+                } else {
+                    pos = AbstractTypedASTNode.UNKNOWN_POSITION;
+                }
                 final String message = pos + " :\n"
                         + e.getMessage();
-                throw new Exception(message, e);
+                error = new Exception(message, e);
+                break;
             }
         }
         writeDotFile(testFileName, root);
+        if (error != null) {
+            throw error;
+        }
     }
 
     private void writeDotFile(String testFileName, ASTNode root) throws IOException {

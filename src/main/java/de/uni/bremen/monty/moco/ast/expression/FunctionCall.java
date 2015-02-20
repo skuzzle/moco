@@ -41,21 +41,27 @@ package de.uni.bremen.monty.moco.ast.expression;
 import java.util.List;
 
 import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.NamedNode;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
-public class FunctionCall extends Expression implements Statement {
+public class FunctionCall extends Expression implements Statement, NamedNode {
 	private final ResolvableIdentifier identifier;
 	private final List<Expression> arguments;
 	private ProcedureDeclaration declaration;
     private List<List<Type>> signatureTypes;
-    private boolean constructorCall;
 
-	public FunctionCall(Position position, ResolvableIdentifier identifier, List<Expression> arguments) {
+    /** Type declaration of the type of which this is a constructor call */
+    private ClassDeclaration constructorType;
+
+    public FunctionCall(Position position, ResolvableIdentifier identifier,
+            List<Expression> arguments) {
 		super(position);
 		this.identifier = identifier;
 		this.arguments = arguments;
@@ -81,18 +87,43 @@ public class FunctionCall extends Expression implements Statement {
         return this.signatureTypes;
     }
 
-    public void setConstructorCall(boolean constructorCall) {
-        this.constructorCall = constructorCall;
+    /**
+     * If the given {@code constructorType} is not null, this call will be
+     * treated as a call of a constructor of the given type.
+     *
+     * @param constructorType The type that this call is a constructor call for,
+     *            or <code>null</code> if this is a regular function call.
+     */
+    public void setConstructorCall(TypeDeclaration constructorType) {
+        if (constructorType != null && !(constructorType instanceof ClassDeclaration)) {
+            throw new IllegalArgumentException("ClassDeclaration expected");
+        }
+        this.constructorType = (ClassDeclaration) constructorType;
     }
 
+    public ClassDeclaration getConstructorType() {
+        if (!isConstructorCall()) {
+            throw new IllegalStateException("this is not a constructor call");
+        }
+        return this.constructorType;
+    }
+
+    /**
+     * Whether this is a constructor call. If <code>true</code>,
+     * {@link #getConstructorType()} gets the {@link ClassDeclaration} for which
+     * this is a constructor.
+     *
+     * @return <code>true</code> if this is a constructor call.
+     */
     public boolean isConstructorCall() {
-        return this.constructorCall;
+        return this.constructorType != null;
     }
 
 	/** get the identifier.
 	 *
 	 * @return the identifier */
-	public ResolvableIdentifier getIdentifier() {
+	@Override
+    public ResolvableIdentifier getIdentifier() {
 		return this.identifier;
 	}
 

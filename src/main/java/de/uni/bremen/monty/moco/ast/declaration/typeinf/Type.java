@@ -48,7 +48,45 @@ public abstract class Type implements Location {
      *
      * @return Whether this is a type variable.
      */
-    public abstract boolean isVariable();
+    public boolean isVariable() {
+        return this instanceof TypeVariable;
+    }
+
+    /**
+     * Whether this is a {@link ClassType}.
+     *
+     * @return Whether this is a {@link ClassType}.
+     */
+    public boolean isClass() {
+        return this instanceof ClassType;
+    }
+
+    /**
+     * Convenience method for casting this type to {@link ClassType}.
+     *
+     * @return This, casted to {@link ClassType}.
+     */
+    public ClassType asClass() {
+        return (ClassType) this;
+    }
+
+    /**
+     * Whether this is a {@link Function}.
+     *
+     * @return Whether this is a {@link Function}.
+     */
+    public boolean isFunction() {
+        return this instanceof Function;
+    }
+
+    /**
+     * Convenience method for casting this type to {@link Function}.
+     *
+     * @return This, casted to {@link Function}.
+     */
+    public Function asFunction() {
+        return (Function) this;
+    }
 
     abstract Type apply(Unification unification);
 

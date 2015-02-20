@@ -1,0 +1,48 @@
+package de.uni.bremen.monty.typeinf;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
+
+import de.uni.bremen.monty.moco.ast.ASTNode;
+import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.CoreTypes;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
+import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
+import de.uni.bremen.monty.moco.util.astsearch.Predicates;
+
+public class ConstructorCallTest extends AbstractTypeInferenceTest {
+
+    @Test
+    public void testAssignCtorCallToDeclaration() throws Exception {
+        final ASTNode root = getASTFromString("testAssignCtorCallToDeclaration.monty",
+                code -> code
+                .append("class Circle:").indent()
+                .append("pass")
+                .dedent()
+                .append("test():").indent()
+                        .append("? var := Circle()"));
+
+        final VariableDeclaration decl = searchFor(VariableDeclaration.class)
+                .where(Predicates.hasName("var"))
+                .in(root).get();
+
+        final FunctionCall call = searchFor(FunctionCall.class)
+                .where(Predicates.hasName("Circle"))
+                .in(root).get();
+
+        final ClassType object = (ClassType) CoreTypes.get("Object");
+        final Type circle = ClassType.named("Circle").withSuperClass(object).createType();
+        final Type expectedCallDeclType = Function.named("initializer")
+                .returning(circle)
+                .createType();
+
+        assertTrue(call.isConstructorCall());
+        assertEquals(circle, call.getType());
+        assertEquals(expectedCallDeclType, call.getDeclaration().getType());
+        assertEquals(circle, decl.getType());
+    }
+}

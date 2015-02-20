@@ -22,6 +22,7 @@ public class Function extends Type {
         private final Location location;
         private final Type returnType;
         private final List<Type> parameters;
+        private final List<TypeVariable> quantification;
 
         private Returning(String name, Location location, Type returnType) {
             super();
@@ -29,10 +30,35 @@ public class Function extends Type {
             this.location = location;
             this.returnType = returnType;
             this.parameters = new ArrayList<>();
+            this.quantification = new ArrayList<>();
+        }
+
+        public Returning quantifiedBy(TypeVariable... types) {
+            if (types == null) {
+                throw new IllegalArgumentException("types is null");
+            }
+            return quantifiedBy(Arrays.asList(types));
+        }
+
+        public Returning quantifiedBy(List<TypeVariable> types) {
+            if (types == null) {
+                throw new IllegalArgumentException("types is null");
+            }
+            this.quantification.addAll(types);
+            return this;
         }
 
         public Returning andParameter(Type type) {
             return andParameters(type);
+        }
+
+        public Returning andParameters(Product product) {
+            if (product == null) {
+                throw new IllegalArgumentException("product is null");
+            } else if (!this.parameters.isEmpty()) {
+                throw new IllegalArgumentException("other types than product present");
+            }
+            return andParameters(product.getComponents());
         }
 
         public Returning andParameters(Type... types) {
@@ -40,13 +66,17 @@ public class Function extends Type {
                 throw new IllegalArgumentException("types is null");
             }
 
-            this.parameters.addAll(Arrays.asList(types));
-            return this;
+            return andParameters(Arrays.asList(types));
         }
 
         public Returning andParameters(List<Type> types) {
             if (types == null) {
                 throw new IllegalArgumentException("types is null");
+            }
+            for (final Type type : types) {
+                if (type instanceof Product) {
+                    throw new IllegalArgumentException("can not add nested product type");
+                }
             }
             this.parameters.addAll(types);
             return this;
@@ -55,7 +85,7 @@ public class Function extends Type {
         public Function createType() {
             final Identifier id = new Identifier(this.name);
             return new Function(this.location.getPosition(), id,
-                    this.returnType, this.parameters);
+                    this.returnType, this.parameters, this.quantification);
         }
     }
 
@@ -136,36 +166,37 @@ public class Function extends Type {
     }
 
     private final Type returnType;
-    private final List<Type> parameterTypes;
+    private final Product parameterTypes;
+    private final List<TypeVariable> quantification;
 
     private Function(Position position, Identifier identifier,
-            Type returnType, List<Type> parameterTypes) {
+            Type returnType, List<Type> parameterTypes, List<TypeVariable> quantification) {
         super(identifier, position);
         this.returnType = returnType;
-        this.parameterTypes = parameterTypes;
+        this.parameterTypes = Product.of(parameterTypes).createType();
+        this.quantification = Collections.unmodifiableList(quantification);
     }
 
     public Type getReturnType() {
         return this.returnType;
     }
 
-    public List<Type> getParameterTypes() {
-        return Collections.unmodifiableList(this.parameterTypes);
+    public Product getParameters() {
+        return this.parameterTypes;
     }
 
-    @Override
-    public boolean isVariable() {
-        return false;
+    public List<Type> getParameterTypes() {
+        return this.parameterTypes.getComponents();
+    }
+
+    public List<TypeVariable> getQuantification() {
+        return this.quantification;
     }
 
     @Override
     Function apply(Unification unification) {
-        final Type newReturnType = unification.getSubstitute(this.returnType);
-        final List<Type> newParameters = new ArrayList<>(this.parameterTypes.size());
-        for (final Type parameterType : this.parameterTypes) {
-            final Type newParameterType = parameterType.apply(unification);
-            newParameters.add(newParameterType);
-        }
+        final Type newReturnType = this.returnType.apply(unification);
+        final Product newParameters = this.parameterTypes.apply(unification);
         return Function
                 .from(this)
                 .returning(newReturnType)

@@ -69,7 +69,7 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 	 * @param returnTypeIdentifier
 	 *            the return returnType */
 	public FunctionDeclaration(Position position, Identifier identifier, Block body,
-	        List<VariableDeclaration> parameter, ProcedureDeclaration.DeclarationType declarationType,
+            List<VariableDeclaration> parameter, DeclarationType declarationType,
 	        ResolvableIdentifier returnTypeIdentifier) {
 		super(position, identifier, body, parameter, declarationType);
 		this.returnTypeIdentifier = returnTypeIdentifier;
@@ -77,7 +77,8 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 
 	public FunctionDeclaration(Position position, Identifier identifier, Block body,
 	        List<VariableDeclaration> parameter, ResolvableIdentifier returnTypeIdentifier) {
-		this(position, identifier, body, parameter, ProcedureDeclaration.DeclarationType.UNBOUND, returnTypeIdentifier);
+        this(position, identifier, body, parameter, DeclarationType.UNBOUND,
+                returnTypeIdentifier);
 	}
 
 	/** get the return returnType.
@@ -111,23 +112,5 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 	 * @param returnType */
     public void setReturnType(Type returnType) {
 		this.returnType = returnType;
-	}
-
-	/** Check equality of two types taking into account the AST object hierachy.
-	 * <p>
-	 *
-	 * @param other
-	 *            the other TypeDeclaration to check against
-	 * @return if equal */
-	@Override
-	public boolean matchesType(TypeDeclaration other) {
-		if (!super.matchesType(other)) {
-			return false;
-		}
-		if (!(other instanceof FunctionDeclaration)) {
-			return true;
-		}
-		FunctionDeclaration function = (FunctionDeclaration) other;
-		return this.returnType.matchesType(function.getReturnType());
 	}
 }

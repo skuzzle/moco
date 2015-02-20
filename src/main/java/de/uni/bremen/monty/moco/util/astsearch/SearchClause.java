@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
 
-public interface Searchable<C extends ASTNode> {
+public interface SearchClause<C extends ASTNode> {
 
     public Optional<C> in(ASTNode root);
 }

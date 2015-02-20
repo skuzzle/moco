@@ -2,20 +2,16 @@ package de.uni.bremen.monty.moco.visitor.typeinf;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
-import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
-import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
-import de.uni.bremen.monty.moco.ast.Scope;
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed.TypeContext;
@@ -23,26 +19,16 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
+import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.exception.MontyBaseException;
 import de.uni.bremen.monty.moco.exception.TypeMismatchException;
+import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 import de.uni.bremen.monty.moco.util.ASTUtil;
-import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
-public class SecondPassTypeResolver extends BaseVisitor {
-
-    private final Set<ASTNode> visited;
-
-    public SecondPassTypeResolver() {
-        this.visited = new HashSet<>();
-        setStopOnFirstError(true);
-    }
-
-    private boolean shouldVisit(ASTNode node) {
-        return this.visited.add(node);
-    }
+public class SecondPassTypeResolver extends AbstractTypeResolver {
 
     // Declarations
 
@@ -79,6 +65,13 @@ public class SecondPassTypeResolver extends BaseVisitor {
         node.getBody().visit(this);
     }
 
+    @Override
+    public void visit(VariableDeclaration node) {
+        if (!shouldVisit(node)) {
+            return;
+        }
+    }
+
 
     // Expressions
 
@@ -104,6 +97,24 @@ public class SecondPassTypeResolver extends BaseVisitor {
     }
 
     @Override
+    public void visit(VariableAccess node) {
+        if (!shouldVisit(node)) {
+            return;
+        }
+        if (!node.isTypeResolved()) {
+            throw new TypeMismatchException(node, "Could not infer unique type among "
+                    + node.getTypes());
+        }
+        final Unification unification = Unification
+                .testIf(node.getType())
+                .isA(node.getDeclaration().getType());
+        assert unification.isSuccessful();
+        node.getDeclaration().setType(unification.apply(node.getType()));
+
+        super.visit(node);
+    }
+
+    @Override
     public void visit(FunctionCall node) {
         if (!shouldVisit(node)) {
             return;
@@ -113,19 +124,27 @@ public class SecondPassTypeResolver extends BaseVisitor {
 
         // find candidates with resolved return type
         final List<Function> candidates = new ArrayList<>(node.getSignatureTypes().size());
+
+        final ResolvableIdentifier functionName;
         final Collection<Function> lhsTypes;
         if (node.isConstructorCall()) {
-            final TypeDeclaration typeDecl = node.getScope().resolveType(node,
-                    node.getIdentifier());
-            lhsTypes = resolveTypes(typeDecl.getScope(),
-                    new ResolvableIdentifier("initializer"), node);
+            // Note: Good thing is, constructor calls do always have a
+            // determinable unique type
+
+            functionName = ResolvableIdentifier.of("initializer");
+            // Get the declaration of the type
+            final ClassDeclaration typeDecl = node.getConstructorType();
+            // Get all constructors
+            lhsTypes = resolveConstructorTypes(typeDecl, node);
         } else {
-            lhsTypes = resolveTypes(node.getScope(), node.getIdentifier(), node);
+            functionName = node.getIdentifier();
+            lhsTypes = resolveTypes(node.getScope(), functionName, node);
         }
+
 
         for (final List<Type> signature : node.getSignatureTypes()) {
             for (final TypeContext retType : node.getTypes()) {
-                final Function func = Function.named(node.getIdentifier())
+                final Function func = Function.named(functionName)
                         .atLocation(node)
                         .returning(retType.getType())
                         .andParameters(signature)
@@ -143,7 +162,13 @@ public class SecondPassTypeResolver extends BaseVisitor {
         }
         if (candidates.size() == 1) {
             final Function candidate = candidates.get(0);
-            final ProcedureDeclaration decl = (ProcedureDeclaration) node.getScope().resolveFromType(candidate);
+            final ProcedureDeclaration decl;
+            if (node.isConstructorCall()) {
+                decl = resolveConstructorDeclarationfromType(candidate,
+                        node.getConstructorType());
+            } else {
+                decl = (ProcedureDeclaration) node.getScope().resolveFromType(candidate);
+            }
             visitDoubleDispatched(decl);
             node.setDeclaration(decl);
 
@@ -157,25 +182,13 @@ public class SecondPassTypeResolver extends BaseVisitor {
         }
     }
 
-    /**
-     * Resolves all possible types of the given call.
-     *
-     * @param call The call.
-     * @return Collection of function types.
-     */
-    private Collection<Function> resolveTypes(Scope scope,
-            ResolvableIdentifier identifier, Location location) {
-        final List<ProcedureDeclaration> declarations = scope.resolveProcedure(location,
-                identifier);
-        final List<Function> result = new ArrayList<>(declarations.size());
-
-        for (final ProcedureDeclaration decl : declarations) {
-            // ensure that declaration's type has been resolved
-            visitDoubleDispatched(decl);
-
-            result.add((Function) decl.getType());
+    private ProcedureDeclaration resolveConstructorDeclarationfromType(Function type,
+            ClassDeclaration classType) {
+        try {
+            return (ProcedureDeclaration) classType.getScope().resolveFromType(type);
+        } catch (UnknownIdentifierException e) {
+            return classType.getDefaultInitializer();
         }
-        return result;
     }
 
     @Override

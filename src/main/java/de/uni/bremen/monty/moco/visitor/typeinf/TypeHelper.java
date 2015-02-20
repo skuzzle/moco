@@ -1,13 +1,17 @@
 package de.uni.bremen.monty.moco.visitor.typeinf;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed.TypeContext;
+import de.uni.bremen.monty.moco.ast.expression.Expression;
 
 /**
  * Provides static helper methods to operate with {@link Type Types}.
@@ -68,6 +72,52 @@ public final class TypeHelper {
                 traverseSuperTypes(parent, types);
             }
         }
+    }
+
+    /**
+     * Creates the cartesian product of all possible signature types.
+     *
+     * @param actual The actual signature of a call.
+     * @return Cartesian product of all types.
+     */
+    public static List<List<Type>> signatureTypes(List<Expression> actual) {
+        final List<List<Type>> parameterTypes = new ArrayList<>(actual.size());
+        for (final Expression parameter : actual) {
+            final List<Type> types = new ArrayList<>();
+            for (final TypeContext ctx : parameter.getTypes()) {
+                types.add(ctx.getType());
+            }
+            parameterTypes.add(types);
+        }
+        return cartesianProduct(parameterTypes);
+    }
+
+    /**
+     * Create the Cartesian product of given lists.
+     *
+     * @param lists The list to create the products of.
+     * @return The Cartesian product.
+     */
+    private static <T> List<List<T>> cartesianProduct(List<List<T>> lists) {
+        final List<List<T>> resultLists = new ArrayList<List<T>>();
+        if (lists.size() == 0) {
+            resultLists.add(new ArrayList<T>());
+            return resultLists;
+        } else {
+            final List<T> firstList = lists.get(0);
+            final List<List<T>> remainingLists = cartesianProduct(
+                    lists.subList(1, lists.size()));
+
+            for (T condition : firstList) {
+                for (List<T> remainingList : remainingLists) {
+                    ArrayList<T> resultList = new ArrayList<T>();
+                    resultList.add(condition);
+                    resultList.addAll(remainingList);
+                    resultLists.add(resultList);
+                }
+            }
+        }
+        return resultLists;
     }
 
     /*public static Function bestFit(List<Type> signature, List<Function> candidates) {

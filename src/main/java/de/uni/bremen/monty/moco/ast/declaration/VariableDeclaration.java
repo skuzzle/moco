@@ -38,12 +38,8 @@
  */
 package de.uni.bremen.monty.moco.ast.declaration;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
@@ -52,39 +48,27 @@ public class VariableDeclaration extends Declaration implements Typed {
         VARIABLE, PARAMETER, ATTRIBUTE, RETURN
 	}
 
-	private final ResolvableIdentifier typeIdentifier;
-    private final List<TypeInstantiation> actualTypeArguments;
+    private final TypeInstantiation typeIdentifier;
 	private DeclarationType declarationType;
 	private boolean isGlobal;
 
 	/* Index of the variable if it is an attribute in the class struct */
 	private int attributeIndex;
 
-	public VariableDeclaration(Position position, Identifier identifier, ResolvableIdentifier typeIdentifier,
+    public VariableDeclaration(Position position, Identifier identifier,
+            TypeInstantiation typeIdentifier,
 	        DeclarationType declarationType) {
 		this(position, identifier, typeIdentifier);
 		this.declarationType = declarationType;
 	}
 
-	public VariableDeclaration(Position position, Identifier identifier, ResolvableIdentifier typeIdentifier) {
+    public VariableDeclaration(Position position, Identifier identifier,
+            TypeInstantiation typeIdentifier) {
 		super(position, identifier);
 		this.typeIdentifier = typeIdentifier;
 		this.declarationType = DeclarationType.VARIABLE;
 		this.attributeIndex = -1;
-        this.actualTypeArguments = new ArrayList<>();
 	}
-
-    public void addActualTypeArgument(TypeInstantiation name) {
-        this.actualTypeArguments.add(name);
-    }
-
-    public List<TypeInstantiation> getActualTypeArguments() {
-        return this.actualTypeArguments;
-    }
-
-    public boolean hasTypeArguments() {
-        return !this.actualTypeArguments.isEmpty();
-    }
 
 	/** set the declaration type */
 	public void setDeclarationType(DeclarationType type) {
@@ -113,7 +97,7 @@ public class VariableDeclaration extends Declaration implements Typed {
 	/** get the identifier of the type.
 	 *
 	 * @return the type identifier */
-	public ResolvableIdentifier getTypeIdentifier() {
+    public TypeInstantiation getTypeIdentifier() {
 		return this.typeIdentifier;
 	}
 
@@ -151,6 +135,7 @@ public class VariableDeclaration extends Declaration implements Typed {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
+        this.typeIdentifier.visit(visitor);
 	}
 
 }

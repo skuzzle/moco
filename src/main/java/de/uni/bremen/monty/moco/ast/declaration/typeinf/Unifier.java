@@ -72,17 +72,20 @@ final class Unifier {
                 : Unification.failed();
     }
 
-    boolean unifyInternal(Type m, Type n, Map<TypeVariable, Type> subst) {
+    private boolean unifyInternal(Type m, Type n, Map<TypeVariable, Type> subst) {
         final Type s = find(m);
         final Type t = find(n);
 
-        if (s instanceof ClassType && t instanceof ClassType) {
+        // checking if s isA t
+        if (s == t || t == CoreTypes.TOP || s == CoreTypes.BOT) {
+            // everything isA TOP, BOT isA everything
+            // this also covers the case that both types are VOID
+            return true;
+        } else if (s instanceof ClassType && t instanceof ClassType) {
             final ClassType cts = (ClassType) s;
             final ClassType ctt = (ClassType) t;
 
             return isA(cts, ctt, subst);
-        } else if (s == CoreTypes.VOID && t == CoreTypes.VOID) {
-            return true;
         } else if (s instanceof Function && t instanceof Function) {
             union(s, t, subst);
             final Function fs = (Function) s;
@@ -138,8 +141,7 @@ final class Unifier {
     private boolean isA(ClassType is, ClassType a, Map<TypeVariable, Type> subst) {
         if (is == a) {
             return true;
-        }
-        if (is.getName().equals(a.getName())) {
+        } else if (is.getName().equals(a.getName())) {
 
             assert is.getTypeParameters().size() == a.getTypeParameters().size();
 

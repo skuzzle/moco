@@ -23,13 +23,29 @@ public final class SearchAST {
      * @return A Stream of nodes.
      */
     public static Stream<ASTNode> stream(ASTNode root) {
-        final Iterator<ASTNode> nodeIterator = new SteppingVisitor(root);
+        if (root == null) {
+            throw new IllegalArgumentException("root is null");
+        }
+
+        final Iterator<ASTNode> nodeIterator = SteppingVisitor.depthFirst(root);
         final Spliterator<ASTNode> splitIt = Spliterators.spliterator(nodeIterator,
                 Long.MAX_VALUE, Spliterator.NONNULL);
         return StreamSupport.stream(splitIt, false);
     }
 
+    /**
+     * Creates a sequential {@link Stream} for processing the parents of the
+     * given {@code root} node. Note: the first element in the stream is the
+     * given node itself.
+     *
+     * @param root The root node.
+     * @return A Stream of nodes.
+     */
     public static Stream<ASTNode> parentStream(ASTNode root) {
+        if (root == null) {
+            throw new IllegalArgumentException("root is null");
+        }
+
         final Iterator<ASTNode> nodeIterator = new ParentIterator(root);
         final Spliterator<ASTNode> splitIt = Spliterators.spliterator(nodeIterator,
                 Long.MAX_VALUE, Spliterator.NONNULL);

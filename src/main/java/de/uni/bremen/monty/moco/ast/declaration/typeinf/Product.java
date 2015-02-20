@@ -69,11 +69,11 @@ public class Product extends Type {
 
     private Product(Identifier name, Position positionHint, List<Type> components) {
         super(name, positionHint);
-        this.components = components;
+        this.components = Collections.unmodifiableList(components);
     }
 
     public List<Type> getComponents() {
-        return Collections.unmodifiableList(this.components);
+        return this.components;
     }
 
     @Override
@@ -82,10 +82,10 @@ public class Product extends Type {
     }
 
     @Override
-    Type apply(Unification unification) {
+    Product apply(Unification unification) {
         final List<Type> resultComponents = new ArrayList<>(this.components.size());
         for (final Type type : this.components) {
-            resultComponents.add(unification.apply(type));
+            resultComponents.add(type.apply(unification));
         }
         return of(resultComponents).atLocation(this).createType();
     }

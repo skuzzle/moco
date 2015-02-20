@@ -174,26 +174,23 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 
 	@Override
 	public ASTNode visitVariableDeclaration(@NotNull VariableDeclarationContext ctx) {
-		final String typeName;
-		if (ctx.type().ClassIdentifier() == null) {
-            typeName = "?";
-		} else {
-			typeName = ctx.type().ClassIdentifier().toString();
-		}
-		ResolvableIdentifier type = new ResolvableIdentifier(typeName);
+        final String typeName = getTypeName(ctx.type());
+        final Builder builder = TypeInstantiation.forTypeName(typeName);
+        collectTypeArgs(builder, ctx.type().typeList());
+
         final VariableDeclaration decl = new VariableDeclaration(
-                position(ctx.getStart()), new Identifier(getText(ctx.Identifier())), type,
-		        this.currentVariableContext);
-
-        if (ctx.type().typeList() != null) {
-            for (final TypeContext t : ctx.type().typeList().type()) {
-                final Builder builder = TypeInstantiation.forTypeName(t.ClassIdentifier().getText());
-                collectTypeArgs(builder, t.typeList());
-                decl.addActualTypeArgument(builder.create());
-            }
-
-        }
+                position(ctx.getStart()), new Identifier(getText(ctx.Identifier())),
+                builder.create(),
+                this.currentVariableContext);
         return decl;
+	}
+
+    private String getTypeName(TypeContext tc) {
+        if (tc.ClassIdentifier() == null) {
+	        return "?";
+	    } else {
+	        return tc.ClassIdentifier().toString();
+	    }
 	}
 
 	@Override
@@ -355,7 +352,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
             return;
         }
         for (final TypeContext typeParam : listCtx.type()) {
-            final Builder subBuilder = TypeInstantiation.forTypeName(typeParam.ClassIdentifier().getText());
+            final String typeName = getTypeName(typeParam);
+            final Builder subBuilder = TypeInstantiation.forTypeName(typeName);
             collectTypeArgs(subBuilder, typeParam.typeList());
             target.addTypeArgument(subBuilder.create());
         }

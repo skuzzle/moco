@@ -105,4 +105,35 @@ public class UnificationTest {
         Assert.assertEquals(expected, unification.apply(this.aAToString));
     }
 
+    @Test
+    public void testTopIsATop() throws Exception {
+        final Unification unification = Unification
+                .testIf(CoreTypes.TOP)
+                .isA(CoreTypes.TOP);
+        assertTrue(unification.isSuccessful());
+    }
+
+    @Test
+    public void testBotIsABot() throws Exception {
+        final Unification unification = Unification
+                .testIf(CoreTypes.BOT)
+                .isA(CoreTypes.BOT);
+        assertTrue(unification.isSuccessful());
+    }
+
+    @Test
+    public void testBotIsATop() throws Exception {
+        final Unification unification = Unification
+                .testIf(CoreTypes.BOT)
+                .isA(CoreTypes.TOP);
+        assertTrue(unification.isSuccessful());
+    }
+
+    @Test
+    public void testVoidIsAVoid() throws Exception {
+        final Unification unification = Unification
+                .testIf(CoreTypes.VOID)
+                .isA(CoreTypes.VOID);
+        assertTrue(unification.isSuccessful());
+    }
 }

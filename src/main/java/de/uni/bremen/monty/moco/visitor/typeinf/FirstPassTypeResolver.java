@@ -6,12 +6,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.ClassScope;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Identifier;
-import de.uni.bremen.monty.moco.ast.Location;
-import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
@@ -46,20 +43,11 @@ import de.uni.bremen.monty.moco.exception.MontyBaseException;
 import de.uni.bremen.monty.moco.exception.TypeMismatchException;
 import de.uni.bremen.monty.moco.exception.UnknownTypeException;
 import de.uni.bremen.monty.moco.util.ASTUtil;
-import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
-public class FirstPassTypeResolver extends BaseVisitor {
-
-    private static final String TYPE_VAR = "?";
-    private final Set<ASTNode> visited;
+public class FirstPassTypeResolver extends AbstractTypeResolver {
 
     public FirstPassTypeResolver() {
-        this.visited = new HashSet<>();
         setStopOnFirstError(true);
-    }
-
-    private boolean shouldVisit(ASTNode node) {
-        return this.visited.add(node);
     }
 
 
@@ -117,26 +105,21 @@ public class FirstPassTypeResolver extends BaseVisitor {
             return;
         }
 
-        final TypeDeclaration decl = node.getScope().resolveType(node, node.getTypeName());
-        assert decl instanceof TypeParameterDeclaration
-                || decl instanceof ClassDeclaration;
-        visitDoubleDispatched(decl);
+        final Type type = resolveType(node, node.getTypeName());
 
-        node.setDeclaration(decl);
-
-        if (decl.getType().isVariable() && !node.getTypeArguments().isEmpty()) {
+        if (type.isVariable() && !node.getTypeArguments().isEmpty()) {
             throw new TypeMismatchException(node, "Type variables can not be quantified");
-        } else if (decl.getType().isVariable()) {
-            node.setType(decl.getType());
+        } else if (type.isVariable()) {
+            node.setType(type);
         } else {
-            final ClassType declType = (ClassType) decl.getType();
+            final ClassType declType = (ClassType) type;
             final Named builder = ClassType
-                    .named(decl.getIdentifier())
-                    .atLocation(decl)
+                    .named(node.getTypeName())
+                    .atLocation(node)
                     .withSuperClasses(declType.getSuperClasses());
             super.visit(node);
             for (final TypeInstantiation child : node.getTypeArguments()) {
-                builder.addTypeParameter(child.getDeclaration().getType());
+                builder.addTypeParameter(child.getType());
             }
             final ClassType ct = builder.createType();
             final Unification unification = Unification.testIf(ct).isA(declType);
@@ -174,8 +157,17 @@ public class FirstPassTypeResolver extends BaseVisitor {
         for (final TypeInstantiation superType : node.getSuperClassIdentifiers()) {
             visitDoubleDispatched(superType);
 
-            final ClassDeclaration decl = (ClassDeclaration) superType.getDeclaration();
-            assert this.visited.contains(decl);
+            if (superType.getType().isVariable()) {
+                // can not inherit from a variable
+                throw new TypeMismatchException(node,
+                        String.format("%s can not inherit from type variable %s",
+                                node.getIdentifier(), superType.getTypeName()));
+            }
+            assert superType.getType().isClass();
+            final ClassDeclaration decl = (ClassDeclaration) scope.resolveFromType(superType.getType());
+            decl.visit(this);
+
+            // assert this.visited.contains(decl);
 
             node.addSuperClassDeclaration(decl);
 
@@ -209,8 +201,8 @@ public class FirstPassTypeResolver extends BaseVisitor {
     @Override
     public void visit(VariableDeclaration node) {
         if (shouldVisit(node)) {
-            final Type type = resolveType(node, node.getTypeIdentifier());
-            node.setType(type);
+            super.visit(node);
+            node.setType(node.getTypeIdentifier().getType());
         }
     }
 
@@ -225,16 +217,20 @@ public class FirstPassTypeResolver extends BaseVisitor {
             formalParam.visit(this);
         }
 
+        final String procedureTypeName;
         final Type returnType;
         if (node.getDeclarationType() == DeclarationType.INITIALIZER) {
             // This is a constructor call
-            final ClassDeclaration enclosingClass = ASTUtil.findAncestor(node, ClassDeclaration.class);
+            final ClassDeclaration enclosingClass = ASTUtil.findAncestor(node,
+                    ClassDeclaration.class);
             returnType = enclosingClass.getType();
+            procedureTypeName = "initializer";
         } else {
             returnType = CoreClasses.voidType().getType();
+            procedureTypeName = node.getIdentifier().getSymbol();
         }
 
-        final Function nodeType = Function.named(node.getIdentifier())
+        final Function nodeType = Function.named(procedureTypeName)
                 .atLocation(node)
                 .returning(returnType)
                 .andParameters(Type.convert(node.getParameter()))
@@ -298,7 +294,10 @@ public class FirstPassTypeResolver extends BaseVisitor {
             // ensure that the variable's type has been resolved
             visitDoubleDispatched(varDecl);
 
+            node.setDeclaration(decl);
             node.addTypeOf(varDecl);
+        } else {
+            // TODO: what else?
         }
     }
 
@@ -339,11 +338,12 @@ public class FirstPassTypeResolver extends BaseVisitor {
         try {
             typeDecl = node.getScope().resolveType(node, node.getIdentifier());
         } catch (UnknownTypeException ignore) {
+            typeDecl = null;
         }
-        node.setConstructorCall(typeDecl instanceof ClassDeclaration);
+        node.setConstructorCall(typeDecl);
 
         // Cartesian product of signature types
-        final List<List<Type>> signatureTypes = signatureTypes(node.getArguments());
+        final List<List<Type>> signatureTypes = TypeHelper.signatureTypes(node.getArguments());
         node.setSignatureTypes(signatureTypes);
 
         // create all possible types given the actual parameter types
@@ -361,8 +361,7 @@ public class FirstPassTypeResolver extends BaseVisitor {
         // Find actual declared functions with the given name
         final Collection<Function> declaredTypes;
         if (node.isConstructorCall()) {
-            declaredTypes = resolveTypes(typeDecl.getScope(),
-                    new ResolvableIdentifier("initializer"), node);
+            declaredTypes = resolveConstructorTypes(node.getConstructorType(), node);
         } else {
             declaredTypes = resolveTypes(node.getScope(), node.getIdentifier(), node);
         }
@@ -415,78 +414,5 @@ public class FirstPassTypeResolver extends BaseVisitor {
                 }
             }
         }
-    }
-
-    private List<List<Type>> signatureTypes(List<Expression> actual) {
-        final List<List<Type>> parameterTypes = new ArrayList<>(actual.size());
-        for (final Expression parameter : actual) {
-            final List<Type> types = new ArrayList<>();
-            for (final TypeContext ctx : parameter.getTypes()) {
-                types.add(ctx.getType());
-            }
-            parameterTypes.add(types);
-        }
-        return cartesianProduct(parameterTypes);
-    }
-
-    /**
-     * Create the Cartesian product of given lists.
-     *
-     * @param lists The list to create the products of.
-     * @return The Cartesian product.
-     */
-    private <T> List<List<T>> cartesianProduct(List<List<T>> lists) {
-        final List<List<T>> resultLists = new ArrayList<List<T>>();
-        if (lists.size() == 0) {
-            resultLists.add(new ArrayList<T>());
-            return resultLists;
-        } else {
-            final List<T> firstList = lists.get(0);
-            final List<List<T>> remainingLists = cartesianProduct(
-                    lists.subList(1, lists.size()));
-
-            for (T condition : firstList) {
-                for (List<T> remainingList : remainingLists) {
-                    ArrayList<T> resultList = new ArrayList<T>();
-                    resultList.add(condition);
-                    resultList.addAll(remainingList);
-                    resultLists.add(resultList);
-                }
-            }
-        }
-        return resultLists;
-    }
-
-    private Type resolveType(ASTNode node, ResolvableIdentifier name) {
-        if (name.getSymbol().equals(TYPE_VAR)) {
-            return TypeVariable.anonymous().atLocation(node).createType();
-        } else {
-            final Scope scope = node.getScope();
-            final TypeDeclaration declaredType = scope.resolveType(node, name);
-
-            visitDoubleDispatched(declaredType);
-            return declaredType.getType();
-        }
-    }
-
-    /**
-     * Resolves all possible types of the given call.
-     *
-     * @param call The call.
-     * @return Collection of function types.
-     */
-    private Collection<Function> resolveTypes(Scope scope,
-            ResolvableIdentifier identifier, Location location) {
-        final List<ProcedureDeclaration> declarations = scope.resolveProcedure(location,
-                identifier);
-        final List<Function> result = new ArrayList<>(declarations.size());
-
-        for (final ProcedureDeclaration decl : declarations) {
-            // ensure that declaration's type has been resolved
-            visitDoubleDispatched(decl);
-
-            result.add((Function) decl.getType());
-        }
-        return result;
     }
 }

@@ -1,9 +1,11 @@
 package de.uni.bremen.monty.moco.util.astsearch;
 
 import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Queue;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.Block;
@@ -40,11 +42,32 @@ import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 class SteppingVisitor extends BaseVisitor implements Iterator<ASTNode> {
 
-    private final Queue<ASTNode> current;
+    public static Iterator<ASTNode> depthFirst(ASTNode root) {
+        return new SteppingVisitor(root, Deque::addLast, Deque::pollLast);
+    }
 
-    SteppingVisitor(ASTNode root) {
+    public static Iterator<ASTNode> levelOrder(ASTNode root) {
+        return new SteppingVisitor(root, Deque::addLast, Deque::pollFirst);
+    }
+
+    private final Deque<ASTNode> current;
+    private final BiConsumer<Deque<ASTNode>, ASTNode> addOperation;
+    private final Function<Deque<ASTNode>, ASTNode> pollOperation;
+
+    private SteppingVisitor(ASTNode root, BiConsumer<Deque<ASTNode>, ASTNode> addOp,
+            Function<Deque<ASTNode>, ASTNode> pollOp) {
         this.current = new ArrayDeque<>();
+        this.addOperation = addOp;
+        this.pollOperation = pollOp;
         this.current.add(root);
+    }
+
+    private ASTNode poll() {
+        return this.pollOperation.apply(this.current);
+    }
+
+    private void addNode(ASTNode node) {
+        this.addOperation.accept(this.current, node);
     }
 
     @Override
@@ -57,7 +80,7 @@ class SteppingVisitor extends BaseVisitor implements Iterator<ASTNode> {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
-        final ASTNode nextNode = this.current.poll();
+        final ASTNode nextNode = poll();
         nextNode.visitChildren(this);
         return nextNode;
     }
@@ -71,159 +94,159 @@ class SteppingVisitor extends BaseVisitor implements Iterator<ASTNode> {
 
     @Override
     public void visit(ModuleDeclaration node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(ClassDeclaration node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(FunctionDeclaration node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(ProcedureDeclaration node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(VariableDeclaration node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     // Expression
 
     @Override
     public void visit(ConditionalExpression node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(SelfExpression node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(ParentExpression node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(CastExpression node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(IsExpression node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(FunctionCall node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(MemberAccess node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(VariableAccess node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     // Literal
 
     @Override
     public void visit(BooleanLiteral node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(FloatLiteral node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(IntegerLiteral node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(StringLiteral node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(ArrayLiteral node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(CharacterLiteral node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     // Statements
 
     @Override
     public void visit(Assignment node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(BreakStatement node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(SkipStatement node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(ConditionalStatement node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(ContinueStatement node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(ReturnStatement node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(WhileLoop node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(TryStatement node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     // Other
 
     @Override
     public void visit(Block node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(Package node) {
-        this.current.add(node);
+        addNode(node);
     }
 
     @Override
     public void visit(Import node) {
-        this.current.add(node);
+        addNode(node);
     }
 }

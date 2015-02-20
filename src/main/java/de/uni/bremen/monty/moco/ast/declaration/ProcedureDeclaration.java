@@ -176,31 +176,4 @@ public class ProcedureDeclaration extends TypeDeclaration {
 		}
 		visitor.visitDoubleDispatched(this.body);
 	}
-
-	/** Check equality of two types taking into account the AST object hierachy.
-	 * <p>
-	 *
-	 * @param other
-	 *            the other TypeDeclaration to check against
-	 * @return if equal */
-	@Override
-	public boolean matchesType(TypeDeclaration other) {
-		if (!super.matchesType(other)) {
-			return false;
-		}
-		if (!(other instanceof ProcedureDeclaration)) {
-			return false;
-		}
-		List<VariableDeclaration> otherParameter = ((ProcedureDeclaration) other).getParameter();
-		if (this.parameter.size() != otherParameter.size()) {
-			return false;
-		}
-		for (int i = 0; i < this.parameter.size(); i++) {
-			if (!this.parameter.get(i).getType().matchesType(otherParameter.get(i).getType())) {
-				return false;
-			}
-		}
-		return true;
-	}
-
 }

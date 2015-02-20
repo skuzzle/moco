@@ -39,33 +39,40 @@
 
 package de.uni.bremen.monty.moco.ast;
 
-import de.uni.bremen.monty.moco.ast.declaration.*;
-import de.uni.bremen.monty.moco.util.MontyFile;
-import de.uni.bremen.monty.moco.util.MontyJar;
-import de.uni.bremen.monty.moco.util.MontyResource;
-import de.uni.bremen.monty.moco.util.Params;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collections;
 
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.Declaration;
+import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
+import de.uni.bremen.monty.moco.util.MontyCodeString;
+import de.uni.bremen.monty.moco.util.MontyFile;
+import de.uni.bremen.monty.moco.util.MontyJar;
+import de.uni.bremen.monty.moco.util.MontyResource;
+import de.uni.bremen.monty.moco.util.Params;
+
 public class PackageBuilder {
 	private final AntlrAdapter antlrAdapter;
-	private Params params;
+	private final Params params;
 
 	public PackageBuilder(Params params) {
 		this.params = params;
-		antlrAdapter = new AntlrAdapter();
+		this.antlrAdapter = new AntlrAdapter();
 	}
 
 	public Package buildPackage() throws IOException {
 		Package basePackage = new Package(new Identifier(""));
-		String inputFile = params.getInputFile();
-		if (inputFile != null) {
+        String inputCode = this.params.getInputCode();
+		String inputFile = this.params.getInputFile();
+
+        if (inputCode != null) {
+            basePackage.addSubPackage(createPackageFromString(inputCode));
+        } else if (inputFile != null) {
 			basePackage.addSubPackage(createPackageFromSingleModule(inputFile));
 		} else {
-			basePackage.addSubPackage(createPackageFromSourceFolder(params));
+			basePackage.addSubPackage(createPackageFromSourceFolder(this.params));
 		}
 		addCoreLib(basePackage);
 		return basePackage;
@@ -121,6 +128,13 @@ public class PackageBuilder {
 		return createPackage(inputFolder);
 	}
 
+    private Package createPackageFromString(String code) throws IOException {
+        final MontyResource codeResource = new MontyCodeString("", code);
+        final Package mainPackage = new Package(Identifier.of(""));
+        addModules(new MontyResource[] { codeResource }, mainPackage);
+        return mainPackage;
+    }
+
 	private Package createPackageFromSingleModule(String inputFile) throws IOException {
 		MontyResource file = new MontyFile(inputFile);
 
@@ -143,7 +157,7 @@ public class PackageBuilder {
 
 	private void addModules(MontyResource[] montyFiles, Package aPackage) throws IOException {
 		for (MontyResource file : montyFiles) {
-			ModuleDeclaration module = antlrAdapter.parse(file.toInputStream(), file.getName());
+			ModuleDeclaration module = this.antlrAdapter.parse(file.toInputStream(), file.getName());
 			aPackage.addModule(module);
 		}
 	}

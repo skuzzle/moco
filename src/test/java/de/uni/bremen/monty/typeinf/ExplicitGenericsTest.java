@@ -21,13 +21,12 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
     final ClassType Object = (ClassType) CoreTypes.get("Object");
 
-    public ExplicitGenericsTest() {
-        super("explicitGenerics.monty");
-    }
-
     @Test
     public void testClassWithSimpleGenerics() throws Exception {
-        final ASTNode root = getTypeCheckedAST();
+        final ASTNode root = getASTFromString("testClassWithSimpleGenerics.monty",
+                code -> code
+                        .append("class Pair<First, Second>:")
+                        .indent().append("pass"));
         final ClassDeclaration decl = SearchAST.forNode(ClassDeclaration.class)
                 .where(Predicates.hasName("Pair"))
                 .in(root).get();
@@ -42,7 +41,13 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
     @Test
     public void testClassWithInheritedInstantiation() throws Exception {
-        final ASTNode root = getTypeCheckedAST();
+        final ASTNode root = getASTFromString("testClassWithInheritedInstantiation.monty",
+                code -> code
+                        .append("class Pair<First, Second>:")
+                        .indent().append("pass").dedent().blankLine()
+                        .append("class Bc inherits Pair<Char, String>:")
+                        .indent().append("pass"));
+
         final ClassDeclaration decl = SearchAST.forNode(ClassDeclaration.class)
                 .where(Predicates.hasName("Bc"))
                 .in(root).get();
@@ -62,7 +67,13 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
     @Test
     public void testClassWithInheritedRecursiveInstantiation() throws Exception {
-        final ASTNode root = getTypeCheckedAST();
+        final ASTNode root = getASTFromString("testClassWithInheritedRecursiveInstantiation.monty",
+                code -> code
+                        .append("class Pair<First, Second>:")
+                        .indent().append("pass").dedent().blankLine()
+                        .append("class Recursive<Aa> inherits Pair<Aa, String>:")
+                        .indent().append("pass"));
+
         final ClassDeclaration decl = SearchAST.forNode(ClassDeclaration.class)
                 .where(Predicates.hasName("Recursive"))
                 .in(root).get();
@@ -82,7 +93,26 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
     @Test
     public void testGenericDeclarationWithAssignment() throws Exception {
-        final ASTNode root = getTypeCheckedAST();
+        final ASTNode root = getASTFromString("testGenericDeclarationWithAssignment.monty",
+                code -> code
+                        .append("class Pair<First, Second>:").indent()
+                        .append("-First t1")
+                        .append("-Second t2")
+                        .blankLine()
+                        .append("+initializer(First f, Second s):").indent()
+                        .append("t1 := f")
+                        .append("t2 := s")
+                        .dedent()
+                        .append("+First get1():").indent()
+                        .append("return t1")
+                        .dedent()
+                        .append("+Second get2():").indent()
+                        .append("return t2")
+                        .dedent()
+                        .dedent()
+                        .append("foo():").indent()
+                        .append("Pair<Int, String> pair := Pair(2, \"5\")"));
+
         final VariableDeclaration decl = SearchAST.forNode(VariableDeclaration.class)
                 .where(Predicates.hasName("pair"))
                 .in(root).get();

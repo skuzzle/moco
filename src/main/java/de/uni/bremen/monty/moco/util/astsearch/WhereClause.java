@@ -11,7 +11,7 @@ import de.uni.bremen.monty.moco.ast.ASTNode;
  * @author Simon Taddiken
  * @param <C> Type of the node to search for.
  */
-public interface WhereClause<C extends ASTNode> extends Searchable<C> {
+public interface WhereClause<C extends ASTNode> extends SearchClause<C> {
 
     /**
      * Adds the given predicate to the list of predicates. In order for the
@@ -36,7 +36,7 @@ public interface WhereClause<C extends ASTNode> extends Searchable<C> {
      * @param subQuery The sub query.
      * @return A {@link InClause} for specializing the search.
      */
-    public InClause<C> where(Searchable<?> subQuery);
+    public InClause<C> where(SearchClause<?> subQuery);
 
     /**
      * Performs the search immediately without specifying any predicates. Will

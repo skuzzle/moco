@@ -3,6 +3,7 @@ package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -114,8 +115,8 @@ public class ClassType extends Type {
             throw new IllegalArgumentException("typeParameters is null");
         }
 
-        this.superClasses = superClasses;
-        this.typeParameters = typeParameters;
+        this.superClasses = Collections.unmodifiableList(superClasses);
+        this.typeParameters = Collections.unmodifiableList(typeParameters);
         this.distanceToObject = calcDistanceToObject(this);
     }
 
