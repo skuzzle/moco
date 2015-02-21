@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
@@ -188,6 +187,23 @@ public class ClassType extends Type {
     public String toString() {
         final StringBuilder b = new StringBuilder();
         b.append(getName().toString());
+        appendQuantification(b);
+        if (!this.superClasses.isEmpty()) {
+            b.append(" : ");
+            final Iterator<ClassType> it = this.superClasses.iterator();
+            while (it.hasNext()) {
+                final ClassType superType = it.next();
+                b.append(superType.getName());
+                superType.appendQuantification(b);
+                if (it.hasNext()) {
+                    b.append(", ");
+                }
+            }
+        }
+        return b.toString();
+    }
+
+    private void appendQuantification(StringBuilder b) {
         if (!this.typeParameters.isEmpty()) {
             b.append("<");
             final Iterator<Type> it = this.typeParameters.iterator();
@@ -199,19 +215,6 @@ public class ClassType extends Type {
             }
             b.append(">");
         }
-        final List<ClassType> superClassesCopy = new ArrayList<>(this.superClasses);
-        superClassesCopy.remove(CoreClasses.objectType().getType());
-        if (!superClassesCopy.isEmpty()) {
-            b.append(" inherits ");
-            final Iterator<ClassType> it = superClassesCopy.iterator();
-            while (it.hasNext()) {
-                b.append(it.next());
-                if (it.hasNext()) {
-                    b.append(", ");
-                }
-            }
-        }
-        return b.toString();
     }
 
     @Override

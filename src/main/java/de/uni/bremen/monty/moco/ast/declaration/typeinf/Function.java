@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import de.uni.bremen.monty.moco.ast.CoreTypes;
+import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
@@ -113,7 +113,7 @@ public class Function extends Type {
         }
 
         public FunctionReturning returningVoid() {
-            return returning(CoreTypes.VOID);
+            return returning(CoreClasses.voidType().getType());
         }
     }
 

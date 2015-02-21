@@ -2,7 +2,6 @@ package de.uni.bremen.monty.typeinf;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;

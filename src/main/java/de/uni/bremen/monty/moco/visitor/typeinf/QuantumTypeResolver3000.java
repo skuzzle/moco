@@ -108,7 +108,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
 
     @Override
     public void visit(ClassDeclaration node) {
-        if (!shouldVisit(node)) {
+        if (!shouldVisit(node) || node == CoreClasses.voidType()) {
             return;
         }
 
@@ -150,10 +150,6 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
             builder.withSuperClass(superClass.getType().asClass());
             scope.addParentClassScope(superClassDecl.getScope(),
                     superClass.getUnification());
-        }
-
-        if (node.getSuperClassIdentifiers().isEmpty()) {
-            builder.withSuperClass(CoreClasses.objectType().getType().asClass());
         }
 
         node.setType(builder.createType());
@@ -246,7 +242,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
             reportError(node, "Type <%s> resolved for function's <%s> body not compatible to its declared return type <%s>",
                     bodyType, node.getIdentifier(), returnType);
         }
-        node.setType(returning.createType());
+        node.setType(unification.apply(returning.createType()));
     }
 
     private Type getBodyType(ProcedureDeclaration node, Type declaredType) {

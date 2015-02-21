@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
+import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
@@ -14,13 +15,15 @@ import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 
 public class ShapesTest extends AbstractTypeInferenceTest {
 
+    private ClassType object;
     private ClassType circle;
     private ClassType shape;
     private ClassType rectangle;
 
     @Before
     public void setup() {
-        this.shape = ClassType.classNamed("Shape").createType();
+        this.object = CoreClasses.objectType().getType().asClass();
+        this.shape = ClassType.classNamed("Shape").withSuperClass(this.object).createType();
         this.circle = ClassType.classNamed("Circle").withSuperClass(this.shape).createType();
         this.rectangle = ClassType.classNamed("Rectangle").withSuperClass(this.shape).createType();
     }
@@ -35,8 +38,8 @@ public class ShapesTest extends AbstractTypeInferenceTest {
                 .where(Predicates.hasName("s2"))
                 .in(root).get();
 
-        assertUniqueTypeIs(ClassType.classNamed("Circle").createType(), s1);
-        assertUniqueTypeIs(ClassType.classNamed("Rectangle").createType(), s2);
+        assertUniqueTypeIs(this.circle, s1);
+        assertUniqueTypeIs(this.rectangle, s2);
     }
 
     @Test

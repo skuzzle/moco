@@ -56,7 +56,7 @@ public class CoreClasses {
 	static {
 		// TODO find name for void that is not a valid identifier
         String[] classNames = new String[] { "Object", "Char", "String", "Int", "Float",
-                "Bool", "Array", "__void" };
+                "Bool", "Array", "$void" };
 		for (String name : classNames) {
 		    final ClassDeclaration coreClass = new ClassDeclaration(new Position("Dummy_" + name, 0, 0), new Identifier(
                     name), Collections.<TypeInstantiation> emptyList(), new Block(
@@ -105,6 +105,6 @@ public class CoreClasses {
 	}
 
 	public static ClassDeclaration voidType() {
-		return coreClasses.get("__void");
+        return coreClasses.get("$void");
 	}
 }

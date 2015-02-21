@@ -21,10 +21,12 @@ public final class CoreTypes {
     private static final Map<String, Type> CORE_TYPES;
     static {
         CORE_TYPES = new HashMap<>();
-        final String[] coreTypes = { "Char", "String", "Int", "Float", "Bool", "Array" };
+        final String[] coreTypes = { "Char", "Int", "Float", "Bool" };
         final ClassType object = ClassType.classNamed("Object").createType();
         CORE_TYPES.put("Object", object);
-        CORE_TYPES.put("__void", VOID);
+        CORE_TYPES.put("String", ClassType.classNamed("String").createType());
+        CORE_TYPES.put("Array", ClassType.classNamed("Array").createType());
+        CORE_TYPES.put("$void", VOID);
         for (final String typeName : coreTypes) {
             CORE_TYPES.put(typeName, ClassType
                     .classNamed(typeName)

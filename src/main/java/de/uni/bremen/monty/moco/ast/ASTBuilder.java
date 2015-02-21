@@ -364,7 +364,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
         List<TypeInstantiation> superClasses = new ArrayList<>();
 		if (ctx.typeList() != null) {
 			for (TypeContext type : ctx.typeList().type()) {
-                final Builder builder = TypeInstantiation.forTypeName(type.ClassIdentifier().getText());
+                final Builder builder = TypeInstantiation
+                        .forTypeName(type.ClassIdentifier().getText());
 
                 collectTypeArgs(builder, type.typeList());
 

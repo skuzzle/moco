@@ -19,8 +19,6 @@ import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 
 public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
-    final ClassType Object = CoreClasses.objectType().getType().asClass();
-
     @Test
     public void testClassWithSimpleGenerics() throws Exception {
         final ASTNode root = getASTFromString("testClassWithSimpleGenerics.monty",
@@ -31,7 +29,8 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 .where(Predicates.hasName("Pair"))
                 .in(root).get();
 
-        final Type expected = ClassType.classNamed("Pair").withSuperClass(this.Object)
+        final Type expected = ClassType.classNamed("Pair")
+                .withSuperClass(CoreClasses.objectType().getType().asClass())
                 .addTypeParameter(TypeVariable.anonymous().createType())
                 .addTypeParameter(TypeVariable.anonymous().createType())
                 .createType();
@@ -52,12 +51,14 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 .where(Predicates.hasName("Bc"))
                 .in(root).get();
 
-        final Type expected1 = ClassType.classNamed("Pair").withSuperClass(this.Object)
+        final Type expected1 = ClassType.classNamed("Pair")
+                .withSuperClass(CoreClasses.objectType().getType().asClass())
                 .addTypeParameter(TypeVariable.anonymous().createType())
                 .addTypeParameter(TypeVariable.anonymous().createType())
                 .createType();
 
-        final Type expected2 = ClassType.classNamed("Pair").withSuperClass(this.Object)
+        final Type expected2 = ClassType.classNamed("Pair")
+                .withSuperClass(CoreClasses.objectType().getType().asClass())
                 .addTypeParameter(CoreClasses.charType().getType())
                 .addTypeParameter(CoreClasses.stringType().getType())
                 .createType();
@@ -79,11 +80,13 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 .where(Predicates.hasName("Recursive"))
                 .in(root).get();
 
-        final Type expected1 = ClassType.classNamed("Recursive").withSuperClass(this.Object)
+        final Type expected1 = ClassType.classNamed("Recursive")
+                .withSuperClass(CoreClasses.objectType().getType().asClass())
                 .addTypeParameter(TypeVariable.anonymous().createType())
                 .createType();
 
-        final Type expected2 = ClassType.classNamed("Pair").withSuperClass(this.Object)
+        final Type expected2 = ClassType.classNamed("Pair")
+                .withSuperClass(CoreClasses.objectType().getType().asClass())
                 .addTypeParameter(TypeVariable.named("A").createType())
                 .addTypeParameter(CoreClasses.stringType().getType())
                 .createType();
@@ -123,7 +126,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 .in(root).get();
 
         final Type expected = ClassType.classNamed("Pair")
-                .withSuperClass(this.Object)
+                .withSuperClass(CoreClasses.objectType().getType().asClass())
                 .addTypeParameter(CoreClasses.intType().getType())
                 .addTypeParameter(CoreClasses.stringType().getType())
                 .createType();
