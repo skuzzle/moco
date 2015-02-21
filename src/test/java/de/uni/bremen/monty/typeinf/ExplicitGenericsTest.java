@@ -111,7 +111,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                         .dedent()
                         .dedent()
                         .append("foo():").indent()
-                        .append("? pair := Pair(2, \"5\")"));
+                        .append("Pair<Int, String> pair := Pair(2, \"5\")"));
 
         final VariableDeclaration decl = SearchAST.forNode(VariableDeclaration.class)
                 .where(Predicates.hasName("pair"))
