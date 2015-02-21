@@ -20,9 +20,9 @@ public class ShapesTest extends AbstractTypeInferenceTest {
 
     @Before
     public void setup() {
-        this.shape = ClassType.named("Shape").createType();
-        this.circle = ClassType.named("Circle").withSuperClass(this.shape).createType();
-        this.rectangle = ClassType.named("Rectangle").withSuperClass(this.shape).createType();
+        this.shape = ClassType.classNamed("Shape").createType();
+        this.circle = ClassType.classNamed("Circle").withSuperClass(this.shape).createType();
+        this.rectangle = ClassType.classNamed("Rectangle").withSuperClass(this.shape).createType();
     }
 
     @Test
@@ -35,8 +35,8 @@ public class ShapesTest extends AbstractTypeInferenceTest {
                 .where(Predicates.hasName("s2"))
                 .in(root).get();
 
-        assertUniqueTypeIs(ClassType.named("Circle").createType(), s1);
-        assertUniqueTypeIs(ClassType.named("Rectangle").createType(), s2);
+        assertUniqueTypeIs(ClassType.classNamed("Circle").createType(), s1);
+        assertUniqueTypeIs(ClassType.classNamed("Rectangle").createType(), s2);
     }
 
     @Test

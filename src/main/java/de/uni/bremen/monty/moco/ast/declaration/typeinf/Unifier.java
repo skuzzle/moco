@@ -42,10 +42,8 @@ final class Unifier {
         final Type rep_n = find(n);
 
         final int equiv = getEquivalenceClass(m);
-        // preferably choose type which is *not* a type var
-        final Type representative = rep_m.isVariable()
-                ? rep_n
-                : rep_m;
+
+        final Type representative = chooseRepresentative(rep_m, rep_n);
         final Type other = representative == rep_n
                 ? rep_m
                 : rep_n;
@@ -53,6 +51,21 @@ final class Unifier {
 
         if (other instanceof TypeVariable) {
             subst.put((TypeVariable) other, representative);
+        }
+    }
+
+    private Type chooseRepresentative(Type rep_m, Type rep_n) {
+        // preferably choose type which is *not* a type var, or, if both are a
+        // type var,
+        // preferably choose the one which is not an 'inferred' variable
+        if (rep_m.isVariable() && rep_n.isVariable()) {
+            return rep_m.getName().getSymbol().equals("?")
+                    ? rep_n
+                    : rep_m;
+        } else if (rep_m.isVariable()) {
+            return rep_n;
+        } else {
+            return rep_m;
         }
     }
 
@@ -131,7 +144,7 @@ final class Unifier {
     }
 
     /**
-     * Defines the subtyping relation between to {@link ClassType ClassTypes}.
+     * Defines the subtyping relation between two {@link ClassType ClassTypes}.
      *
      * @param is The first type.
      * @param a The type to check whether the first is an instance of.

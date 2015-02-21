@@ -43,7 +43,6 @@ import java.util.List;
 import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
@@ -53,7 +52,7 @@ import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 public class FunctionDeclaration extends ProcedureDeclaration {
 
 	/** The return returnType. */
-	private final ResolvableIdentifier returnTypeIdentifier;
+    private final TypeInstantiation returnTypeIdentifier;
     private Type returnType;
 
 	/** Constructor.
@@ -70,13 +69,13 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 	 *            the return returnType */
 	public FunctionDeclaration(Position position, Identifier identifier, Block body,
             List<VariableDeclaration> parameter, DeclarationType declarationType,
-	        ResolvableIdentifier returnTypeIdentifier) {
+            TypeInstantiation returnTypeIdentifier) {
 		super(position, identifier, body, parameter, declarationType);
 		this.returnTypeIdentifier = returnTypeIdentifier;
 	}
 
 	public FunctionDeclaration(Position position, Identifier identifier, Block body,
-	        List<VariableDeclaration> parameter, ResolvableIdentifier returnTypeIdentifier) {
+            List<VariableDeclaration> parameter, TypeInstantiation returnTypeIdentifier) {
         this(position, identifier, body, parameter, DeclarationType.UNBOUND,
                 returnTypeIdentifier);
 	}
@@ -84,7 +83,7 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 	/** get the return returnType.
 	 *
 	 * @return the return returnType */
-	public ResolvableIdentifier getReturnTypeIdentifier() {
+    public TypeInstantiation getReturnTypeIdentifier() {
 		return this.returnTypeIdentifier;
 	}
 

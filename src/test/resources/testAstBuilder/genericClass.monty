@@ -2,6 +2,12 @@ foo():
     Ab<Int, String> a := Ab()
     Ab<Xy<Int>> b := Ab()
 
+Ab<Int, String> genericFunction():
+    pass
+    
+? inferredFunction():
+    pass
+
 class Ab<Aa, Bb>:
     pass
 

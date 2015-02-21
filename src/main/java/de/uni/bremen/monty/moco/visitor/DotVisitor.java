@@ -106,7 +106,7 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
         final Iterator<TypeInstantiation> names = node.getSuperClassIdentifiers().iterator();
 
         while (names.hasNext()) {
-            superClasses.append(names.next().getTypeName().getSymbol());
+            superClasses.append(names.next().getIdentifier().getSymbol());
             if (names.hasNext()) {
                 superClasses.append(", ");
             }

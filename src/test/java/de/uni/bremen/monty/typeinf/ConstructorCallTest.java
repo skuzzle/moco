@@ -35,7 +35,7 @@ public class ConstructorCallTest extends AbstractTypeInferenceTest {
                 .in(root).get();
 
         final ClassType object = (ClassType) CoreTypes.get("Object");
-        final Type circle = ClassType.named("Circle").withSuperClass(object).createType();
+        final Type circle = ClassType.classNamed("Circle").withSuperClass(object).createType();
         final Type expectedCallDeclType = Function.named("initializer")
                 .returning(circle)
                 .createType();

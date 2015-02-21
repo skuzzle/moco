@@ -17,14 +17,14 @@ public class Function extends Type {
 
     // Builder classes
 
-    public static class Returning {
+    public static class FunctionReturning {
         private final String name;
         private final Location location;
         private final Type returnType;
         private final List<Type> parameters;
         private final List<TypeVariable> quantification;
 
-        private Returning(String name, Location location, Type returnType) {
+        private FunctionReturning(String name, Location location, Type returnType) {
             super();
             this.name = name;
             this.location = location;
@@ -33,14 +33,14 @@ public class Function extends Type {
             this.quantification = new ArrayList<>();
         }
 
-        public Returning quantifiedBy(TypeVariable... types) {
+        public FunctionReturning quantifiedBy(TypeVariable... types) {
             if (types == null) {
                 throw new IllegalArgumentException("types is null");
             }
             return quantifiedBy(Arrays.asList(types));
         }
 
-        public Returning quantifiedBy(List<TypeVariable> types) {
+        public FunctionReturning quantifiedBy(List<TypeVariable> types) {
             if (types == null) {
                 throw new IllegalArgumentException("types is null");
             }
@@ -48,11 +48,11 @@ public class Function extends Type {
             return this;
         }
 
-        public Returning andParameter(Type type) {
+        public FunctionReturning andParameter(Type type) {
             return andParameters(type);
         }
 
-        public Returning andParameters(Product product) {
+        public FunctionReturning andParameters(Product product) {
             if (product == null) {
                 throw new IllegalArgumentException("product is null");
             } else if (!this.parameters.isEmpty()) {
@@ -61,7 +61,7 @@ public class Function extends Type {
             return andParameters(product.getComponents());
         }
 
-        public Returning andParameters(Type... types) {
+        public FunctionReturning andParameters(Type... types) {
             if (types == null) {
                 throw new IllegalArgumentException("types is null");
             }
@@ -69,7 +69,7 @@ public class Function extends Type {
             return andParameters(Arrays.asList(types));
         }
 
-        public Returning andParameters(List<Type> types) {
+        public FunctionReturning andParameters(List<Type> types) {
             if (types == null) {
                 throw new IllegalArgumentException("types is null");
             }
@@ -89,16 +89,16 @@ public class Function extends Type {
         }
     }
 
-    public static class Named {
+    public static class FunctionNamed {
         private final String name;
         private Location location;
 
-        private Named(String name) {
+        private FunctionNamed(String name) {
             this.name = name;
             this.location = UNKNOWN_LOCATION;
         }
 
-        public Named atLocation(Location location) {
+        public FunctionNamed atLocation(Location location) {
             if (location == null) {
                 throw new IllegalArgumentException("location is null");
             }
@@ -107,38 +107,38 @@ public class Function extends Type {
             return this;
         }
 
-        public Returning returning(Type returnType) {
+        public FunctionReturning returning(Type returnType) {
             if (returnType == null) {
                 throw new IllegalArgumentException("returnType is null");
             }
-            return new Returning(this.name, this.location, returnType);
+            return new FunctionReturning(this.name, this.location, returnType);
         }
 
-        public Returning returningVoid() {
+        public FunctionReturning returningVoid() {
             return returning(CoreTypes.VOID);
         }
     }
 
-    public static Named anonymous() {
+    public static FunctionNamed anonymous() {
         return named("<anonymous>");
     }
 
-    public static Named named(String name) {
+    public static FunctionNamed named(String name) {
         if (name == null) {
             throw new IllegalArgumentException("name is null");
         }
 
-        return new Named(name);
+        return new FunctionNamed(name);
     }
 
-    public static Named named(Identifier identifier) {
+    public static FunctionNamed named(Identifier identifier) {
         if (identifier == null) {
             throw new IllegalArgumentException("identifier is null");
         }
-        return new Named(identifier.getSymbol());
+        return new FunctionNamed(identifier.getSymbol());
     }
 
-    public static Named from(Function function) {
+    public static FunctionNamed from(Function function) {
         return named(function.getName())
                 .atLocation(function);
     }
@@ -194,6 +194,11 @@ public class Function extends Type {
     }
 
     @Override
+    public Function fresh() {
+        return Unification.fresh(this);
+    }
+
+    @Override
     Function apply(Unification unification) {
         final Type newReturnType = this.returnType.apply(unification);
         final Product newParameters = this.parameterTypes.apply(unification);
@@ -220,6 +225,19 @@ public class Function extends Type {
     public String toString() {
         final StringBuilder b = new StringBuilder();
         b.append(getName().getSymbol()).append(": ");
+        final Iterator<TypeVariable> qunatIt = getQuantification().iterator();
+        if (!qunatIt.hasNext()) {
+            b.append("[]");
+        } else {
+            b.append("[");
+            while (qunatIt.hasNext()) {
+                b.append(qunatIt.next().toString());
+                if (qunatIt.hasNext()) {
+                    b.append(", ");
+                }
+            }
+            b.append("]");
+        }
         final Iterator<Type> it = getParameterTypes().iterator();
         if (!it.hasNext()) {
             b.append("()");

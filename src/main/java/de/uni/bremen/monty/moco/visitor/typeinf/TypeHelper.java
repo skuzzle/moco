@@ -33,7 +33,7 @@ public final class TypeHelper {
      * @param types A list of types.
      * @return The common super type.
      */
-    public static Type findCommonSuperType(Collection<Type> types) {
+    public static Type findLeastCommonSuperType(Collection<Type> types) {
         final Map<Type, Set<ClassType>> superTypeMap = new HashMap<>();
         // For each type, collect super types
         final Set<ClassType> commonTypes = new HashSet<>();

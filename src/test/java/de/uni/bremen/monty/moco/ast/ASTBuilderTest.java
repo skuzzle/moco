@@ -85,22 +85,22 @@ public class ASTBuilderTest {
 
         assertFalse(decl.isGeneric());
         final TypeInstantiation superClass = decl.getSuperClassIdentifiers().get(0);
-        assertEquals("Int", superClass.getTypeArguments().get(0).getTypeName().getSymbol());
-        assertEquals("Xy", superClass.getTypeArguments().get(1).getTypeName().getSymbol());
-        assertEquals("String", superClass.getTypeArguments().get(1).getTypeArguments().get(0).getTypeName().getSymbol());
+        assertEquals("Int", superClass.getTypeArguments().get(0).getIdentifier().getSymbol());
+        assertEquals("Xy", superClass.getTypeArguments().get(1).getIdentifier().getSymbol());
+        assertEquals("String", superClass.getTypeArguments().get(1).getTypeArguments().get(0).getIdentifier().getSymbol());
     }
 
     @Test
-    public void tesDeeptGenericDeclaration() throws Exception {
+    public void testDeeptGenericDeclaration() throws Exception {
         final ModuleDeclaration ast = buildASTfrom("genericClass");
         final VariableDeclaration decl = SearchAST.forNode(VariableDeclaration.class)
                 .where(Predicates.hasName("b"))
                 .in(ast)
                 .get();
 
-        assertTrue(decl.hasTypeArguments());
-        assertEquals("Xy", decl.getActualTypeArguments().get(0).getTypeName().getSymbol());
-        assertEquals("Int", decl.getActualTypeArguments().get(0).getTypeArguments().get(0).getTypeName().getSymbol());
+        assertEquals("Ab", decl.getTypeIdentifier().getIdentifier().getSymbol());
+        assertEquals("Xy", decl.getTypeIdentifier().getTypeArguments().get(0).getIdentifier().getSymbol());
+        assertEquals("Int", decl.getTypeIdentifier().getTypeArguments().get(0).getTypeArguments().get(0).getIdentifier().getSymbol());
     }
 
     @Test
@@ -111,9 +111,9 @@ public class ASTBuilderTest {
                 .in(ast)
                 .get();
 
-        assertTrue(decl.hasTypeArguments());
-        assertEquals("Int", decl.getActualTypeArguments().get(0).getTypeName().getSymbol());
-        assertEquals("String", decl.getActualTypeArguments().get(1).getTypeName().getSymbol());
+        assertEquals("Ab", decl.getTypeIdentifier().getIdentifier().getSymbol());
+        assertEquals("Int", decl.getTypeIdentifier().getTypeArguments().get(0).getIdentifier().getSymbol());
+        assertEquals("String", decl.getTypeIdentifier().getTypeArguments().get(1).getIdentifier().getSymbol());
     }
 
     @Test
@@ -128,6 +128,28 @@ public class ASTBuilderTest {
         final List<Identifier> expected = Arrays.asList(
                 Identifier.of("Aa"), Identifier.of("Bb"));
         assertEquals(expected, decl.getTypeParameters());
+    }
+
+    @Test
+    public void testGenericFunctionReturnType() throws Exception {
+        final ASTNode root = buildASTfrom("genericClass");
+        final FunctionDeclaration decl = SearchAST.forNode(FunctionDeclaration.class)
+                .where(Predicates.hasName("genericFunction"))
+                .in(root).get();
+
+        assertEquals("Ab", decl.getReturnTypeIdentifier().getIdentifier().getSymbol());
+        assertEquals("Int", decl.getReturnTypeIdentifier().getTypeArguments().get(0).getIdentifier().getSymbol());
+        assertEquals("String", decl.getReturnTypeIdentifier().getTypeArguments().get(1).getIdentifier().getSymbol());
+    }
+
+    @Test
+    public void testInferredFunctionReturnType() throws Exception {
+        final ASTNode root = buildASTfrom("genericClass");
+        final FunctionDeclaration decl = SearchAST.forNode(FunctionDeclaration.class)
+                .where(Predicates.hasName("inferredFunction"))
+                .in(root).get();
+
+        assertEquals("?", decl.getReturnTypeIdentifier().getIdentifier().getSymbol());
     }
 
 	@Test

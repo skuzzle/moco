@@ -38,12 +38,12 @@ public final class CoreTypes {
     static {
         CORE_TYPES = new HashMap<>();
         final String[] coreTypes = { "Char", "String", "Int", "Float", "Bool", "Array" };
-        final ClassType object = ClassType.named("Object").createType();
+        final ClassType object = ClassType.classNamed("Object").createType();
         CORE_TYPES.put("Object", object);
         CORE_TYPES.put("__void", VOID);
         for (final String typeName : coreTypes) {
             CORE_TYPES.put(typeName, ClassType
-                    .named(typeName)
+                    .classNamed(typeName)
                     .withSuperClass(object)
                     .createType());
         }

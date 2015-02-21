@@ -55,7 +55,6 @@ import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration.DeclarationType;
 import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
-import de.uni.bremen.monty.moco.ast.declaration.TypeParameterDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
@@ -107,12 +106,6 @@ public class DeclarationVisitor extends BaseVisitor {
 
 		this.currentScope.define(node);
         this.currentScope = this.currentScope.enterClass(node.getIdentifier().getSymbol());
-
-        // Define type arguments
-        for (final Identifier typeParam : node.getTypeParameters()) {
-            this.currentScope.define(new TypeParameterDeclaration(node.getPosition(),
-                    typeParam));
-        }
 
 		// These are not boxed yet. So they cant inherit from object and cant have initializers.
 		List<ClassDeclaration> treatSpecial =
@@ -229,7 +222,7 @@ public class DeclarationVisitor extends BaseVisitor {
         for (TypeInstantiation superclass : node.getSuperClassIdentifiers()) {
 			SelfExpression self = new SelfExpression(node.getPosition());
 			FunctionCall call =
-                    new FunctionCall(node.getPosition(), new ResolvableIdentifier(superclass.getTypeName().getSymbol()
+                    new FunctionCall(node.getPosition(), new ResolvableIdentifier(superclass.getIdentifier().getSymbol()
                             + "_definit"),
 			                new ArrayList<Expression>());
 			MemberAccess defaultInitializerCall = new MemberAccess(node.getPosition(), self, call);

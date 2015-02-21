@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
@@ -86,7 +87,6 @@ public class Scope {
 	/** The map to store the remaining associations. */
     protected final Map<Identifier, Declaration> members;
 
-    protected final Map<TypeVariable, Type> typeMap;
 
 	        /**
      * Constructor.
@@ -99,7 +99,6 @@ public class Scope {
 		this.parent = parent;
 		this.procedures = new HashMap<Identifier, List<ProcedureDeclaration>>();
 		this.members = new HashMap<Identifier, Declaration>();
-        this.typeMap = new HashMap<>();
 	}
 
 	/** Get the parent scope in nesting hierarchy.
@@ -262,6 +261,23 @@ public class Scope {
 		}
 	}
 
+    public ClassDeclaration resolveType(Location location, ClassType typeBinding) {
+        final ResolvableIdentifier typeName = ResolvableIdentifier
+                .of(typeBinding.getName());
+        return (ClassDeclaration) resolveType(location, typeName);
+    }
+
+    public Type resolveTypeBinding(Location position, ResolvableIdentifier identifier) {
+        if (identifier == null) {
+            throw new IllegalArgumentException("identifier is null");
+        }
+
+        if (identifier.isTypeVariableIdentifier()) {
+            return TypeVariable.anonymous().atLocation(position).createType();
+        }
+        return resolveType(position, identifier).getType();
+    }
+
     /**
      * Resolve an identifier for list of overloaded procedures or functions.
      *
@@ -311,22 +327,7 @@ public class Scope {
 		}
 	}
 
-    public void define(TypeVariable var, Type type) {
-        this.typeMap.put(var, type);
-    }
-
-    public Type resolve(TypeVariable var) {
-        Type result = this.typeMap.get(var);
-        if (result == null && this.parent != null) {
-            result = this.parent.resolve(var);
-        }
-        if (result == null) {
-            result = var;
-        }
-        return result;
-    }
-
-	    /**
+    /**
      * Associate an identifier with a declaration.
      * <p>
      * This differs from define(Identifier, Declaration) as this method uses the

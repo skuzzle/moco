@@ -14,20 +14,20 @@ import de.uni.bremen.monty.moco.ast.Position;
 
 public class ClassType extends Type {
 
-    public static class Named {
+    public static class ClassNamed {
         private final String name;
         private Location location;
         private final List<ClassType> superClasses;
         private final List<Type> typeParameters;
 
-        private Named(String name) {
+        private ClassNamed(String name) {
             this.name = name;
             this.location = UNKNOWN_LOCATION;
             this.superClasses = new ArrayList<>();
             this.typeParameters = new ArrayList<>();
         }
 
-        public Named atLocation(Location location) {
+        public ClassNamed atLocation(Location location) {
             if (location == null) {
                 throw new IllegalArgumentException("location is null");
             }
@@ -35,7 +35,7 @@ public class ClassType extends Type {
             return this;
         }
 
-        public Named addTypeParameter(Type... var) {
+        public ClassNamed addTypeParameter(Type... var) {
             if (var == null) {
                 throw new IllegalArgumentException("var is null");
             }
@@ -43,7 +43,7 @@ public class ClassType extends Type {
             return this;
         }
 
-        public Named addTypeParameters(Collection<Type> vars) {
+        public ClassNamed addTypeParameters(Collection<Type> vars) {
             if (vars == null) {
                 throw new IllegalArgumentException("vars is null");
             }
@@ -51,14 +51,14 @@ public class ClassType extends Type {
             return this;
         }
 
-        public Named withSuperClass(ClassType superClass) {
+        public ClassNamed withSuperClass(ClassType superClass) {
             if (superClass == null) {
                 throw new IllegalArgumentException("superClass is null");
             }
             return withSuperClasses(superClass);
         }
 
-        public Named withSuperClasses(ClassType... classes) {
+        public ClassNamed withSuperClasses(ClassType... classes) {
             if (classes == null) {
                 throw new IllegalArgumentException("classes is null");
             }
@@ -66,7 +66,7 @@ public class ClassType extends Type {
             return withSuperClasses(Arrays.asList(classes));
         }
 
-        public Named withSuperClasses(List<ClassType> classes) {
+        public ClassNamed withSuperClasses(List<ClassType> classes) {
             if (classes == null) {
                 throw new IllegalArgumentException("classes is null");
             }
@@ -80,26 +80,26 @@ public class ClassType extends Type {
         }
     }
 
-    public static Named named(String name) {
+    public static ClassNamed classNamed(String name) {
         if (name == null) {
             throw new IllegalArgumentException("name is null");
         }
-        return new Named(name);
+        return new ClassNamed(name);
     }
 
-    public static Named named(Identifier identifier) {
+    public static ClassNamed classNamed(Identifier identifier) {
         if (identifier == null) {
             throw new IllegalArgumentException("identifier is null");
         }
-        return named(identifier.getSymbol());
+        return classNamed(identifier.getSymbol());
     }
 
-    public static Named from(ClassType other) {
+    public static ClassNamed from(ClassType other) {
         if (other == null) {
             throw new IllegalArgumentException("other is null");
         }
 
-        return named(other.getName()).atLocation(other);
+        return classNamed(other.getName()).atLocation(other);
     }
 
     private final List<ClassType> superClasses;
@@ -138,6 +138,11 @@ public class ClassType extends Type {
     }
 
     @Override
+    public ClassType fresh() {
+        return Unification.fresh(this);
+    }
+
+    @Override
     ClassType apply(Unification unification) {
         final List<Type> newTypeParams = new ArrayList<>(this.typeParameters.size());
         for (final Type param : this.typeParameters) {
@@ -147,7 +152,7 @@ public class ClassType extends Type {
         for (final ClassType superClass : this.superClasses) {
             newSuperClasses.add(superClass.apply(unification));
         }
-        return named(getName())
+        return classNamed(getName())
                 .atLocation(getPosition())
                 .withSuperClasses(newSuperClasses)
                 .addTypeParameters(newTypeParams)

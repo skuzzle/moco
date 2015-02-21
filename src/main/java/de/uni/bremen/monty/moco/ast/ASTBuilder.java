@@ -219,7 +219,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	private void buildDefaultProcedures(boolean functionDeclaration, List<DefaultParameterContext> defaultParameter,
 	        List<VariableDeclaration> allVariableDeclarations, List<VariableDeclaration> params,
 	        List<Expression> defaultExpression, List<VariableDeclaration> defaultVariableDeclaration,
-	        Identifier identifier, Token token, String returnTypeName, DeclarationType declarationTypeCopy) {
+            Identifier identifier, Token token, TypeInstantiation returnType,
+            DeclarationType declarationTypeCopy) {
 
 		for (int defaultParameterIdx = 0; defaultParameterIdx < defaultParameter.size(); defaultParameterIdx++) {
 			Block block = new Block(position(token));
@@ -252,9 +253,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			if (functionDeclaration) {
 				block.addStatement(new ReturnStatement(new Position(), expression));
 
-				procDecl1 =
-				        new FunctionDeclaration(position(token), identifier, block, subParams, declarationTypeCopy,
-				                new ResolvableIdentifier(returnTypeName));
+                procDecl1 = new FunctionDeclaration(position(token), identifier, block,
+                        subParams, declarationTypeCopy, returnType);
 			} else {
 				block.addStatement((Statement) expression);
 				block.addStatement(new ReturnStatement(new Position(), null));
@@ -284,18 +284,18 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		allVariableDeclarations.addAll(params);
 		allVariableDeclarations.addAll(defaultVariableDeclaration);
 
-		final String returnTypeName;
-		if (typeContext == null) {
-			// procedure
-			returnTypeName = null;
-		} else if (typeContext.ClassIdentifier() != null) {
-			// explicit type
-			returnTypeName = typeContext.ClassIdentifier().getText();
-		} else {
-			// type var
-            returnTypeName = "?";
-		}
-
+        final TypeInstantiation returnType;
+        if (typeContext == null) {
+            // procedure
+            returnType = TypeInstantiation
+                    .forTypeName(CoreClasses.voidType().getIdentifier())
+                    .create();
+        } else {
+            final String returnTypeName = getTypeName(typeContext);
+            final Builder retTypeBuilder = TypeInstantiation.forTypeName(returnTypeName);
+            collectTypeArgs(retTypeBuilder, typeContext.typeList());
+            returnType = retTypeBuilder.create();
+        }
 		buildDefaultProcedures(
 		        functionDeclaration,
 		        defaultParameter,
@@ -305,7 +305,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		        defaultVariableDeclaration,
 		        identifier,
 		        token,
-		        returnTypeName,
+                returnType,
 		        declarationTypeCopy);
 
 		ProcedureDeclaration procDecl2;
@@ -313,7 +313,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		if (functionDeclaration) {
 			procDecl2 =
 			        new FunctionDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
-			                allVariableDeclarations, declarationTypeCopy, new ResolvableIdentifier(returnTypeName));
+                            allVariableDeclarations, declarationTypeCopy, returnType);
 		} else {
 			procDecl2 =
 			        new ProcedureDeclaration(position(token), identifier, (Block) visit(statementBlockContext),

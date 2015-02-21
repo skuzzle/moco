@@ -7,10 +7,10 @@ import org.junit.Test;
 
 public class ClassTypeTest {
 
-    private final ClassType object = ClassType.named("Object").createType();
-    private final ClassType number = ClassType.named("Number").withSuperClass(this.object).createType();
-    private final ClassType Int = ClassType.named("Int").withSuperClass(this.number).createType();
-    private final ClassType foo = ClassType.named("foo").withSuperClasses(this.object, this.number).createType();
+    private final ClassType object = ClassType.classNamed("Object").createType();
+    private final ClassType number = ClassType.classNamed("Number").withSuperClass(this.object).createType();
+    private final ClassType Int = ClassType.classNamed("Int").withSuperClass(this.number).createType();
+    private final ClassType foo = ClassType.classNamed("foo").withSuperClasses(this.object, this.number).createType();
 
     @Before
     public void setUp() throws Exception {}

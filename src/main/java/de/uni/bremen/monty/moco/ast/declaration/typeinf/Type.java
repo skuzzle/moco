@@ -44,12 +44,31 @@ public abstract class Type implements Location {
     }
 
     /**
+     * Creates a structural identical type from this one, replacing all type
+     * variables with fresh ones.
+     *
+     * @return A fresh copy of this type.
+     */
+    public Type fresh() {
+        return Unification.fresh(this);
+    }
+
+    /**
      * Whether this is a type variable.
      *
      * @return Whether this is a type variable.
      */
     public boolean isVariable() {
         return this instanceof TypeVariable;
+    }
+
+    /**
+     * Convenience method for casting this type to {@link TypeVariable}.
+     *
+     * @return This, casted to {@link TypeVariable}.
+     */
+    public TypeVariable asVariable() {
+        return (TypeVariable) this;
     }
 
     /**

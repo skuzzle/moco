@@ -31,7 +31,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 .where(Predicates.hasName("Pair"))
                 .in(root).get();
 
-        final Type expected = ClassType.named("Pair").withSuperClass(this.Object)
+        final Type expected = ClassType.classNamed("Pair").withSuperClass(this.Object)
                 .addTypeParameter(TypeVariable.anonymous().createType())
                 .addTypeParameter(TypeVariable.anonymous().createType())
                 .createType();
@@ -52,12 +52,12 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 .where(Predicates.hasName("Bc"))
                 .in(root).get();
 
-        final Type expected1 = ClassType.named("Pair").withSuperClass(this.Object)
+        final Type expected1 = ClassType.classNamed("Pair").withSuperClass(this.Object)
                 .addTypeParameter(TypeVariable.anonymous().createType())
                 .addTypeParameter(TypeVariable.anonymous().createType())
                 .createType();
 
-        final Type expected2 = ClassType.named("Pair").withSuperClass(this.Object)
+        final Type expected2 = ClassType.classNamed("Pair").withSuperClass(this.Object)
                 .addTypeParameter(CoreTypes.get("Char"), CoreTypes.get("String"))
                 .createType();
 
@@ -78,11 +78,11 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 .where(Predicates.hasName("Recursive"))
                 .in(root).get();
 
-        final Type expected1 = ClassType.named("Recursive").withSuperClass(this.Object)
+        final Type expected1 = ClassType.classNamed("Recursive").withSuperClass(this.Object)
                 .addTypeParameter(TypeVariable.anonymous().createType())
                 .createType();
 
-        final Type expected2 = ClassType.named("Pair").withSuperClass(this.Object)
+        final Type expected2 = ClassType.classNamed("Pair").withSuperClass(this.Object)
                 .addTypeParameter(TypeVariable.named("A").createType())
                 .addTypeParameter(CoreTypes.get("String"))
                 .createType();
@@ -121,7 +121,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 .where(Predicates.onLine(2))
                 .in(root).get();
 
-        final Type expected = ClassType.named("Pair")
+        final Type expected = ClassType.classNamed("Pair")
                 .withSuperClass(this.Object)
                 .addTypeParameter(CoreTypes.get("Int"), CoreTypes.get("String"))
                 .createType();

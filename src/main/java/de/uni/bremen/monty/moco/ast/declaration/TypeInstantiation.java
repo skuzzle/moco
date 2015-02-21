@@ -5,14 +5,17 @@ import java.util.Collections;
 import java.util.List;
 
 import de.uni.bremen.monty.moco.ast.AbstractTypedASTNode;
+import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
+import de.uni.bremen.monty.moco.ast.NamedNode;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
-public class TypeInstantiation extends AbstractTypedASTNode {
+public class TypeInstantiation extends AbstractTypedASTNode implements NamedNode {
 
     public static class Builder {
         private final ResolvableIdentifier typeName;
@@ -64,9 +67,17 @@ public class TypeInstantiation extends AbstractTypedASTNode {
         return new Builder(ResolvableIdentifier.of(typeName));
     }
 
+    public static Builder forTypeName(Identifier typeName) {
+        if (typeName == null) {
+            throw new IllegalArgumentException("typeName is null");
+        }
+        return forTypeName(typeName.getSymbol());
+    }
+
     private final ResolvableIdentifier typeName;
     private final List<TypeInstantiation> typeArguments;
     private TypeDeclaration declaration;
+    private Unification unification = Unification.EMPTY;
 
     TypeInstantiation(Position position, ResolvableIdentifier typeName,
             List<TypeInstantiation> typeArguments) {
@@ -83,12 +94,24 @@ public class TypeInstantiation extends AbstractTypedASTNode {
         return this.declaration;
     }
 
-    public ResolvableIdentifier getTypeName() {
+    @Override
+    public ResolvableIdentifier getIdentifier() {
         return this.typeName;
     }
 
     public List<TypeInstantiation> getTypeArguments() {
         return this.typeArguments;
+    }
+
+    public void setUnification(Unification unification) {
+        if (unification == null) {
+            throw new IllegalArgumentException("unification is null");
+        }
+        this.unification = unification;
+    }
+
+    public Unification getUnification() {
+        return this.unification;
     }
 
     @Override

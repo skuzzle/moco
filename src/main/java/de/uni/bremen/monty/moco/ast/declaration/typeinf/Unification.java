@@ -1,7 +1,9 @@
 package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -15,7 +17,7 @@ import java.util.Map.Entry;
  *
  * @author Simon Taddiken
  */
-public final class Unification {
+public class Unification {
 
     private static final class TypePair {
         private final Type t1;
@@ -45,48 +47,21 @@ public final class Unification {
     public static final Unification EMPTY = successful(
             Collections.<TypeVariable, Type> emptyMap());
 
+    /** An unsuccessful unification */
+    public static final Unification FAILED = new Unification(false, null);
+
     private static final Map<TypePair, Unification> UNIFICATION_CACHE =
             new HashMap<>();
-
-    public static final class UnificationBuilder {
-        private final Type first;
-
-        private UnificationBuilder(Type first) {
-            this.first = first;
-        }
-
-        /**
-         * Creates a Unification of the first type which has been specified at
-         * {@link Unification#of(Type)} and the given second type. If those
-         * types are not unifiable, the resulting Unification will be
-         * {@link Unification#isSuccessful() unsuccessful}. If the types are
-         * unifiable, the result provides the resolved substitutes for the type
-         * variables which occurred in both type expressions.
-         *
-         * @param second The type to unify with.
-         * @return The Unification.
-         */
-        public Unification with(Type second) {
-            if (second == null) {
-                throw new IllegalArgumentException("second is null");
-            }
-
-            final TypePair pair = new TypePair(this.first, second);
-            Unification unification = UNIFICATION_CACHE.get(pair);
-            if (unification == null) {
-                final Unifier unifier = new Unifier();
-                unification = unifier.unify(this.first, second);
-                UNIFICATION_CACHE.put(pair, unification);
-            }
-            return unification;
-        }
-    }
 
     public static final class TestIfBuilder {
         private final Type first;
 
         private TestIfBuilder(Type first) {
             this.first = first;
+        }
+
+        public Unification isA(Typed typedNode) {
+            return isA(typedNode.getType());
         }
 
         public Unification isA(Type second) {
@@ -105,39 +80,77 @@ public final class Unification {
         }
     }
 
-    public static TestIfBuilder testIf(Type first) {
-        return new TestIfBuilder(first);
+    public static final class SimultaneousBuilder {
+        private final Iterator<TypeVariable> typeVars;
+
+        public SimultaneousBuilder(Iterator<TypeVariable> typeVars) {
+            this.typeVars = typeVars;
+        }
+
+        public Unification simultaneousFor(Collection<? extends Typed> typedNodes) {
+            if (typedNodes == null) {
+                throw new IllegalArgumentException("typedNodes is null");
+            }
+            return simultaneousFor(typedNodes.stream().map(Typed::getType).iterator());
+        }
+
+        public Unification simultaneousFor(Iterable<Type> types) {
+            if (types == null) {
+                throw new IllegalArgumentException("types is null");
+            }
+            return simultaneousFor(types.iterator());
+        }
+
+        public Unification simultaneousFor(Iterator<Type> types) {
+            if (types == null) {
+                throw new IllegalArgumentException("types is null");
+            }
+            final Map<TypeVariable, Type> subst = new HashMap<>();
+            while (this.typeVars.hasNext()) {
+                if (!types.hasNext()) {
+                    throw new IllegalArgumentException("size mismatch");
+                }
+                subst.put(this.typeVars.next(), types.next());
+            }
+            if (types.hasNext()) {
+                throw new IllegalArgumentException("size mismatch");
+            }
+            return Unification.successful(subst);
+        }
     }
 
-    /**
-     * Creates a unification from two types. Usage:
-     *
-     * <pre>
-     * final Unification unification = Unification.of(type1).with(type2);
-     * </pre>
-     *
-     * @param first The left hand type of the unification.
-     * @return Builder object to specify the right hand type of the unification.
-     */
-    @Deprecated
-    public static UnificationBuilder of(Type first) {
+    public static TestIfBuilder testIf(Type first) {
         if (first == null) {
             throw new IllegalArgumentException("first is null");
         }
+        return new TestIfBuilder(first);
+    }
 
-        return new UnificationBuilder(first);
+    public static TestIfBuilder testIf(Typed typedNode) {
+        if (typedNode == null) {
+            throw new IllegalArgumentException("typedNode is null");
+        }
+
+        return new TestIfBuilder(typedNode.getType());
     }
 
     /**
-     * Creates a new failed unification. Failed unifications do not contain any
+     * Creates a failed unification. Failed unifications do not contain any
      * substitutes. They can not be merged into successful ones and other
      * Unifications can not be merged into them.
      *
-     * @return A new failed unification.
+     * @return A failed unification.
      */
     public static Unification failed() {
-        return new Unification(false,
-                Collections.<TypeVariable, Type> emptyMap());
+        return FAILED;
+    }
+
+    public static SimultaneousBuilder substitute(Iterable<TypeVariable> typeVars) {
+        return new SimultaneousBuilder(typeVars.iterator());
+    }
+
+    public static SimultaneousBuilder substitute(Collection<? extends Type> typeVars) {
+        return new SimultaneousBuilder(typeVars.stream().map(Type::asVariable).iterator());
     }
 
     /**
@@ -153,12 +166,33 @@ public final class Unification {
         return new Unification(true, subst);
     }
 
+    static <T extends Type> T fresh(T type) {
+        if (type == null) {
+            throw new IllegalArgumentException("type is null");
+        }
+        final Unification fresh = new Unification(true, new HashMap<>()) {
+            @Override
+            Type getSubstitute(TypeVariable other) {
+                Type subst = this.subst.get(other);
+                if (subst == null) {
+                    subst = TypeVariable
+                            .named(other.getName())
+                            .atLocation(other.getPosition())
+                            .createType();
+                    this.subst.put(other, subst);
+                }
+                return subst;
+            }
+        };
+        return fresh.apply(type);
+    }
+
     private final boolean success;
-    private final Map<TypeVariable, Type> subst;
+    protected final Map<TypeVariable, Type> subst;
 
     private Unification(boolean success, Map<TypeVariable, Type> subst) {
         this.success = success;
-        this.subst = Collections.unmodifiableMap(subst);
+        this.subst = subst;
     }
 
     /**
@@ -234,6 +268,21 @@ public final class Unification {
     }
 
     /**
+     * Applies this Unification to the type of the given {@link Typed typed
+     * node}.
+     * 
+     * @param typedNode Node to obtain the type from.
+     * @return A new type.
+     * @see #apply(Type)
+     */
+    public Type apply(Typed typedNode) {
+        if (typedNode == null) {
+            throw new IllegalArgumentException("typedNode is null");
+        }
+        return apply(typedNode.getType());
+    }
+
+    /**
      * Tries to find a substitute for the given type in this unification. If no
      * substitute exists, the passed type itself will be returned. If this is
      * not a successful unification, this method throws an Exception.
@@ -241,7 +290,7 @@ public final class Unification {
      * @param other The type to find the substitute for.
      * @return The substitute type of {@code other} if no substitute was found.
      */
-    Type getSubstitute(Type other) {
+    Type getSubstitute(TypeVariable other) {
         if (!isSuccessful()) {
             throw new IllegalStateException(
                     "Can't obtain substitute from unsuccessful unification");
@@ -250,7 +299,9 @@ public final class Unification {
         }
 
         final Type substitute = this.subst.get(other);
-        return substitute == null ? other : substitute;
+        return substitute == null
+                ? other
+                : substitute;
     }
 
     /**
@@ -287,8 +338,8 @@ public final class Unification {
 
     @Override
     public String toString() {
-        return this.subst.isEmpty()
-                ? ""
+        return this.subst == null
+                ? "[]"
                 : this.subst.toString();
     }
 }

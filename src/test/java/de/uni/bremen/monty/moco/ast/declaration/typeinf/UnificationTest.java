@@ -10,17 +10,17 @@ import org.junit.Test;
 
 public class UnificationTest {
 
-    private final ClassType Object = ClassType.named("Object").createType();
-    private final ClassType Number = ClassType.named("Number").withSuperClass(this.Object).createType();
-    private final ClassType Int = ClassType.named("Int").withSuperClass(this.Number).createType();
-    private final ClassType String = ClassType.named("String").withSuperClass(this.Object).createType();
-    private final Type A = TypeVariable.named("A").createType();
-    private final Type B = TypeVariable.named("B").createType();
-    private final ClassType listDecl = ClassType.named("List").withSuperClass(this.Object).addTypeParameter(this.A).createType();
-    private final ClassType intListInst = ClassType.named("List").withSuperClass(this.Object).addTypeParameter(this.Int).createType();
-    private final ClassType stringListInst = ClassType.named("List").withSuperClass(this.Object).addTypeParameter(this.String).createType();
-    private final ClassType numberListInst = ClassType.named("List").withSuperClass(this.Object).addTypeParameter(this.Number).createType();
-    private final ClassType mySubType = ClassType.named("MyList").withSuperClass(this.intListInst).createType();
+    private final ClassType Object = ClassType.classNamed("Object").createType();
+    private final ClassType Number = ClassType.classNamed("Number").withSuperClass(this.Object).createType();
+    private final ClassType Int = ClassType.classNamed("Int").withSuperClass(this.Number).createType();
+    private final ClassType String = ClassType.classNamed("String").withSuperClass(this.Object).createType();
+    private final TypeVariable A = TypeVariable.named("A").createType();
+    private final TypeVariable B = TypeVariable.named("B").createType();
+    private final ClassType listDecl = ClassType.classNamed("List").withSuperClass(this.Object).addTypeParameter(this.A).createType();
+    private final ClassType intListInst = ClassType.classNamed("List").withSuperClass(this.Object).addTypeParameter(this.Int).createType();
+    private final ClassType stringListInst = ClassType.classNamed("List").withSuperClass(this.Object).addTypeParameter(this.String).createType();
+    private final ClassType numberListInst = ClassType.classNamed("List").withSuperClass(this.Object).addTypeParameter(this.Number).createType();
+    private final ClassType mySubType = ClassType.classNamed("MyList").withSuperClass(this.intListInst).createType();
 
     private final Type objObjToA = Function.named("Object x Object -> A")
             .returning(this.A)
@@ -135,5 +135,17 @@ public class UnificationTest {
                 .testIf(CoreTypes.VOID)
                 .isA(CoreTypes.VOID);
         assertTrue(unification.isSuccessful());
+    }
+
+    @Test
+    public void testUnifyVarWithInferredVar() throws Exception {
+        // Test that, if two type variables are unified, the one which is not an
+        // inferred variable is chosen as representative
+        final TypeVariable someVar = TypeVariable.named("A").createType();
+        final TypeVariable inferredVar = TypeVariable.named("?").createType();
+        final Unification unification = Unification.testIf(inferredVar).isA(someVar);
+        assertTrue(unification.isSuccessful());
+        assertSame(someVar, unification.getSubstitute(inferredVar));
+        assertSame(someVar, unification.getSubstitute(someVar));
     }
 }

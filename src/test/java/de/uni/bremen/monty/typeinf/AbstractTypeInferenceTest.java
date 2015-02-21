@@ -26,8 +26,7 @@ import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 import de.uni.bremen.monty.moco.visitor.DeclarationVisitor;
 import de.uni.bremen.monty.moco.visitor.DotVisitor;
 import de.uni.bremen.monty.moco.visitor.SetParentVisitor;
-import de.uni.bremen.monty.moco.visitor.typeinf.FirstPassTypeResolver;
-import de.uni.bremen.monty.moco.visitor.typeinf.SecondPassTypeResolver;
+import de.uni.bremen.monty.moco.visitor.typeinf.QuantumTypeResolver3000;
 
 public class AbstractTypeInferenceTest {
 
@@ -114,8 +113,7 @@ public class AbstractTypeInferenceTest {
         final BaseVisitor[] visitors = new BaseVisitor[] {
                 new SetParentVisitor(),
                 new DeclarationVisitor(),
-                new FirstPassTypeResolver(),
-                new SecondPassTypeResolver()
+                new QuantumTypeResolver3000()
         };
         Exception error = null;
         for (final BaseVisitor bv : visitors) {

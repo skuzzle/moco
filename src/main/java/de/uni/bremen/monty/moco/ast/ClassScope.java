@@ -43,6 +43,7 @@ import java.util.List;
 
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 
 /** A scope in which identifier are associated with declarations.
@@ -69,6 +70,8 @@ public class ClassScope extends Scope {
 	/** The parent class in inheritance hierachy. */
 	private final List<ClassScope> parentClassesScopes;
 
+    private Unification substitutions;
+
 	    /**
      * Constructor.
      *
@@ -78,6 +81,7 @@ public class ClassScope extends Scope {
     public ClassScope(String name, Scope parent) {
         super(name, parent);
 		this.parentClassesScopes = new ArrayList<>();
+        this.substitutions = Unification.EMPTY;
 	}
 
     @Override
@@ -110,9 +114,25 @@ public class ClassScope extends Scope {
         }
     }
 
-	public void addParentClassScope(ClassScope scope) {
+    public void addParentClassScope(ClassScope scope, Unification substitutions) {
+        if (scope == null) {
+            throw new IllegalArgumentException("scope is null");
+        } else if (substitutions == null) {
+            throw new IllegalArgumentException("substitutions is null");
+        }
+
 		this.parentClassesScopes.add(scope);
+        this.substitutions = this.substitutions.merge(substitutions);
 	}
+
+    /**
+     * Gets the substitutions that bind type variables of super classes.
+     *
+     * @return Substitutions for super class type variables.
+     */
+    public Unification getSubstitutions() {
+        return this.substitutions;
+    }
 
 	/** Resolve an identifier in inherited scopes.
 	 *

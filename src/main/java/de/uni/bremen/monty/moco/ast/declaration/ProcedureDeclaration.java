@@ -61,6 +61,9 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	/** The parameters of this declaration. */
 	private final List<VariableDeclaration> parameter;
 
+    /** The type parameters of this declaration */
+    private final List<TypeParameterDeclaration> typeParameters;
+
     /** The return statements which occurred within the body of this declaration */
     private final List<ReturnStatement> returnStatements;
 
@@ -87,6 +90,7 @@ public class ProcedureDeclaration extends TypeDeclaration {
 		this.parameter = parameter;
 		this.declarationType = declarationType;
 		this.vmtIndex = -1;
+        this.typeParameters = new ArrayList<>();
 	}
 
 	public ProcedureDeclaration(Position position, Identifier identifier, Block body,
@@ -105,6 +109,10 @@ public class ProcedureDeclaration extends TypeDeclaration {
 
     public List<ReturnStatement> getReturnStatements() {
         return this.returnStatements;
+    }
+
+    public List<TypeParameterDeclaration> getTypeParameters() {
+        return this.typeParameters;
     }
 
 	/** Get the body block.
