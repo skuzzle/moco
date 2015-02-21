@@ -6,12 +6,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import de.uni.bremen.monty.moco.ast.CoreTypes;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 
 public class Function extends Type {
 
@@ -141,28 +139,6 @@ public class Function extends Type {
     public static FunctionNamed from(Function function) {
         return named(function.getName())
                 .atLocation(function);
-    }
-
-    /**
-     * Converts the given {@link ProcedureDeclaration} or
-     * {@link FunctionDeclaration} into a {@link Function}.
-     *
-     * @param procedure The declaration to convert.
-     * @return The resulting type.
-     */
-    public static Function from(ProcedureDeclaration procedure) {
-        final List<Type> parameters = new ArrayList<>(procedure.getParameter().size());
-        for (final VariableDeclaration decl : procedure.getParameter()) {
-            parameters.add(decl.getType());
-        }
-        final Type returnType = procedure instanceof FunctionDeclaration
-                ? ((FunctionDeclaration) procedure).getReturnType()
-                : CoreTypes.VOID;
-        return named(procedure.getIdentifier())
-                .atLocation(procedure)
-                .returning(returnType)
-                .andParameters(parameters)
-                .createType();
     }
 
     private final Type returnType;

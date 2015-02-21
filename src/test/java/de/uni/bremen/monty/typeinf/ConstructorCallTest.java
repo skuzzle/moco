@@ -6,9 +6,9 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
+import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.CoreTypes;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
@@ -34,7 +34,7 @@ public class ConstructorCallTest extends AbstractTypeInferenceTest {
                 .where(Predicates.hasName("Circle"))
                 .in(root).get();
 
-        final ClassType object = (ClassType) CoreTypes.get("Object");
+        final ClassType object = CoreClasses.objectType().getType().asClass();
         final Type circle = ClassType.classNamed("Circle").withSuperClass(object).createType();
         final Type expectedCallDeclType = Function.named("initializer")
                 .returning(circle)

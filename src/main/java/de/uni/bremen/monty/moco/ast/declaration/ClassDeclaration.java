@@ -40,11 +40,13 @@ package de.uni.bremen.monty.moco.ast.declaration;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.ClassScope;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 /** A ClassDeclaration represents the declaration of a class in the AST.
@@ -151,6 +153,23 @@ public class ClassDeclaration extends TypeDeclaration {
 		allSuperClassDeclarations.add(this);
 		return allSuperClassDeclarations;
 	}
+
+    public Optional<TypeInstantiation> getRecursiveParent(ResolvableIdentifier name) {
+        for (final TypeInstantiation superClass : this.superClassIdentifiers) {
+            if (superClass.getIdentifier().equals(name)) {
+                return Optional.of(superClass);
+            }
+            assert superClass.getDeclaration() != null;
+            assert superClass.getDeclaration() instanceof ClassDeclaration;
+
+            final ClassDeclaration decl = (ClassDeclaration) superClass.getDeclaration();
+            final Optional<TypeInstantiation> nested = decl.getRecursiveParent(name);
+            if (nested.isPresent()) {
+                return nested;
+            }
+        }
+        return Optional.empty();
+    }
 
 	/** set the last attribute index.
 	 *

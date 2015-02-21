@@ -5,10 +5,10 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
+import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.CoreTypes;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
@@ -21,7 +21,7 @@ public class TestExplicitTyping extends AbstractTypeInferenceTest {
         final VariableDeclaration decl = searchFor(VariableDeclaration.class)
                 .where(Predicates.hasName("bar"))
                 .in(root).get();
-        assertUniqueTypeIs(CoreTypes.get("String"), decl);
+        assertUniqueTypeIs(CoreClasses.stringType().getType(), decl);
     }
 
     @Test
@@ -31,11 +31,12 @@ public class TestExplicitTyping extends AbstractTypeInferenceTest {
                 .where(Predicates.hasName("add"))
                 .in(root).get();
         final Function expected = Function.named("add")
-                .returning(CoreTypes.get("Int"))
-                .andParameters(CoreTypes.get("Int"), CoreTypes.get("Int"))
+                .returning(CoreClasses.intType().getType())
+                .andParameters(CoreClasses.intType().getType())
+                .andParameters(CoreClasses.intType().getType())
                 .createType();
         assertUniqueTypeIs(expected, decl);
-        assertEquals(expected.getReturnType(), decl.getReturnType());
+        assertEquals(expected.getReturnType(), decl.getType().asFunction().getReturnType());
     }
 
     @Test
@@ -46,7 +47,7 @@ public class TestExplicitTyping extends AbstractTypeInferenceTest {
                 .and(SearchAST.forParent(ProcedureDeclaration.class)
                         .where(Predicates.hasName("add")))
                 .in(root).get();
-        assertUniqueTypeIs(CoreTypes.get("Int"), decl);
+        assertUniqueTypeIs(CoreClasses.intType().getType(), decl);
     }
 
     @Test
@@ -58,10 +59,10 @@ public class TestExplicitTyping extends AbstractTypeInferenceTest {
 
         final Function expected = Function.named("noop")
                 .returningVoid()
-                .andParameter(CoreTypes.get("String"))
+                .andParameter(CoreClasses.stringType().getType())
                 .createType();
         assertUniqueTypeIs(expected, decl);
-        assertEquals(expected.getReturnType(), CoreTypes.get("__void"));
+        assertEquals(expected.getReturnType(), CoreClasses.voidType().getType());
     }
 
     @Test
@@ -71,6 +72,6 @@ public class TestExplicitTyping extends AbstractTypeInferenceTest {
                 .where(Predicates.hasName("a"))
                 .and(SearchAST.forExactParent(ProcedureDeclaration.class))
                 .in(root).get();
-        assertUniqueTypeIs(CoreTypes.get("String"), decl);
+        assertUniqueTypeIs(CoreClasses.stringType().getType(), decl);
     }
 }

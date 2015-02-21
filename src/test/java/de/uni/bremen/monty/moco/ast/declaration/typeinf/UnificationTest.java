@@ -8,6 +8,9 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Assert;
 import org.junit.Test;
 
+import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.CoreTypes;
+
 public class UnificationTest {
 
     private final ClassType Object = ClassType.classNamed("Object").createType();
@@ -132,8 +135,8 @@ public class UnificationTest {
     @Test
     public void testVoidIsAVoid() throws Exception {
         final Unification unification = Unification
-                .testIf(CoreTypes.VOID)
-                .isA(CoreTypes.VOID);
+                .testIf(CoreClasses.voidType().getType())
+                .isA(CoreClasses.voidType().getType());
         assertTrue(unification.isSuccessful());
     }
 

@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import de.uni.bremen.monty.moco.ast.CoreTypes;
+
 final class Unifier {
 
     private final Map<Type, Integer> typeToClass;

@@ -10,8 +10,6 @@ import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.NamedNode;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
@@ -112,21 +110,6 @@ public class TypeInstantiation extends AbstractTypedASTNode implements NamedNode
 
     public Unification getUnification() {
         return this.unification;
-    }
-
-    @Override
-    public TypeContextBuilder addType(Type type) {
-        throw new UnsupportedOperationException("node can not have multiple types");
-    }
-
-    @Override
-    public void addTypeContext(TypeContext typeContext) {
-        throw new UnsupportedOperationException("node can not have multiple types");
-    }
-
-    @Override
-    public TypeContextBuilder addTypeOf(Typed typed) {
-        throw new UnsupportedOperationException("node can not have multiple types");
     }
 
     @Override

@@ -1,7 +1,6 @@
 package de.uni.bremen.monty.typeinf;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -47,17 +46,6 @@ public class AbstractTypeInferenceTest {
             fail("No unique type resolved");
         }
         assertEquals(expected, node.getType());
-    }
-
-    /**
-     * Asserts that the given node's possible types contain the given type.
-     *
-     * @param possibleType The type to search for.
-     * @param node The node to check for.
-     */
-    protected static void assertHasPossibleType(Type possibleType, Typed node) {
-        assertTrue(String.format("Node does not contain the type <%s>", possibleType),
-                node.getTypes().contains(possibleType));
     }
 
     /**

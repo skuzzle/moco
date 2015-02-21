@@ -43,7 +43,6 @@ import java.util.List;
 import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 /** A FunctionDeclaration represents the declaration of a function in the AST.
@@ -53,7 +52,6 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 
 	/** The return returnType. */
     private final TypeInstantiation returnTypeIdentifier;
-    private Type returnType;
 
 	/** Constructor.
 	 *
@@ -98,19 +96,5 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 	public void visitChildren(BaseVisitor visitor) {
         this.returnTypeIdentifier.visit(visitor);
 		super.visitChildren(visitor);
-	}
-
-	/** get the returnType.
-	 *
-	 * @return the returnType */
-    public Type getReturnType() {
-		return this.returnType;
-	}
-
-	/** set the returnType
-	 *
-	 * @param returnType */
-    public void setReturnType(Type returnType) {
-		this.returnType = returnType;
 	}
 }

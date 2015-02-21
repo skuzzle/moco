@@ -46,7 +46,6 @@ import java.util.Map;
 
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.CoreTypes;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 
 public class CoreClasses {

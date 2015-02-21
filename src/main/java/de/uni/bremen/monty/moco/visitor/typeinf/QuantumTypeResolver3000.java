@@ -3,10 +3,13 @@ package de.uni.bremen.monty.moco.visitor.typeinf;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.ClassScope;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Identifier;
@@ -42,11 +45,16 @@ import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.exception.TypeMismatchException;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 import de.uni.bremen.monty.moco.exception.UnknownTypeException;
-import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class QuantumTypeResolver3000 extends BaseVisitor {
+
+    private final Set<ASTNode> visited = new HashSet<>();
+
+    private boolean shouldVisit(ASTNode node) {
+        return this.visited.add(node);
+    }
 
     @Override
     public void visit(TypeInstantiation node) {
@@ -100,7 +108,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
 
     @Override
     public void visit(ClassDeclaration node) {
-        if (node.isTypeResolved()) {
+        if (!shouldVisit(node)) {
             return;
         }
 
@@ -149,6 +157,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
         }
 
         node.setType(builder.createType());
+        super.visit(node);
     }
 
     @Override
@@ -158,7 +167,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
 
     @Override
     public void visit(ProcedureDeclaration node) {
-        if (node.isTypeResolved()) {
+        if (!shouldVisit(node)) {
             return;
         }
 
@@ -265,22 +274,23 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
     @Override
     public void visit(FunctionCall node) {
         // resolve parameter types
+        final List<Type> signature = new ArrayList<>(node.getArguments().size());
         for (final Expression param : node.getArguments()) {
             param.visit(this);
+            signature.add(param.getType());
         }
 
-        final List<ProcedureDeclaration> overloads;
+        List<ProcedureDeclaration> overloads;
         if (checkIsConstructorCall(node)) {
             overloads = getConstructorOverloads(node, node.getConstructorType());
         } else {
             overloads = node.getScope().resolveProcedure(node, node.getIdentifier());
         }
 
-        for (final ProcedureDeclaration decl : overloads) {
-            decl.visit(this);
-        }
+        // sort out recursive call
+        overloads = sortOutSelf(node, overloads);
 
-        final ProcedureDeclaration target = TypeHelper.bestFit(overloads, node);
+        final ProcedureDeclaration target = TypeHelper.bestFit(overloads, node, this);
         if (target == null) {
             reportError(node, "Could not uniquely resolve overload of <%s>",
                     node.getIdentifier());
@@ -289,8 +299,31 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
         assert target.isTypeResolved();
 
         final Function fun = target.getType().asFunction();
+        final Function call = Function.named(node.getIdentifier())
+                .atLocation(node).returning(fun.getReturnType())
+                .andParameters(signature).createType();
+
+        final Unification unification = Unification.testIf(call).isA(fun);
+        final Function unified = unification.apply(fun);
         node.setDeclaration(target);
-        node.setType(fun.getReturnType());
+        node.setType(unified.getReturnType());
+    }
+
+    private List<ProcedureDeclaration> sortOutSelf(ASTNode call,
+            List<ProcedureDeclaration> overloads) {
+        final Optional<ProcedureDeclaration> parent = SearchAST
+                .forParent(ProcedureDeclaration.class)
+                .in(call);
+        if (!parent.isPresent()) {
+            return overloads;
+        }
+        final List<ProcedureDeclaration> result = new ArrayList<>(overloads.size() - 1);
+        for (final ProcedureDeclaration overload : overloads) {
+            if (overload != parent.get()) {
+                result.add(overload);
+            }
+        }
+        return result;
     }
 
     private List<ProcedureDeclaration> getConstructorOverloads(Location location,
@@ -319,7 +352,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
 
     @Override
     public void visit(VariableDeclaration node) {
-        if (node.isTypeResolved()) {
+        if (!shouldVisit(node)) {
             return;
         }
         node.getTypeIdentifier().visit(this);
@@ -414,12 +447,16 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
             reportError(node, "No nested class declaration found");
         }
         final ClassDeclaration decl = parent.get();
-        final Optional<TypeInstantiation> superClass = SearchAST
-                .forNode(TypeInstantiation.class)
-                .where(Predicates.hasName(node.getParentIdentifier()))
-                .in(decl);
         assert decl.isTypeResolved();
+        final Optional<TypeInstantiation> superClass = decl.getRecursiveParent(
+                node.getParentIdentifier());
+
+        if (!superClass.isPresent()) {
+            reportError(node, "<%s> is not a super class of <%s>",
+                    node.getParentIdentifier(), decl.getIdentifier());
+        }
         node.setSelfType(decl.getType());
+        node.setType(superClass.get().getType());
     }
 
     private void reportError(Location location, String message, Object... content) {

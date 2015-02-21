@@ -1,38 +1,22 @@
-package de.uni.bremen.monty.moco.ast.declaration.typeinf;
+package de.uni.bremen.monty.moco.ast;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import de.uni.bremen.monty.moco.ast.Identifier;
-import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.IdentityType;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 
 public final class CoreTypes {
 
     private CoreTypes() {}
 
-    private static class IdentityType extends Type {
-
-        protected IdentityType(String name) {
-            super(Identifier.of(name), UNKNOWN_POSITION);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return obj == this;
-        }
-
-        @Override
-        Type apply(Unification unification) {
-            return this;
-        }
-    }
-
     public static final Type TOP = new IdentityType("$top");
 
     public static final Type BOT = new IdentityType("$bottom");
 
-    public static final Type VOID = new IdentityType("$void");
+    static final Type VOID = new IdentityType("$void");
 
     private static final Map<String, Type> CORE_TYPES;
     static {
@@ -49,11 +33,11 @@ public final class CoreTypes {
         }
     }
 
-    public static Type get(Identifier name) {
+    static Type get(Identifier name) {
         return get(name.getSymbol());
     }
 
-    public static Type get(String name) {
+    static Type get(String name) {
         final Type result = CORE_TYPES.get(name);
         if (result == null) {
             throw new UnknownIdentifierException(Type.UNKNOWN_LOCATION,

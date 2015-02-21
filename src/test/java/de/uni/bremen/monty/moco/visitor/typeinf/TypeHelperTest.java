@@ -7,13 +7,13 @@ import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.CoreTypes;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 
 public class TypeHelperTest {
 
-    private final ClassType object = (ClassType) CoreTypes.get("Object");
+    private final ClassType object = CoreClasses.objectType().getType().asClass();
     private final ClassType sub = ClassType.classNamed("sub").withSuperClass(this.object).createType();
     private final ClassType sub1 = ClassType.classNamed("sub1").withSuperClass(this.sub).createType();
     private final ClassType sub11 = ClassType.classNamed("sub11").withSuperClass(this.sub1).createType();

@@ -6,10 +6,10 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
+import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.CoreTypes;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
@@ -19,7 +19,7 @@ import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 
 public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
-    final ClassType Object = (ClassType) CoreTypes.get("Object");
+    final ClassType Object = CoreClasses.objectType().getType().asClass();
 
     @Test
     public void testClassWithSimpleGenerics() throws Exception {
@@ -58,7 +58,8 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 .createType();
 
         final Type expected2 = ClassType.classNamed("Pair").withSuperClass(this.Object)
-                .addTypeParameter(CoreTypes.get("Char"), CoreTypes.get("String"))
+                .addTypeParameter(CoreClasses.charType().getType())
+                .addTypeParameter(CoreClasses.stringType().getType())
                 .createType();
 
         assertTrue(Unification.testIf(decl.getType()).isA(expected1).isSuccessful());
@@ -84,7 +85,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
         final Type expected2 = ClassType.classNamed("Pair").withSuperClass(this.Object)
                 .addTypeParameter(TypeVariable.named("A").createType())
-                .addTypeParameter(CoreTypes.get("String"))
+                .addTypeParameter(CoreClasses.stringType().getType())
                 .createType();
 
         assertTrue(Unification.testIf(decl.getType()).isA(expected1).isSuccessful());
@@ -123,7 +124,8 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
         final Type expected = ClassType.classNamed("Pair")
                 .withSuperClass(this.Object)
-                .addTypeParameter(CoreTypes.get("Int"), CoreTypes.get("String"))
+                .addTypeParameter(CoreClasses.intType().getType())
+                .addTypeParameter(CoreClasses.stringType().getType())
                 .createType();
 
         assertEquals(expected, ctor.getType());

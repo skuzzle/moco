@@ -52,7 +52,7 @@ public class ShapesTest extends AbstractTypeInferenceTest {
                 .createType();
 
         assertUniqueTypeIs(expected, decl);
-        assertEquals(expected.getReturnType(), decl.getReturnType());
+        assertEquals(expected.getReturnType(), decl.getType().asFunction().getReturnType());
     }
 
     @Test
@@ -68,6 +68,6 @@ public class ShapesTest extends AbstractTypeInferenceTest {
                 .createType();
 
         assertUniqueTypeIs(expected, decl);
-        assertEquals(expected.getReturnType(), decl.getReturnType());
+        assertEquals(expected.getReturnType(), decl.getType().asFunction().getReturnType());
     }
 }

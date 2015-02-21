@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
+import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
@@ -17,13 +20,13 @@ public class ClassType extends Type {
     public static class ClassNamed {
         private final String name;
         private Location location;
-        private final List<ClassType> superClasses;
+        private final Set<ClassType> superClasses;
         private final List<Type> typeParameters;
 
         private ClassNamed(String name) {
             this.name = name;
             this.location = UNKNOWN_LOCATION;
-            this.superClasses = new ArrayList<>();
+            this.superClasses = new HashSet<>();
             this.typeParameters = new ArrayList<>();
         }
 
@@ -102,12 +105,12 @@ public class ClassType extends Type {
         return classNamed(other.getName()).atLocation(other);
     }
 
-    private final List<ClassType> superClasses;
+    private final Set<ClassType> superClasses;
     private final List<Type> typeParameters;
     private final int distanceToObject;
 
     ClassType(Identifier name, Position positionHint,
-            List<ClassType> superClasses, List<Type> typeParameters) {
+            Set<ClassType> superClasses, List<Type> typeParameters) {
         super(name, positionHint);
         if (superClasses == null) {
             throw new IllegalArgumentException("superClasses is null");
@@ -115,7 +118,7 @@ public class ClassType extends Type {
             throw new IllegalArgumentException("typeParameters is null");
         }
 
-        this.superClasses = Collections.unmodifiableList(superClasses);
+        this.superClasses = Collections.unmodifiableSet(superClasses);
         this.typeParameters = Collections.unmodifiableList(typeParameters);
         this.distanceToObject = calcDistanceToObject(this);
     }
@@ -168,7 +171,7 @@ public class ClassType extends Type {
         return false;
     }
 
-    public List<ClassType> getSuperClasses() {
+    public Collection<ClassType> getSuperClasses() {
         return this.superClasses;
     }
 
@@ -197,7 +200,7 @@ public class ClassType extends Type {
             b.append(">");
         }
         final List<ClassType> superClassesCopy = new ArrayList<>(this.superClasses);
-        superClassesCopy.remove(CoreTypes.get("Object"));
+        superClassesCopy.remove(CoreClasses.objectType().getType());
         if (!superClassesCopy.isEmpty()) {
             b.append(" inherits ");
             final Iterator<ClassType> it = superClassesCopy.iterator();
