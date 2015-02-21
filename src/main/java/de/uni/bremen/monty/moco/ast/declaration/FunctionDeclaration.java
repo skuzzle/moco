@@ -96,6 +96,7 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
+        this.returnTypeIdentifier.visit(visitor);
 		super.visitChildren(visitor);
 	}
 

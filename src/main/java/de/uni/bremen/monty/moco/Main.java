@@ -59,8 +59,7 @@ import de.uni.bremen.monty.moco.visitor.DeclarationVisitor;
 import de.uni.bremen.monty.moco.visitor.DotVisitor;
 import de.uni.bremen.monty.moco.visitor.PrintVisitor;
 import de.uni.bremen.monty.moco.visitor.SetParentVisitor;
-import de.uni.bremen.monty.moco.visitor.typeinf.FirstPassTypeResolver;
-import de.uni.bremen.monty.moco.visitor.typeinf.SecondPassTypeResolver;
+import de.uni.bremen.monty.moco.visitor.typeinf.QuantumTypeResolver3000;
 
 public class Main {
 
@@ -95,14 +94,12 @@ public class Main {
         final BaseVisitor[] visitors = new BaseVisitor[] {
                 new SetParentVisitor(),
                 new DeclarationVisitor(),
-                new FirstPassTypeResolver(),
-                new SecondPassTypeResolver()
+                new QuantumTypeResolver3000()
         };
 
 		boolean everyThingIsAwesome = true;
 
 		for (BaseVisitor visitor : visitors) {
-			visitor.setStopOnFirstError(params.isStopOnFirstError());
 			visitor.setStopOnFirstError(params.isStopOnFirstError());
 
 			try {

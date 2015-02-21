@@ -119,6 +119,8 @@ public class ClassScope extends Scope {
             throw new IllegalArgumentException("scope is null");
         } else if (substitutions == null) {
             throw new IllegalArgumentException("substitutions is null");
+        } else if (scope == this) {
+            throw new IllegalArgumentException("scope can not be its own parent");
         }
 
 		this.parentClassesScopes.add(scope);

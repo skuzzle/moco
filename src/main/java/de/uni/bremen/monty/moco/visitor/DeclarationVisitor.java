@@ -150,7 +150,7 @@ public class DeclarationVisitor extends BaseVisitor {
         super.visit(node);
         node.setScope(node.getBody().getScope());
 
-        if (node.getIdentifier().getSymbol().equals("initializer")) {
+        if (node.isMethod() && node.getIdentifier().getSymbol().equals("initializer")) {
             final ClassDeclaration enclosingClass = ASTUtil.findAncestor(node, ClassDeclaration.class);
             if (enclosingClass != null) {
                 node.setDeclarationType(DeclarationType.INITIALIZER);
@@ -237,6 +237,10 @@ public class DeclarationVisitor extends BaseVisitor {
 			initializerBlock.addStatement(stm);
 		}
 
+        final ReturnStatement ret = new ReturnStatement(node.getPosition(), null);
+        ret.setParentNode(initializerBlock);
+        initializerBlock.addStatement(ret);
+        initializer.addReturnStatement(ret);
 		return initializer;
 	}
 }
