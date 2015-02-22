@@ -75,8 +75,4 @@ public class ResolvableIdentifier extends Identifier {
 	public static ResolvableIdentifier convert(Identifier identifier) {
 		return new ResolvableIdentifier(identifier.getSymbol());
 	}
-
-    public boolean isTypeVariableIdentifier() {
-        return "?".equals(getSymbol());
-    }
 }

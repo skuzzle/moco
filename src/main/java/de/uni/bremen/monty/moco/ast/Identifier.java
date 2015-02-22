@@ -95,7 +95,11 @@ public class Identifier {
 		return this.symbol;
 	}
 
-	public static Identifier convert(ResolvableIdentifier identifier) {
+	public boolean isTypeVariableIdentifier() {
+        return "?".equals(getSymbol());
+    }
+
+    public static Identifier convert(ResolvableIdentifier identifier) {
 		return new Identifier(identifier.getSymbol());
 	}
 }
