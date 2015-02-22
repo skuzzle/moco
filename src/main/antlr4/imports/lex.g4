@@ -142,7 +142,7 @@ Identifier
   ;
 
 ClassIdentifier
-  : UppercaseLetter (LowercaseLetter | UppercaseLetter | Digit)* LowercaseLetter (LowercaseLetter | UppercaseLetter | Digit)*
+  : UppercaseLetter ((LowercaseLetter | UppercaseLetter | Digit)* LowercaseLetter (LowercaseLetter | UppercaseLetter | Digit)*)?
   ;
 
 ConstantIdentifier
