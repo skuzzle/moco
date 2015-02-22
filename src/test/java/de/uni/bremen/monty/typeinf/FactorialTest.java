@@ -2,6 +2,7 @@ package de.uni.bremen.monty.typeinf;
 
 import static org.junit.Assert.assertEquals;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
@@ -13,7 +14,6 @@ import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 
 @Ignore
 public class FactorialTest extends AbstractTypeInferenceTest {
-
     @Test
     public void testInferCallType() throws Exception {
         final ASTNode root = getASTFromResource("factorial.monty");
