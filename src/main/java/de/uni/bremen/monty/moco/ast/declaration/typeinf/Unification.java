@@ -94,14 +94,14 @@ public class Unification {
             return simultaneousFor(typedNodes.stream().map(Typed::getType).iterator());
         }
 
-        public Unification simultaneousFor(Iterable<Type> types) {
+        public Unification simultaneousFor(Iterable<? extends Type> types) {
             if (types == null) {
                 throw new IllegalArgumentException("types is null");
             }
             return simultaneousFor(types.iterator());
         }
 
-        public Unification simultaneousFor(Iterator<Type> types) {
+        public Unification simultaneousFor(Iterator<? extends Type> types) {
             if (types == null) {
                 throw new IllegalArgumentException("types is null");
             }
@@ -270,7 +270,7 @@ public class Unification {
     /**
      * Applies this Unification to the type of the given {@link Typed typed
      * node}.
-     * 
+     *
      * @param typedNode Node to obtain the type from.
      * @return A new type.
      * @see #apply(Type)

@@ -45,7 +45,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
@@ -261,10 +260,10 @@ public class Scope {
 		}
 	}
 
-    public ClassDeclaration resolveType(Location location, ClassType typeBinding) {
+    public TypeDeclaration resolveType(Location location, ClassType typeBinding) {
         final ResolvableIdentifier typeName = ResolvableIdentifier
                 .of(typeBinding.getName());
-        return (ClassDeclaration) resolveType(location, typeName);
+        return resolveType(location, typeName);
     }
 
     public Type resolveTypeBinding(Location position, ResolvableIdentifier identifier) {
