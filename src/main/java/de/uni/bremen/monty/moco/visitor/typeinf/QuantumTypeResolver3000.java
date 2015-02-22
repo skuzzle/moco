@@ -224,6 +224,10 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
             returning.andParameter(param.getType());
         }
 
+        // set intermediate type before checking body. This comes in handy for
+        // recursive functions with explicitly declared return type
+        node.setType(returning.createType());
+
         // handle body and check compatibility to return type
         final Type bodyType;
         if (node instanceof FunctionDeclaration) {
@@ -310,7 +314,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
         final Optional<ProcedureDeclaration> parent = SearchAST
                 .forParent(ProcedureDeclaration.class)
                 .in(call);
-        if (!parent.isPresent()) {
+        if (!parent.isPresent() || overloads.size() == 1) {
             return overloads;
         }
         final List<ProcedureDeclaration> result = new ArrayList<>(overloads.size() - 1);
