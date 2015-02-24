@@ -19,5 +19,5 @@ class Pair<First, Second>:
 class Bc inherits Pair<Char, String>:
     pass
     
-class Recursive<Aa> inherits Pair<Aa, String>:
+class Recursive<A> inherits Pair<A, String>:
     pass

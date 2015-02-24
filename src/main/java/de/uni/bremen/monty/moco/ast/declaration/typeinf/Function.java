@@ -178,9 +178,18 @@ public class Function extends Type {
     Function apply(Unification unification) {
         final Type newReturnType = this.returnType.apply(unification);
         final Product newParameters = this.parameterTypes.apply(unification);
+        final List<TypeVariable> qunatification = new ArrayList<>(this.quantification.size());
+        for (final TypeVariable var : this.quantification) {
+            // add all type variables, that have no substitute
+            final Type subst = unification.getSubstitute(var);
+            if (subst == var) {
+                qunatification.add(var);
+            }
+        }
         return Function
                 .from(this)
                 .returning(newReturnType)
+                .quantifiedBy(qunatification)
                 .andParameters(newParameters)
                 .createType();
     }

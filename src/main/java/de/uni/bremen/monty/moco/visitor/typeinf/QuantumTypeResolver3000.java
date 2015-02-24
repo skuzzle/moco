@@ -77,7 +77,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
             // forbidden case typevar < typename >
             reportError(node, "Typevariables can not be quantified");
         } else if (typeBinding.isVariable()) {
-            // case: ? or typevar
+            // case: ?
             node.setType(typeBinding);
             return;
         }
@@ -86,7 +86,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
         final ClassType classBinding = typeBinding.asClass();
 
         // Ensure that the referenced class's type has been resolved
-        final ClassDeclaration decl = node.getScope()
+        final TypeDeclaration decl = node.getScope()
                 .resolveType(node, typeBinding.asClass());
         decl.visit(this);
         node.setDeclaration(decl);
@@ -114,8 +114,8 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
 
         final ClassNamed builder = ClassType
                 .classNamed(node.getIdentifier())
-
                 .atLocation(node);
+
         final ClassScope scope = node.getScope();
 
         // Define type arguments
@@ -123,8 +123,17 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
             final TypeDeclaration decl = new TypeParameterDeclaration(node.getPosition(),
                     typeParam);
 
-            final Type var = TypeVariable.named(typeParam).atLocation(node).createType();
-            decl.setType(var);
+            final Type t = ClassType
+                    .classNamed(typeParam)
+                    .atLocation(decl)
+                    .withSuperClass(CoreClasses.objectType().getType().asClass())
+                    .createType();
+            decl.setType(t);
+
+            final Type var = TypeVariable
+                    .named(typeParam)
+                    .atLocation(decl)
+                    .createType();
             builder.addTypeParameter(var);
             scope.getParentScope().define(decl);
         }
@@ -168,11 +177,13 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
         }
 
         // this also handles FunctionDeclarations
-
         final FunctionNamed builder = Function
                 .named(node.getIdentifier())
                 .atLocation(node);
+
         final Type returnType;
+        final List<TypeVariable> classQuantification = new ArrayList<>();
+        Unification substitution = Unification.EMPTY;
         if (node.getDeclarationType() == DeclarationType.INITIALIZER) {
             final ClassDeclaration classDecl = SearchAST
                     .forParent(ClassDeclaration.class)
@@ -180,15 +191,22 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
                     .get();
 
             assert classDecl.isTypeResolved();
+
             // if the class declaration is generic, we have to add its type
             // parameters to the constructor
-            returnType = classDecl.getType();
+            final ClassType ct = classDecl.getType().asClass();
 
             for (final Identifier typeParam : classDecl.getTypeParameters()) {
-                final TypeParameterDeclaration tpd = new TypeParameterDeclaration(
-                        node.getPosition(), typeParam);
-                // node.getTypeParameters().add(tpd);
+                // TODO: replace anonymous with typeParam name
+                classQuantification.add(TypeVariable.anonymous()
+                        .atLocation(node)
+                        .createType());
             }
+            // Substitute declared type parameters with fresh variables
+            substitution = Unification
+                    .substitute(ct.getTypeParameters())
+                    .simultaneousFor(classQuantification);
+            returnType = ct;
         } else if (node instanceof FunctionDeclaration) {
             // handle return type
             final FunctionDeclaration fun = (FunctionDeclaration) node;
@@ -202,6 +220,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
         final FunctionReturning returning = builder.returning(returnType);
 
         // handle type parameters
+        returning.quantifiedBy(classQuantification);
         for (final TypeParameterDeclaration typeParam : node.getTypeParameters()) {
             node.getScope().define(typeParam);
             final TypeVariable var = TypeVariable
@@ -226,7 +245,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
 
         // set intermediate type before checking body. This comes in handy for
         // recursive functions with explicitly declared return type
-        node.setType(returning.createType());
+        node.setType(substitution.apply(returning.createType()));
 
         // handle body and check compatibility to return type
         final Type bodyType;
@@ -386,23 +405,30 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
         }
         assert node.getLeft().getType().isClass();
         final ClassType instanceType = node.getLeft().getType().asClass();
-        final ClassDeclaration raw = node.getScope().resolveType(node, instanceType);
-        final ClassScope rawScope = raw.getScope();
+        final TypeDeclaration raw = node.getScope().resolveType(node, instanceType);
+
 
         // Resolve type of the right hand node in the scope of the left hand
         // node. This will yield the raw (declared type) of the right hand node.
         // It must therefore be run through the substitution which binds type
         // variables
-        node.getRight().setScope(rawScope);
+        node.getRight().setScope(raw.getScope());
         node.getRight().visit(this);
 
         assert node.getRight().isTypeResolved();
 
-        final Unification typeVarBindings = rawScope.getSubstitutions();
-        // We need to substitute type variables of the right with their bindings from
-        // the left scope
-        final Type rightType = typeVarBindings.apply(node.getRight());
-        node.setType(rightType);
+        if (raw instanceof ClassDeclaration) {
+            final ClassScope rawScope = (ClassScope) raw.getScope();
+            final Unification typeVarBindings = rawScope.getSubstitutions();
+            // We need to substitute type variables of the right with their
+            // bindings from
+            // the left scope
+
+            final Type rightType = typeVarBindings.apply(node.getRight());
+            node.setType(rightType);
+        } else {
+            node.setType(node.getRight().getType());
+        }
     }
 
     @Override
