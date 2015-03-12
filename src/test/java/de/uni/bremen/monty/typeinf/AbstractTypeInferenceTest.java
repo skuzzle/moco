@@ -108,16 +108,10 @@ public class AbstractTypeInferenceTest {
             try {
                 bv.setStopOnFirstError(true);
                 bv.visitDoubleDispatched(root);
+            } catch (MontyBaseException e) {
+                error = e;
             } catch (Exception e) {
-                final Position pos;
-                if (e instanceof MontyBaseException) {
-                    final MontyBaseException mbe = (MontyBaseException) e;
-                    pos = mbe.getLocation() != null
-                            ? mbe.getLocation().getPosition()
-                            : AbstractTypedASTNode.UNKNOWN_POSITION;
-                } else {
-                    pos = AbstractTypedASTNode.UNKNOWN_POSITION;
-                }
+                final Position pos = AbstractTypedASTNode.UNKNOWN_POSITION;
                 final String message = pos + " :\n"
                         + e.getMessage();
                 error = new Exception(message, e);
@@ -139,7 +133,7 @@ public class AbstractTypeInferenceTest {
             targetDotFile.getParentFile().mkdirs();
         }
 
-        try (final DotVisitor dotVisitor = DotVisitor.toFile(targetDotFile)) {
+        try (final DotVisitor dotVisitor = DotVisitor.toFile(targetDotFile, false)) {
             dotVisitor.visitDoubleDispatched(root);
         }
     }

@@ -8,17 +8,15 @@ import org.junit.Test;
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
-import de.uni.bremen.monty.moco.exception.TypeMismatchException;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
+import de.uni.bremen.monty.moco.visitor.typeinf.TypeInferenceException;
 
 public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
@@ -138,24 +136,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
         assertEquals(expected, decl.getType());
     }
 
-    @Test
-    public void testConstructorTypeInheritsTypeVars() throws Exception {
-        final ASTNode root = getASTFromString("testConstructorTypeInheritsTypeVars.monty",
-                code -> code.append("class Pair<A, B>:").indent()
-                        .append("+initializer(A a, B b):").indent()
-                        .append("pass"));
-
-        final ProcedureDeclaration ctor = searchFor(ProcedureDeclaration.class)
-                .where(Predicates.hasName("initializer"))
-                .in(root)
-                .get();
-
-        final Function type = ctor.getType().asFunction();
-        assertEquals("A", type.getQuantification().get(0).getName().getSymbol());
-        assertEquals("B", type.getQuantification().get(1).getName().getSymbol());
-    }
-
-    @Test(expected = TypeMismatchException.class)
+    @Test(expected = TypeInferenceException.class)
     public void testGenericMembers() throws Exception {
         getASTFromString("testGenericDeclarationWithAssignment.monty",
                 code -> code

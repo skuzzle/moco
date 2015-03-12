@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import de.uni.bremen.monty.moco.ast.Identifier;
@@ -83,6 +84,23 @@ public class Product extends Type {
             resultComponents.add(type.apply(unification));
         }
         return of(resultComponents).atLocation(this).createType();
+    }
+
+    @Override
+    public boolean isA(Type other) {
+        if (other == this) {
+            return true;
+        } else if (!other.isProduct()) {
+            return false;
+        }
+        final Product prod = other.asProduct();
+        final Iterator<Type> otherIt = prod.components.iterator();
+        for (final Type type : this.components) {
+            if (!type.isA(otherIt.next())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

@@ -195,6 +195,18 @@ public class Function extends Type {
     }
 
     @Override
+    public boolean isA(Type other) {
+        if (this == other) {
+            return true;
+        } else if (!other.isFunction()) {
+            return false;
+        }
+        final Function fun = other.asFunction();
+        return getParameters().isA(fun.getParameters()) &&
+                getReturnType().isA(fun.getReturnType());
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;

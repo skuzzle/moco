@@ -76,6 +76,11 @@ public class TypeVariable extends Type {
     }
 
     @Override
+    public boolean isA(Type other) {
+        return this == other;
+    }
+
+    @Override
     public boolean equals(Object obj) {
         return this == obj;
     }

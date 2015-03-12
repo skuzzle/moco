@@ -184,6 +184,26 @@ public class ClassType extends Type {
     }
 
     @Override
+    public boolean isA(Type other) {
+        if (this == other) {
+            return true;
+        } else if (!other.isClass()) {
+            return false;
+        }
+
+        final ClassType ct = other.asClass();
+        if (getName().equals(ct.getName())) {
+            return true;
+        }
+        for (final ClassType superType : this.superClasses) {
+            if (superType.isA(other)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
     public String toString() {
         final StringBuilder b = new StringBuilder();
         b.append(getName().toString());

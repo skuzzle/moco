@@ -107,6 +107,24 @@ public abstract class Type implements Location {
         return (Function) this;
     }
 
+    /**
+     * Whether this is a {@link Product}.
+     * 
+     * @return Whether this is a {@link Product}.
+     */
+    public boolean isProduct() {
+        return this instanceof Product;
+    }
+
+    /**
+     * Convenience method for casting this type to {@link Product}.
+     * 
+     * @return This, casted to {@link Product}.
+     */
+    public Product asProduct() {
+        return (Product) this;
+    }
+
     abstract Type apply(Unification unification);
 
     /**
@@ -119,6 +137,8 @@ public abstract class Type implements Location {
      */
     @Override
     public abstract boolean equals(Object obj);
+
+    public abstract boolean isA(Type other);
 
     @Override
     public String toString() {

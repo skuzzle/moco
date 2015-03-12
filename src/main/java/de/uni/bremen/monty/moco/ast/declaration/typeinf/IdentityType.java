@@ -14,6 +14,11 @@ public class IdentityType extends Type {
     }
 
     @Override
+    public boolean isA(Type other) {
+        return this == other;
+    }
+
+    @Override
     Type apply(Unification unification) {
         return this;
     }

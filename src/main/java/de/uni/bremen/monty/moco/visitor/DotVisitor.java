@@ -43,18 +43,21 @@ import de.uni.bremen.monty.moco.util.DotBuilder;
 
 public class DotVisitor extends BaseVisitor implements AutoCloseable {
 
-    public static DotVisitor toFile(File dotFile) throws FileNotFoundException {
-        return new DotVisitor(new PrintStream(dotFile));
+    public static DotVisitor toFile(File dotFile, boolean printNatives)
+            throws FileNotFoundException {
+        return new DotVisitor(new PrintStream(dotFile), printNatives);
     }
 
     private final DotBuilder dotBuilder;
+    private final boolean printNatives;
 
-    public DotVisitor(PrintStream out) {
+    public DotVisitor(PrintStream out, boolean printNatives) {
         if (out == null) {
             throw new IllegalArgumentException("out is null");
         }
 
         this.dotBuilder = new DotBuilder(out);
+        this.printNatives = printNatives;
     }
 
     @Override
@@ -264,10 +267,12 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
 
     @Override
     public void visit(Package node) {
-        this.dotBuilder.printNode(node, "Package", node.getPosition().toString());
-        super.visit(node);
-        for (final ModuleDeclaration module : node.getModules()) {
-            this.dotBuilder.printEdge(node, module, "");
+        if (this.printNatives || !node.isNativePackage()) {
+            this.dotBuilder.printNode(node, "Package", node.getPosition().toString());
+            super.visit(node);
+            for (final ModuleDeclaration module : node.getModules()) {
+                this.dotBuilder.printEdge(node, module, "");
+            }
         }
     }
 

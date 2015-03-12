@@ -27,14 +27,28 @@ public class TypeHelperTest {
     @Test
     public void testObjectIsCommon() throws Exception {
         final Type common = TypeHelper.findLeastCommonSuperType(Arrays.asList(
-                this.sub1, this.sub2, this.sub22));
+                this.sub1, this.sub2, this.sub22)).get();
         assertEquals(this.object, common);
     }
 
     @Test
     public void testSub1IsCommon() throws Exception {
         final Type common = TypeHelper.findLeastCommonSuperType(Arrays.asList(
-                this.sub1, this.sub11, this.sub12));
+                this.sub1, this.sub11, this.sub12)).get();
         assertEquals(this.sub1, common);
+    }
+
+    @Test
+    public void testSingleVoid() throws Exception {
+        final Type common = TypeHelper.findLeastCommonSuperType(
+                Arrays.asList(CoreClasses.voidType().getType())).get();
+        assertEquals(CoreClasses.voidType().getType(), common);
+    }
+
+    @Test
+    public void testMultipleVoid() throws Exception {
+        final Type common = TypeHelper.findLeastCommonSuperType(Arrays.asList(
+                CoreClasses.voidType().getType(), CoreClasses.voidType().getType())).get();
+        assertEquals(CoreClasses.voidType().getType(), common);
     }
 }

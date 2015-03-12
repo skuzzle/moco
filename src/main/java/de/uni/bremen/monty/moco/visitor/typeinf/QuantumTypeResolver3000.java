@@ -1,27 +1,23 @@
 package de.uni.bremen.monty.moco.visitor.typeinf;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.ClassScope;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
-import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration.DeclarationType;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
 import de.uni.bremen.monty.moco.ast.declaration.TypeParameterDeclaration;
@@ -29,8 +25,6 @@ import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType.ClassNamed;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function.FunctionNamed;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function.FunctionReturning;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
@@ -41,7 +35,6 @@ import de.uni.bremen.monty.moco.ast.expression.ParentExpression;
 import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
-import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.exception.TypeMismatchException;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 import de.uni.bremen.monty.moco.exception.UnknownTypeException;
@@ -122,18 +115,11 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
         for (final Identifier typeParam : node.getTypeParameters()) {
             final TypeDeclaration decl = new TypeParameterDeclaration(node.getPosition(),
                     typeParam);
-
-            final Type t = ClassType
-                    .classNamed(typeParam)
-                    .atLocation(decl)
-                    .withSuperClass(CoreClasses.objectType().getType().asClass())
-                    .createType();
-            decl.setType(t);
-
             final Type var = TypeVariable
                     .named(typeParam)
                     .atLocation(decl)
                     .createType();
+            decl.setType(var);
             builder.addTypeParameter(var);
             scope.getParentScope().define(decl);
         }
@@ -176,119 +162,102 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
             return;
         }
 
-        // this also handles FunctionDeclarations
-        final FunctionNamed builder = Function
-                .named(node.getIdentifier())
-                .atLocation(node);
-
-        final Type returnType;
-        final List<TypeVariable> classQuantification = new ArrayList<>();
-        Unification substitution = Unification.EMPTY;
-        if (node.getDeclarationType() == DeclarationType.INITIALIZER) {
-            final ClassDeclaration classDecl = SearchAST
-                    .forParent(ClassDeclaration.class)
-                    .in(node)
-                    .get();
-
-            assert classDecl.isTypeResolved();
-
-            // if the class declaration is generic, we have to add its type
-            // parameters to the constructor
-            final ClassType ct = classDecl.getType().asClass();
-
-            for (final Identifier typeParam : classDecl.getTypeParameters()) {
-                // TODO: replace anonymous with typeParam name
-                classQuantification.add(TypeVariable.anonymous()
-                        .atLocation(node)
-                        .createType());
-            }
-            // Substitute declared type parameters with fresh variables
-            substitution = Unification
-                    .substitute(ct.getTypeParameters())
-                    .simultaneousFor(classQuantification);
-            returnType = ct;
-        } else if (node instanceof FunctionDeclaration) {
-            // handle return type
-            final FunctionDeclaration fun = (FunctionDeclaration) node;
-            fun.getReturnTypeIdentifier().visit(this);
-            assert fun.getReturnTypeIdentifier().isTypeResolved();
-            returnType = fun.getReturnTypeIdentifier().getType();
-        } else {
-            returnType = CoreClasses.voidType().getType();
-        }
-
-        final FunctionReturning returning = builder.returning(returnType);
-
-        // handle type parameters
-        returning.quantifiedBy(classQuantification);
-        for (final TypeParameterDeclaration typeParam : node.getTypeParameters()) {
-            node.getScope().define(typeParam);
-            final TypeVariable var = TypeVariable
-                    .named(typeParam.getIdentifier())
-                    .atLocation(node)
-                    .createType();
-            typeParam.setType(var);
-            returning.quantifiedBy(var);
-            node.getScope().define(typeParam);
-        }
-
-        // handle parameters
-        for (final VariableDeclaration param : node.getParameter()) {
-            param.visit(this);
-            assert param.isTypeResolved();
-
-            // if (param.getType().isVariable()) {
-            // reportError(param, "Parameters may not have unknown type");
-            // }
-            returning.andParameter(param.getType());
-        }
-
-        // set intermediate type before checking body. This comes in handy for
-        // recursive functions with explicitly declared return type
-        node.setType(substitution.apply(returning.createType()));
-
-        // handle body and check compatibility to return type
-        final Type bodyType;
-        if (node instanceof FunctionDeclaration) {
-            bodyType = getBodyType(node, returnType);
-        } else if (node.getDeclarationType() == DeclarationType.INITIALIZER) {
-            // constructors do not have return statements
-            node.getBody().visit(this);
-            bodyType = returnType;
-        } else {
-            // TODO: ensure that all return statements are empty
-            node.getBody().visit(this);
-            bodyType = CoreClasses.voidType().getType();
-        }
-        final Unification unification = Unification.testIf(bodyType).isA(returnType);
-        if (!unification.isSuccessful()) {
-            reportError(node, "Type <%s> resolved for function's <%s> body not compatible to its declared return type <%s>",
-                    bodyType, node.getIdentifier(), returnType);
-        }
-        node.setType(unification.apply(returning.createType()));
+        final ProcedureTypeResolver ptr = new ProcedureTypeResolver(this);
+        ptr.resolveType(node);
+// // this also handles FunctionDeclarations
+        // final FunctionNamed builder = Function
+        // .named(node.getIdentifier())
+        // .atLocation(node);
+        //
+        // final Type returnType;
+        // final List<TypeVariable> classQuantification = new ArrayList<>();
+        // Unification substitution = Unification.EMPTY;
+        // if (node.getDeclarationType() == DeclarationType.INITIALIZER) {
+        // final ClassDeclaration classDecl = SearchAST
+        // .forParent(ClassDeclaration.class)
+        // .in(node)
+        // .get();
+        //
+        // assert classDecl.isTypeResolved();
+        //
+        // // if the class declaration is generic, we have to add its type
+        // // parameters to the constructor
+        // final ClassType ct = classDecl.getType().asClass();
+        //
+        // for (final Identifier typeParam : classDecl.getTypeParameters()) {
+        // // TODO: replace anonymous with typeParam name
+        // classQuantification.add(TypeVariable.anonymous()
+        // .atLocation(node)
+        // .createType());
+        // }
+        // // Substitute declared type parameters with fresh variables
+        // substitution = Unification
+        // .substitute(ct.getTypeParameters())
+        // .simultaneousFor(classQuantification);
+        // returnType = ct;
+        // } else if (node instanceof FunctionDeclaration) {
+        // // handle return type
+        // final FunctionDeclaration fun = (FunctionDeclaration) node;
+        // fun.getReturnTypeIdentifier().visit(this);
+        // assert fun.getReturnTypeIdentifier().isTypeResolved();
+        // returnType = fun.getReturnTypeIdentifier().getType();
+        // } else {
+        // returnType = CoreClasses.voidType().getType();
+        // }
+        //
+        // final FunctionReturning returning = builder.returning(returnType);
+        //
+        // // handle type parameters
+        // returning.quantifiedBy(classQuantification);
+        // for (final TypeParameterDeclaration typeParam :
+        // node.getTypeParameters()) {
+        // node.getScope().define(typeParam);
+        // final TypeVariable var = TypeVariable
+        // .named(typeParam.getIdentifier())
+        // .atLocation(node)
+        // .createType();
+        // typeParam.setType(var);
+        // returning.quantifiedBy(var);
+        // node.getScope().define(typeParam);
+        // }
+        //
+        // // handle parameters
+        // for (final VariableDeclaration param : node.getParameter()) {
+        // param.visit(this);
+        // assert param.isTypeResolved();
+        //
+        // returning.andParameter(param.getType());
+        // }
+        //
+        // // set intermediate type before checking body. This comes in handy
+        // for
+        // // recursive functions with explicitly declared return type
+        // node.setType(substitution.apply(returning.createType()));
+        //
+        // // handle body and check compatibility to return type
+        // final Type bodyType;
+        // if (node instanceof FunctionDeclaration) {
+        // bodyType = getBodyType(node, returnType);
+        // } else if (node.getDeclarationType() == DeclarationType.INITIALIZER)
+        // {
+        // // constructors do not have return statements
+        // node.getBody().visit(this);
+        // bodyType = returnType;
+        // } else {
+        // // TODO: ensure that all return statements are empty
+        // node.getBody().visit(this);
+        // bodyType = CoreClasses.voidType().getType();
+        // }
+        // final Function nodeType = returning.createType();
+        //
+        // if (!bodyType.isA(nodeType.getReturnType())) {
+        // reportError(node,
+        // "Type <%s> resolved for function's <%s> body not compatible to its declared return type <%s>",
+        // bodyType, node.getIdentifier(), returnType);
+        // }
+        // node.setType(nodeType);
     }
 
-    private Type getBodyType(ProcedureDeclaration node, Type declaredType) {
-        // resolve body's type
-        node.getBody().visit(this);
-        final Collection<ReturnStatement> stmts = node.getReturnStatements();
-        final Collection<Type> returnTypes = stmts.stream()
-                .map(stmt -> stmt.getParameter() == null
-                        ? CoreClasses.voidType().getType()
-                        : stmt.getParameter().getType())
-                .collect(Collectors.toCollection(() -> new ArrayList<>(stmts.size())));
-
-        if (returnTypes.isEmpty()) {
-            final Optional<Package> pkg = SearchAST.forParent(Package.class)
-                    .where(Package::isNativePackage).in(node);
-            if (pkg.isPresent()) {
-                // everything is allowed in a native package!
-                return declaredType;
-            }
-            return CoreClasses.voidType().getType();
-        }
-        return TypeHelper.findLeastCommonSuperType(returnTypes);
-    }
 
     @Override
     public void visit(FunctionCall node) {

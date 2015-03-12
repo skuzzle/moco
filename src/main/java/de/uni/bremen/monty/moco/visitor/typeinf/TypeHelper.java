@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
@@ -36,10 +37,10 @@ public final class TypeHelper {
      * @param types A list of types.
      * @return The common super type.
      */
-    public static Type findLeastCommonSuperType(Collection<Type> types) {
+    public static Optional<Type> findLeastCommonSuperType(Collection<Type> types) {
         if (types.size() == 1) {
             // hack for now...
-            return types.iterator().next();
+            return Optional.of(types.iterator().next());
         }
         final Map<Type, Set<ClassType>> superTypeMap = new HashMap<>();
         // For each type, collect super types
@@ -56,10 +57,7 @@ public final class TypeHelper {
             commonTypes.retainAll(superTypes);
         }
         if (commonTypes.isEmpty()) {
-            // This should not happen, because all types should have Object as
-            // super class
-            throw new IllegalStateException(String.format(
-                    "The types %s do not share a common super type", types));
+            return Optional.empty();
         }
 
         // Chose the most concrete type
@@ -70,7 +68,7 @@ public final class TypeHelper {
                 minDistanceType = type;
             }
         }
-        return minDistanceType;
+        return Optional.of(minDistanceType);
     }
 
     private static void traverseSuperTypes(ClassType current, Set<ClassType> types) {
