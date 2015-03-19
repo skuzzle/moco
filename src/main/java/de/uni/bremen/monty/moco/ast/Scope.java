@@ -48,6 +48,7 @@ import java.util.Map.Entry;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
@@ -86,6 +87,8 @@ public class Scope {
 	/** The map to store the remaining associations. */
     protected final Map<Identifier, Declaration> members;
 
+    protected final Map<TypeVariableDeclaration, TypeDeclaration> typeVars;
+
 
 	        /**
      * Constructor.
@@ -98,6 +101,7 @@ public class Scope {
 		this.parent = parent;
 		this.procedures = new HashMap<Identifier, List<ProcedureDeclaration>>();
 		this.members = new HashMap<Identifier, Declaration>();
+        this.typeVars = new HashMap<>();
 	}
 
 	/** Get the parent scope in nesting hierarchy.
@@ -304,6 +308,22 @@ public class Scope {
 		}
 		return result;
 	}
+
+    public void defineTypeVariable(TypeVariableDeclaration decl, TypeDeclaration type) {
+        this.typeVars.put(decl, type);
+    }
+
+    public boolean isFree(TypeVariable variable) {
+        try {
+            final ResolvableIdentifier ri = ResolvableIdentifier.of(variable.getName());
+            final TypeDeclaration type = resolveType(variable, ri);
+            assert type instanceof TypeVariableDeclaration;
+            // assert type.getType() == variable;
+            return true;
+        } catch (UnknownTypeException e) {
+            return false;
+        }
+    }
 
 	/** Associate an identifier with a declaration.
 	 *

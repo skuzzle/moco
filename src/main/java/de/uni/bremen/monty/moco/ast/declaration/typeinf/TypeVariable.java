@@ -66,11 +66,6 @@ public class TypeVariable extends Type {
     }
 
     @Override
-    public boolean isVariable() {
-        return true;
-    }
-
-    @Override
     Type apply(Unification unification) {
         return unification.getSubstitute(this);
     }

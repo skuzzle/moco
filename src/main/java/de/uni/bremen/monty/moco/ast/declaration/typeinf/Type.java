@@ -6,6 +6,8 @@ import java.util.List;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.Scope;
+import de.uni.bremen.monty.moco.util.DebugUtil;
 
 public abstract class Type implements Location {
 
@@ -23,6 +25,9 @@ public abstract class Type implements Location {
     private final Identifier name;
     private final Position positionHint;
 
+    // XXX: remove
+    private final String trace;
+
     protected Type(Identifier name, Position positionHint) {
         if (name == null) {
             throw new IllegalArgumentException("name is null");
@@ -32,6 +37,7 @@ public abstract class Type implements Location {
 
         this.name = name;
         this.positionHint = positionHint;
+        this.trace = DebugUtil.getCurrentLocation();
     }
 
     public Identifier getName() {
@@ -44,13 +50,14 @@ public abstract class Type implements Location {
     }
 
     /**
-     * Creates a structural identical type from this one, replacing all type
-     * variables with fresh ones.
+     * Creates a structural identical type from this one, replacing all bound
+     * type variables with fresh mono types.
      *
+     * @param scope The current scope.
      * @return A fresh copy of this type.
      */
-    public Type fresh() {
-        return Unification.fresh(this);
+    public Type fresh(Scope scope) {
+        return Unification.fresh(this, scope);
     }
 
     /**
@@ -109,7 +116,7 @@ public abstract class Type implements Location {
 
     /**
      * Whether this is a {@link Product}.
-     * 
+     *
      * @return Whether this is a {@link Product}.
      */
     public boolean isProduct() {
@@ -118,7 +125,7 @@ public abstract class Type implements Location {
 
     /**
      * Convenience method for casting this type to {@link Product}.
-     * 
+     *
      * @return This, casted to {@link Product}.
      */
     public Product asProduct() {

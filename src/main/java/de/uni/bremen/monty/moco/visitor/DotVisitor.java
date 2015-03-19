@@ -122,7 +122,17 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
 
         super.visit(node);
 
+        for (final TypeInstantiation ti : node.getSuperClassIdentifiers()) {
+            this.dotBuilder.printEdge(node, ti, "inst");
+        }
         this.dotBuilder.printEdge(node, node.getBlock(), "body");
+    }
+
+    @Override
+    public void visit(TypeInstantiation node) {
+        this.dotBuilder.printNode(node,
+                String.format("TypeInstantiation '%s'", node.getIdentifier()),
+                node.getPosition().toString());
     }
 
     @Override

@@ -62,7 +62,7 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	private final List<VariableDeclaration> parameter;
 
     /** The type parameters of this declaration */
-    private final List<TypeParameterDeclaration> typeParameters;
+    private final List<TypeVariableDeclaration> typeParameters;
 
     /** The return statements which occurred within the body of this declaration */
     private final List<ReturnStatement> returnStatements;
@@ -111,7 +111,7 @@ public class ProcedureDeclaration extends TypeDeclaration {
         return this.returnStatements;
     }
 
-    public List<TypeParameterDeclaration> getTypeParameters() {
+    public List<TypeVariableDeclaration> getTypeParameters() {
         return this.typeParameters;
     }
 

@@ -118,7 +118,7 @@ public class Main {
 
 		if (params.usePrintVisitor()) {
 			(new PrintVisitor()).visitDoubleDispatched(ast);
-            try (final DotVisitor v = DotVisitor.toFile(new File("ast.dot"))) {
+            try (final DotVisitor v = DotVisitor.toFile(new File("ast.dot"), false)) {
 			    v.visitDoubleDispatched(ast);
 			} catch (IOException e) {
 			    System.out.println(e.getMessage());

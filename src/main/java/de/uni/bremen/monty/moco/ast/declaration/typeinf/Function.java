@@ -10,6 +10,7 @@ import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.Scope;
 
 public class Function extends Type {
 
@@ -170,8 +171,8 @@ public class Function extends Type {
     }
 
     @Override
-    public Function fresh() {
-        return Unification.fresh(this);
+    public Function fresh(Scope scope) {
+        return Unification.fresh(this, scope);
     }
 
     @Override

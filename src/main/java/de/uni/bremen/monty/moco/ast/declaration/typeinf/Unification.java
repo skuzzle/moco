@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import de.uni.bremen.monty.moco.ast.Scope;
+
 /**
  * Unification is the process of determining structural equality of two
  * {@link Type type expressions}. This class represents the result of unifying
@@ -166,25 +168,35 @@ public class Unification {
         return new Unification(true, subst);
     }
 
-    static <T extends Type> T fresh(T type) {
-        if (type == null) {
-            throw new IllegalArgumentException("type is null");
+    /**
+     * Creates a unification for substituting all bound variables with fresh
+     * mono types.
+     *
+     * @param scope The scope in which to determine whether a variable is free
+     *            or bound.
+     * @return A new unification which substitutes bound variables.
+     */
+    private static Unification substituteFresh(Scope scope) {
+        if (scope == null) {
+            throw new IllegalArgumentException("scope is null");
         }
-        final Unification fresh = new Unification(true, new HashMap<>()) {
+        return new Unification(true, new HashMap<>()) {
             @Override
             Type getSubstitute(TypeVariable other) {
                 Type subst = this.subst.get(other);
-                if (subst == null) {
-                    subst = TypeVariable
-                            .named(other.getName())
-                            .atLocation(other.getPosition())
-                            .createType();
+                if (subst == null && !scope.isFree(other)) {
+                    subst = new MonoType(other.getName(), other.getPosition());
                     this.subst.put(other, subst);
+                } else if (subst == null) {
+                    subst = other;
                 }
                 return subst;
             }
         };
-        return fresh.apply(type);
+    }
+
+    static <T extends Type> T fresh(T type, Scope scope) {
+        return substituteFresh(scope).apply(type);
     }
 
     private final boolean success;
@@ -228,8 +240,6 @@ public class Unification {
     public Unification apply(Unification other) {
         if (other == null) {
             throw new IllegalArgumentException("other is null");
-        } else if (other == this) {
-            throw new IllegalArgumentException("can not apply to self");
         } else if (!other.isSuccessful()) {
             throw new IllegalStateException("can not apply unsuccesful unification");
         } else if (!isSuccessful()) {

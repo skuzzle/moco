@@ -13,6 +13,7 @@ import java.util.Set;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.Scope;
 
 public class ClassType extends Type {
 
@@ -140,12 +141,17 @@ public class ClassType extends Type {
     }
 
     @Override
-    public ClassType fresh() {
-        return Unification.fresh(this);
+    public ClassType fresh(Scope scope) {
+        return Unification.fresh(this, scope);
     }
 
     @Override
     ClassType apply(Unification unification) {
+        if (this.typeParameters.isEmpty() && this.superClasses.isEmpty()) {
+            // this cant be a ploy type, so avoid copying
+            return this;
+        }
+
         final List<Type> newTypeParams = new ArrayList<>(this.typeParameters.size());
         for (final Type param : this.typeParameters) {
             newTypeParams.add(param.apply(unification));

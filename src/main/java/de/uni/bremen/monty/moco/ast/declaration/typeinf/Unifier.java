@@ -61,7 +61,7 @@ final class Unifier {
         // type var,
         // preferably choose the one which is not an 'inferred' variable
         if (rep_m.isVariable() && rep_n.isVariable()) {
-            return rep_m.getName().getSymbol().equals("?")
+            return rep_m.getName().isTypeVariableIdentifier()
                     ? rep_n
                     : rep_m;
         } else if (rep_m.isVariable()) {
@@ -96,35 +96,31 @@ final class Unifier {
             // everything isA TOP, BOT isA everything
             // this also covers the case that both types are VOID
             return true;
+        } else if (s instanceof MonoType && t instanceof MonoType) {
+            return s.isA(t);
         } else if (s instanceof ClassType && t instanceof ClassType) {
-            final ClassType cts = (ClassType) s;
-            final ClassType ctt = (ClassType) t;
+            final ClassType cts = s.asClass();
+            final ClassType ctt = t.asClass();
 
             return isA(cts, ctt, subst);
         } else if (s instanceof Function && t instanceof Function) {
             union(s, t, subst);
-            final Function fs = (Function) s;
-            final Function ft = (Function) t;
-
-            if (fs.getParameterTypes().size() != ft.getParameterTypes().size()) {
-                return false;
-            }
+            final Function fs = s.asFunction();
+            final Function ft = t.asFunction();
 
             if (!unifyInternal(fs.getReturnType(), ft.getReturnType(), subst)) {
                 return false;
             }
 
-            final Iterator<Type> tIt = ft.getParameterTypes().iterator();
-            for (final Type param : fs.getParameterTypes()) {
-                if (!unifyInternal(param, tIt.next(), subst)) {
-                    return false;
-                }
+            if (!unifyInternal(fs.getParameters(), ft.getParameters(), subst)) {
+                return false;
             }
+
             return true;
         } else if (s instanceof Product && t instanceof Product) {
             union(s, t, subst);
-            final Product ps = (Product) s;
-            final Product pt = (Product) t;
+            final Product ps = s.asProduct();
+            final Product pt = t.asProduct();
 
             if (ps.getComponents().size() != pt.getComponents().size()) {
                 return false;

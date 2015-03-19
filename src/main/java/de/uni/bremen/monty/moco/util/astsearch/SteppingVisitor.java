@@ -15,6 +15,7 @@ import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.CastExpression;
 import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
@@ -114,6 +115,11 @@ class SteppingVisitor extends BaseVisitor implements Iterator<ASTNode> {
 
     @Override
     public void visit(VariableDeclaration node) {
+        addNode(node);
+    }
+
+    @Override
+    public void visit(TypeInstantiation node) {
         addNode(node);
     }
 

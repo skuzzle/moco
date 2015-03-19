@@ -12,6 +12,7 @@ import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
+import de.uni.bremen.monty.moco.visitor.typeinf.TypeInferenceException;
 
 public class TestExplicitTyping extends AbstractTypeInferenceTest {
 
@@ -73,5 +74,30 @@ public class TestExplicitTyping extends AbstractTypeInferenceTest {
                 .and(SearchAST.forExactParent(ProcedureDeclaration.class))
                 .in(root).get();
         assertUniqueTypeIs(CoreClasses.stringType().getType(), decl);
+    }
+
+    @Test(expected = TypeInferenceException.class)
+    public void testReturnTypeMismatchFunction() throws Exception {
+        getASTFromString("returnTypeMismatchFunction.monty",
+                code -> code
+                .append("Int foo():").indent()
+                .append("return \"abc\""));
+    }
+
+    @Test(expected = TypeInferenceException.class)
+    public void testReturnTypeMismatchProcedure() throws Exception {
+        getASTFromString("returnTypeMismatchProcedure.monty",
+                code -> code
+                        .append("foo():").indent()
+                        .append("return \"abc\""));
+    }
+
+    @Test(expected = TypeInferenceException.class)
+    public void testReturnTypeMismatchConstructor() throws Exception {
+        getASTFromString("returnTypeMismatchConstructor.monty",
+                code -> code
+                        .append("class Foo:").indent()
+                        .append("+initializer():").indent()
+                        .append("return \"abc\""));
     }
 }

@@ -1,17 +1,22 @@
 package de.uni.bremen.monty.moco.visitor.typeinf;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Product;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
@@ -79,13 +84,26 @@ public final class TypeHelper {
         }
     }
 
-    public static ProcedureDeclaration bestFit(
+    public static Optional<ProcedureDeclaration> bestFit(
             Collection<ProcedureDeclaration> candidates, FunctionCall call,
             BaseVisitor typeResolver) {
 
         ProcedureDeclaration bestMatch = null;
         int bestRating = 0;
         boolean doubleMatch = false;
+
+        final Scope scope = call.getScope();
+
+        final List<Type> actualSignature = new ArrayList<>(call.getArguments().size());
+        for (final Expression actual : call.getArguments()) {
+            actualSignature.add(actual.getType());
+        }
+
+        final Function callType = Function.named(call.getIdentifier())
+                .atLocation(call)
+                .returning(TypeVariable.anonymous().createType())
+                .andParameters(actualSignature)
+                .createType();
 
         outer: for (final ProcedureDeclaration candidate : candidates) {
             if (candidate.getParameter().size() != call.getArguments().size()) {
@@ -94,20 +112,12 @@ public final class TypeHelper {
 
             candidate.visit(typeResolver);
 
-            final Iterator<VariableDeclaration> formalIt = candidate.getParameter().iterator();
-            final Iterator<Expression> actualIt = call.getArguments().iterator();
+            final Function candidateType = candidate.getType().asFunction().fresh(candidate.getScope());
 
-            int rating = 0;
-            while (formalIt.hasNext()) {
-                final VariableDeclaration formal = formalIt.next();
-                final Expression actual = actualIt.next();
-
-                final Unification unification = Unification.testIf(actual).isA(formal);
-                if (!unification.isSuccessful()) {
-                    continue outer;
-                }
-                rating += rate(actual.getType(), formal.getType());
+            if (!Unification.testIf(callType).isA(candidateType).isSuccessful()) {
+                continue outer;
             }
+            int rating = rateSignature(callType.getParameters(), candidateType.getParameters());
 
             if (bestMatch == null || rating > bestRating) {
                 bestMatch = candidate;
@@ -121,14 +131,26 @@ public final class TypeHelper {
         // TODO: error handling
         if (doubleMatch) {
             // ambiguous call
-            return null;
+            return Optional.empty();
         } else if (bestMatch == null) {
             // no match
-            return null;
+            return Optional.empty();
         } else {
             // we have a winner
-            return bestMatch;
+            return Optional.of(bestMatch);
         }
+    }
+
+    private static int rateSignature(Product fun1, Product fun2) {
+        assert fun1.getComponents().size() == fun2.getComponents().size();
+        final Iterator<Type> fun1It = fun1.getComponents().iterator();
+        final Iterator<Type> fun2It = fun2.getComponents().iterator();
+
+        int rate = 0;
+        while (fun1It.hasNext()) {
+            rate += rate(fun1It.next(), fun2It.next());
+        }
+        return rate;
     }
 
     private static int rate(Type t1, Type t2) {

@@ -8,6 +8,7 @@ import org.junit.Test;
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
@@ -81,19 +82,17 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 .where(Predicates.hasName("Recursive"))
                 .in(root).get();
 
-        final Type expected1 = ClassType.classNamed("Recursive")
-                .withSuperClass(CoreClasses.objectType().getType().asClass())
-                .addTypeParameter(TypeVariable.anonymous().createType())
-                .createType();
+        final TypeInstantiation superClassDecl = SearchAST.forNode(TypeInstantiation.class)
+                .where(Predicates.hasName("Pair"))
+                .in(root).get();
 
-        final Type expected2 = ClassType.classNamed("Pair")
+        final Type expectedTypeInst = ClassType.classNamed("Pair")
                 .withSuperClass(CoreClasses.objectType().getType().asClass())
                 .addTypeParameter(TypeVariable.named("A").createType())
                 .addTypeParameter(CoreClasses.stringType().getType())
                 .createType();
 
-        assertTrue(Unification.testIf(decl.getType()).isA(expected1).isSuccessful());
-        assertTrue(Unification.testIf(decl.getType()).isA(expected2).isSuccessful());
+        assertTrue(Unification.testIf(superClassDecl.getType()).isA(expectedTypeInst).isSuccessful());
     }
 
     @Test
@@ -134,6 +133,23 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
         assertEquals(expected, ctor.getType());
         assertEquals(expected, decl.getType());
+    }
+
+    @Test(expected = TypeInferenceException.class)
+    public void testWrongGenericParameter() throws Exception {
+        getASTFromString("testWrongGenericParameter.monty",
+                code -> code
+                        .append("main():").indent()
+                        .append("Foo<Int> myfoo := Foo(5)")
+                        .append("Int a := myfoo.bar(\"a\")")
+                        .dedent()
+                        .append("class Foo<X>:").indent()
+                        .append("+initializer(X x):").indent()
+                        .append("pass")
+                        .dedent()
+                        .blankLine()
+                        .append("+Int bar(X x):").indent()
+                        .append("return 2"));
     }
 
     @Test(expected = TypeInferenceException.class)
