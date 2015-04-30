@@ -197,8 +197,29 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     }
 
     @Test
-    public void testReturnNestedGeneric() throws Exception {
+    public void testAssignAttribute() throws Exception {
+        final ASTNode root = getASTFromString("testAssignAttribute.monty",
+                code -> code
+                        .append("Foo<String> a := Foo<String>()")
+                        .append("Foo<String> temp := Foo<String>()")
+                        .append("a.x := \"b\"")
+                        .append("temp.x := a.x")
+                        .append("class Foo<X>:").indent()
+                        .append("+X x"));
 
+        final VariableDeclaration a = SearchAST.forNode(VariableDeclaration.class)
+                .where(Predicates.hasName("a")).in(root).get();
+        final VariableDeclaration temp = SearchAST.forNode(VariableDeclaration.class)
+                .where(Predicates.hasName("temp")).in(root).get();
+
+        final Type expected = ClassType.classNamed("Foo")
+                .addTypeParameter(CoreClasses.stringType().getType())
+                .withSuperClass(CoreClasses.objectType().getType().asClass())
+                .createType();
+
+        assertUniqueTypeIs(expected, a);
+        assertUniqueTypeIs(expected, temp);
+        assertAllTypesResolved(root);
     }
 
     @Test
