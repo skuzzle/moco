@@ -55,6 +55,7 @@ import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration.DeclarationType;
 import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
+import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
@@ -129,6 +130,12 @@ public class DeclarationVisitor extends BaseVisitor {
 		node.setScope(classBlock.getScope());
         this.currentScope = this.currentScope.leave();
 	}
+
+    @Override
+    public void visit(TypeVariableDeclaration node) {
+        this.currentScope.define(node);
+        super.visit(node);
+    }
 
 	@Override
 	public void visit(FunctionDeclaration node) {
@@ -211,10 +218,13 @@ public class DeclarationVisitor extends BaseVisitor {
 
 	private ProcedureDeclaration buildDefaultInitializer(ClassDeclaration node) {
 
-		ProcedureDeclaration initializer =
-		        new ProcedureDeclaration(node.getPosition(), new Identifier(node.getIdentifier().getSymbol()
-		                + "_definit"), new Block(node.getPosition()), new ArrayList<VariableDeclaration>(),
-		                ProcedureDeclaration.DeclarationType.INITIALIZER);
+        final ProcedureDeclaration initializer = new ProcedureDeclaration(
+                node.getPosition(),
+                Identifier.of(node.getIdentifier().getSymbol() + "_definit"),
+                new Block(node.getPosition()),
+                new ArrayList<VariableDeclaration>(),
+                ProcedureDeclaration.DeclarationType.INITIALIZER);
+
 		initializer.setParentNode(node.getBlock());
 		Block initializerBlock = initializer.getBody();
 		initializerBlock.setParentNode(initializer);
@@ -224,7 +234,8 @@ public class DeclarationVisitor extends BaseVisitor {
 			FunctionCall call =
                     new FunctionCall(node.getPosition(), new ResolvableIdentifier(superclass.getIdentifier().getSymbol()
                             + "_definit"),
-			                new ArrayList<Expression>());
+                            new ArrayList<Expression>(),
+			                new ArrayList<TypeInstantiation>());
 			MemberAccess defaultInitializerCall = new MemberAccess(node.getPosition(), self, call);
 
 			self.setParentNode(defaultInitializerCall);

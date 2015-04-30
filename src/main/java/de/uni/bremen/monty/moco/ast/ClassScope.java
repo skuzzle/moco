@@ -70,8 +70,6 @@ public class ClassScope extends Scope {
 	/** The parent class in inheritance hierachy. */
 	private final List<ClassScope> parentClassesScopes;
 
-    private Unification substitutions;
-
 	    /**
      * Constructor.
      *
@@ -124,17 +122,8 @@ public class ClassScope extends Scope {
         }
 
 		this.parentClassesScopes.add(scope);
-        this.substitutions = this.substitutions.merge(substitutions);
+        defineSubstitutions(substitutions);
 	}
-
-    /**
-     * Gets the substitutions that bind type variables of super classes.
-     *
-     * @return Substitutions for super class type variables.
-     */
-    public Unification getSubstitutions() {
-        return this.substitutions;
-    }
 
 	/** Resolve an identifier in inherited scopes.
 	 *

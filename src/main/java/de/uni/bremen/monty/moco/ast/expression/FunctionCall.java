@@ -38,6 +38,7 @@
  */
 package de.uni.bremen.monty.moco.ast.expression;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import de.uni.bremen.monty.moco.ast.Identifier;
@@ -47,44 +48,30 @@ import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
+import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class FunctionCall extends Expression implements Statement, NamedNode {
 	private final ResolvableIdentifier identifier;
 	private final List<Expression> arguments;
+    private final List<TypeInstantiation> typeArguments;
 	private ProcedureDeclaration declaration;
-    private List<List<Type>> signatureTypes;
 
     /** Type declaration of the type of which this is a constructor call */
     private ClassDeclaration constructorType;
 
     public FunctionCall(Position position, ResolvableIdentifier identifier,
-            List<Expression> arguments) {
+            List<Expression> arguments, List<TypeInstantiation> typeArgs) {
 		super(position);
 		this.identifier = identifier;
 		this.arguments = arguments;
+        this.typeArguments = typeArgs;
 	}
 
-    /**
-     * Sets the signature types.
-     *
-     * @param signatureTypes The signature types.
-     */
-    public void setSignatureTypes(List<List<Type>> signatureTypes) {
-        this.signatureTypes = signatureTypes;
-    }
-
-    /**
-     * Gets all possible signature types. That is, the Cartesian product of the
-     * types of actual parameters of this call. These types are set during first
-     * pass of type resolving.
-     *
-     * @return The signature types.
-     */
-    public List<List<Type>> getSignatureTypes() {
-        return this.signatureTypes;
+    public FunctionCall(Position position, ResolvableIdentifier identifier,
+            List<Expression> arguments) {
+        this(position, identifier, arguments, new ArrayList<>());
     }
 
     /**
@@ -134,6 +121,10 @@ public class FunctionCall extends Expression implements Statement, NamedNode {
 		return this.arguments;
 	}
 
+    public List<TypeInstantiation> getTypeArguments() {
+        return this.typeArguments;
+    }
+
 	/** {@inheritDoc} */
 	@Override
 	public void visit(BaseVisitor visitor) {
@@ -143,8 +134,11 @@ public class FunctionCall extends Expression implements Statement, NamedNode {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
+        for (final TypeInstantiation inst : this.typeArguments) {
+            inst.visit(visitor);
+        }
 		for (Expression expression : this.arguments) {
-			visitor.visitDoubleDispatched(expression);
+            expression.visit(visitor);
 		}
 	}
 

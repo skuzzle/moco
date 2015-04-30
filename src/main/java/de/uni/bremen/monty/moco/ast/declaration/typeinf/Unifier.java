@@ -11,11 +11,13 @@ final class Unifier {
     private final Map<Type, Integer> typeToClass;
     private final Map<Integer, Type> classToType;
     private int classes;
+    private final TypeContext context;
 
-    Unifier() {
+    Unifier(TypeContext context) {
         this.typeToClass = new HashMap<>();
         this.classToType = new HashMap<>();
         this.classes = 0;
+        this.context = context;
     }
 
     private int getEquivalenceClass(Type t) {
@@ -133,12 +135,21 @@ final class Unifier {
                 }
             }
             return true;
-        } else if (s instanceof TypeVariable || t instanceof TypeVariable) {
+        } else if (canUnifyVariables(s, t)) {
             union(s, t, subst);
             return true;
         } else {
             return false;
         }
+    }
+
+    private boolean canUnifyVariables(Type s, Type t) {
+        if (s.isVariable()) {
+            return !this.context.isFree(s.asVariable());
+        } else if (t.isVariable()) {
+            return !this.context.isFree(t.asVariable());
+        }
+        return false;
     }
 
     /**

@@ -52,7 +52,7 @@ import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 /** A ClassDeclaration represents the declaration of a class in the AST.
  * <p>
  * A ClassDeclaration has a list of superclasses and a list of nested declarations. It can be used as a type. */
-public class ClassDeclaration extends TypeDeclaration {
+public class ClassDeclaration extends TypeDeclaration implements QuantifiedDeclaration {
 
 	/** Identifier of superclasses. */
     private final List<TypeInstantiation> superClassIdentifiers = new ArrayList<>();
@@ -61,7 +61,7 @@ public class ClassDeclaration extends TypeDeclaration {
     private final List<TypeDeclaration> superClassDeclarations = new ArrayList<>();
 
     /** Identifier of type parameters to this declaration */
-    private final List<Identifier> typeParameters = new ArrayList<>();
+    private List<TypeVariableDeclaration> typeParameters = new ArrayList<>();
 
 	/** The generated default initializer to be called from every user defined initializer. */
 	private ProcedureDeclaration defaultInitializer;
@@ -94,16 +94,17 @@ public class ClassDeclaration extends TypeDeclaration {
 		this.superClassIdentifiers.addAll(superClasses);
 	}
 
+    public void setTypeParameters(List<TypeVariableDeclaration> typeParameters) {
+        this.typeParameters = typeParameters;
+    }
+
+    @Override
+    public List<TypeVariableDeclaration> getTypeParameters() {
+        return this.typeParameters;
+    }
+
     public void addSuperClassDeclaration(ClassDeclaration superClass) {
         this.superClassDeclarations.add(superClass);
-    }
-
-    public void addTypeParameter(Identifier name) {
-        this.typeParameters.add(name);
-    }
-
-    public List<Identifier> getTypeParameters() {
-        return this.typeParameters;
     }
 
     /**
@@ -113,7 +114,7 @@ public class ClassDeclaration extends TypeDeclaration {
      * @return Whether this is a generic class.
      */
     public boolean isGeneric() {
-        return !this.typeParameters.isEmpty();
+        return this.typeParameters != null && !this.typeParameters.isEmpty();
     }
 
     @Override
@@ -217,11 +218,13 @@ public class ClassDeclaration extends TypeDeclaration {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
-
-        for (final TypeInstantiation superClass : this.superClassIdentifiers) {
-            visitor.visitDoubleDispatched(superClass);
+        for (final TypeVariableDeclaration decl : this.typeParameters) {
+            decl.visit(visitor);
         }
-		visitor.visitDoubleDispatched(this.block);
+        for (final TypeInstantiation superClass : this.superClassIdentifiers) {
+            superClass.visit(visitor);
+        }
+        this.block.visit(visitor);
 	}
 
 	/** {@inheritDoc} */

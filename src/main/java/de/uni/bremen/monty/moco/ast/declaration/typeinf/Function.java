@@ -21,7 +21,7 @@ public class Function extends Type {
         private final Location location;
         private final Type returnType;
         private final List<Type> parameters;
-        private final List<TypeVariable> quantification;
+        private final List<Type> quantification;
 
         private FunctionReturning(String name, Location location, Type returnType) {
             super();
@@ -32,14 +32,14 @@ public class Function extends Type {
             this.quantification = new ArrayList<>();
         }
 
-        public FunctionReturning quantifiedBy(TypeVariable... types) {
+        public FunctionReturning quantifiedBy(Type... types) {
             if (types == null) {
                 throw new IllegalArgumentException("types is null");
             }
             return quantifiedBy(Arrays.asList(types));
         }
 
-        public FunctionReturning quantifiedBy(List<TypeVariable> types) {
+        public FunctionReturning quantifiedBy(List<Type> types) {
             if (types == null) {
                 throw new IllegalArgumentException("types is null");
             }
@@ -144,10 +144,10 @@ public class Function extends Type {
 
     private final Type returnType;
     private final Product parameterTypes;
-    private final List<TypeVariable> quantification;
+    private final List<Type> quantification;
 
     private Function(Position position, Identifier identifier,
-            Type returnType, List<Type> parameterTypes, List<TypeVariable> quantification) {
+            Type returnType, List<Type> parameterTypes, List<Type> quantification) {
         super(identifier, position);
         this.returnType = returnType;
         this.parameterTypes = Product.of(parameterTypes).createType();
@@ -166,7 +166,7 @@ public class Function extends Type {
         return this.parameterTypes.getComponents();
     }
 
-    public List<TypeVariable> getQuantification() {
+    public List<Type> getQuantification() {
         return this.quantification;
     }
 
@@ -179,13 +179,10 @@ public class Function extends Type {
     Function apply(Unification unification) {
         final Type newReturnType = this.returnType.apply(unification);
         final Product newParameters = this.parameterTypes.apply(unification);
-        final List<TypeVariable> qunatification = new ArrayList<>(this.quantification.size());
-        for (final TypeVariable var : this.quantification) {
+        final List<Type> qunatification = new ArrayList<>(this.quantification.size());
+        for (final Type var : this.quantification) {
             // add all type variables, that have no substitute
-            final Type subst = unification.getSubstitute(var);
-            if (subst == var) {
-                qunatification.add(var);
-            }
+            qunatification.add(var.apply(unification));
         }
         return Function
                 .from(this)
@@ -223,7 +220,7 @@ public class Function extends Type {
     public String toString() {
         final StringBuilder b = new StringBuilder();
         b.append(getName().getSymbol()).append(": ");
-        final Iterator<TypeVariable> qunatIt = getQuantification().iterator();
+        final Iterator<Type> qunatIt = getQuantification().iterator();
         if (!qunatIt.hasNext()) {
             b.append("[]");
         } else {

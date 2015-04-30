@@ -6,8 +6,18 @@ import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class TypeVariableDeclaration extends TypeDeclaration {
 
+    private boolean artificial;
+
     public TypeVariableDeclaration(Position position, Identifier identifier) {
         super(position, identifier);
+    }
+
+    public void setArtificial(boolean artificial) {
+        this.artificial = artificial;
+    }
+
+    public boolean isArtificial() {
+        return this.artificial;
     }
 
     @Override

@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Product;
@@ -20,7 +20,6 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
-import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 /**
  * Provides static helper methods to operate with {@link Type Types}.
@@ -84,18 +83,98 @@ public final class TypeHelper {
         }
     }
 
-    public static Optional<ProcedureDeclaration> bestFit(
-            Collection<ProcedureDeclaration> candidates, FunctionCall call,
-            BaseVisitor typeResolver) {
+    /**
+     * Represents the result of finding the best fitting procedure declaration
+     * to a function/procedure call.
+     *
+     * @author Simon Taddiken
+     * @see TypeHelper#bestFit(Collection, FunctionCall, TypeResolver)
+     */
+    public final static class BestFit {
+        private final List<ProcedureDeclaration> matches;
+        private final Unification unification;
+        private final Function callType;
 
-        ProcedureDeclaration bestMatch = null;
-        int bestRating = 0;
-        boolean doubleMatch = false;
+        private BestFit(List<ProcedureDeclaration> matches, Unification unification,
+                Function callType) {
+            this.matches = matches;
+            this.unification = unification;
+            this.callType = callType;
+        }
 
-        final Scope scope = call.getScope();
+        public boolean isUnique() {
+            return this.matches.size() == 1;
+        }
+
+        public Unification getUnification() {
+            assert isUnique();
+            return this.unification;
+        }
+
+        public Function getCallType() {
+            assert isUnique();
+            return this.callType;
+        }
+
+        public ProcedureDeclaration getBestMatch() {
+            assert isUnique();
+            return this.matches.get(0);
+        }
+
+        private void reconstructTypeArguments() {
+            assert isUnique();
+            final ProcedureDeclaration decl = getBestMatch();
+        }
+
+        private BestFit checkIsUnique(FunctionCall call, TypeResolver typeResolver) {
+            if (this.matches.isEmpty()) {
+                typeResolver.reportError(call,
+                        "Found no matching overload of <%s>",
+                        call.getIdentifier());
+            } else if (this.matches.size() > 1) {
+                final StringBuilder b = new StringBuilder();
+                final Iterator<ProcedureDeclaration> it = this.matches.iterator();
+                while (it.hasNext()) {
+                    b.append(it.next().getType());
+                    b.append("\n");
+                }
+                final StringBuilder b2 = new StringBuilder();
+                b2.append(call.getIdentifier()).append("(");
+                final Iterator<Expression> expIt = call.getArguments().iterator();
+                while (expIt.hasNext()) {
+                    b2.append(expIt.next().getType());
+                    if (expIt.hasNext()) {
+                        b2.append(" x ");
+                    }
+                }
+                b2.append(")");
+                typeResolver.reportError(call,
+                        "Ambiguous call.%nCall: %s%nCandidates:%n%s",
+                        b2.toString(),
+                        b.toString());
+            }
+            return this;
+        }
+    }
+
+    /**
+     * Resolves the best fitting procedure or function declaration to the given
+     * call. If the overload can not be resolved uniquely, an error is reported
+     * at the given {@code typeResolver}.
+     *
+     * @param candidates The overload candidates.
+     * @param call The call.
+     * @param typeResolver The type resolver.
+     * @return A {@link BestFit} instance holding the best matching result and
+     *         an {@link Unification} containing substitutions for type
+     *         variables.
+     */
+    public static BestFit bestFit(Collection<ProcedureDeclaration> candidates,
+            FunctionCall call, TypeResolver typeResolver) {
 
         final List<Type> actualSignature = new ArrayList<>(call.getArguments().size());
         for (final Expression actual : call.getArguments()) {
+            typeResolver.resolveTypeOf(actual);
             actualSignature.add(actual.getType());
         }
 
@@ -105,40 +184,61 @@ public final class TypeHelper {
                 .andParameters(actualSignature)
                 .createType();
 
+        final Unification callScope = call.getScope().getSubstitutions();
+
+        int bestRating = -1;
+        Unification bestUnification = Unification.EMPTY;
+        final List<ProcedureDeclaration> matches = new ArrayList<>();
+
         outer: for (final ProcedureDeclaration candidate : candidates) {
+            Unification unification = Unification.EMPTY;
+
             if (candidate.getParameter().size() != call.getArguments().size()) {
                 continue;
             }
 
-            candidate.visit(typeResolver);
+            typeResolver.resolveTypeOf(candidate);
 
-            final Function candidateType = candidate.getType().asFunction().fresh(candidate.getScope());
+            // determine the context which supplies external substitutions
+            Unification context = callScope;
+            if (!call.getTypeArguments().isEmpty()) {
+                // type args have explicitly been specified at the call
+                if (candidate.getTypeParameters().size() != call.getTypeArguments().size()) {
+                    continue;
+                }
+                context = Unification.substitute(candidate.getTypeParameters().stream())
+                        .simultaneousFor(call.getTypeArguments());
+            }
 
-            if (!Unification.testIf(callType).isA(candidateType).isSuccessful()) {
+            final Function candidateType = context.apply(candidate).asFunction();
+
+            unification = Unification
+                    .testIf(callType)
+                    .isA(candidateType)
+                    .mergeIfSuccessful(context);
+            if (!unification.isSuccessful()) {
                 continue outer;
             }
-            int rating = rateSignature(callType.getParameters(), candidateType.getParameters());
+            int rating = rateSignature(callType.getParameters(),
+                    candidateType.getParameters());
 
-            if (bestMatch == null || rating > bestRating) {
-                bestMatch = candidate;
+            if (rating > bestRating) {
+                matches.clear();
                 bestRating = rating;
-                doubleMatch = false;
+                matches.add(candidate);
+                bestUnification = unification;
             } else if (bestRating == rating) {
-                doubleMatch = true;
+                matches.add(candidate);
             }
         }
 
-        // TODO: error handling
-        if (doubleMatch) {
-            // ambiguous call
-            return Optional.empty();
-        } else if (bestMatch == null) {
-            // no match
-            return Optional.empty();
-        } else {
-            // we have a winner
-            return Optional.of(bestMatch);
+        assert bestUnification.isSuccessful();
+
+        for (final TypeInstantiation actualTypeArg : call.getTypeArguments()) {
+            bestUnification = bestUnification.merge(actualTypeArg.getUnification());
         }
+        return new BestFit(matches, bestUnification, callType)
+                .checkIsUnique(call, typeResolver);
     }
 
     private static int rateSignature(Product fun1, Product fun2) {

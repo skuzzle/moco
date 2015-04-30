@@ -62,14 +62,15 @@ typeList
   ;
 
 functionDeclaration
-  : type
+  : ( '<' typeParamDeclaration '>' )? type
     (Identifier | 'operator' binaryOperation)
     Lparenthesis parameterList? Rparenthesis ':' EndOfLine
     statementBlock
   ;
 
 procedureDeclaration
-  : Identifier Lparenthesis parameterList? Rparenthesis ':' EndOfLine
+  : ( '<' typeParamDeclaration '>' )? 
+    Identifier Lparenthesis parameterList? Rparenthesis ':' EndOfLine
     statementBlock
   ;
 
@@ -136,7 +137,7 @@ compoundSymbol
   ;
 
 functionCall
-  : (ClassIdentifier | Identifier) '(' expressionList? ')'
+  : (ClassIdentifier | Identifier) ('<' typeList '>')? '(' expressionList? ')'
   ;
 
 expressionList

@@ -52,6 +52,7 @@ import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeContext;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.exception.RedeclarationException;
@@ -73,7 +74,7 @@ import de.uni.bremen.monty.moco.exception.UnknownTypeException;
  * currentScope = currentScope.getParentScope();
  * }
  * </pre> */
-public class Scope {
+public class Scope implements TypeContext {
 
     /** Scope's name */
     protected final String name;
@@ -87,7 +88,7 @@ public class Scope {
 	/** The map to store the remaining associations. */
     protected final Map<Identifier, Declaration> members;
 
-    protected final Map<TypeVariableDeclaration, TypeDeclaration> typeVars;
+    protected Unification substitutions;
 
 
 	        /**
@@ -101,7 +102,7 @@ public class Scope {
 		this.parent = parent;
 		this.procedures = new HashMap<Identifier, List<ProcedureDeclaration>>();
 		this.members = new HashMap<Identifier, Declaration>();
-        this.typeVars = new HashMap<>();
+        this.substitutions = Unification.EMPTY;
 	}
 
 	/** Get the parent scope in nesting hierarchy.
@@ -309,17 +310,29 @@ public class Scope {
 		return result;
 	}
 
-    public void defineTypeVariable(TypeVariableDeclaration decl, TypeDeclaration type) {
-        this.typeVars.put(decl, type);
+    public Unification getSubstitutions() {
+        Scope parent = this.parent;
+        Unification result = this.substitutions;
+        while (parent != null) {
+            result = result.merge(parent.getSubstitutions());
+            parent = parent.parent;
+        }
+        return result;
     }
 
+    public void defineSubstitutions(Unification unification) {
+        this.substitutions = this.substitutions.merge(unification);
+    }
+
+
+    @Override
     public boolean isFree(TypeVariable variable) {
         try {
             final ResolvableIdentifier ri = ResolvableIdentifier.of(variable.getName());
-            final TypeDeclaration type = resolveType(variable, ri);
+            final TypeVariableDeclaration type = (TypeVariableDeclaration) resolveType(variable, ri);
             assert type instanceof TypeVariableDeclaration;
             // assert type.getType() == variable;
-            return true;
+            return !type.isArtificial();
         } catch (UnknownTypeException e) {
             return false;
         }

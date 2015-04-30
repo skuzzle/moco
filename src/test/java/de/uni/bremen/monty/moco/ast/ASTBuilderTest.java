@@ -47,8 +47,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.List;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -125,9 +123,44 @@ public class ASTBuilderTest {
                 .get();
 
         assertTrue("Class is expected to be generic", decl.isGeneric());
-        final List<Identifier> expected = Arrays.asList(
-                Identifier.of("Aa"), Identifier.of("Bb"));
-        assertEquals(expected, decl.getTypeParameters());
+        assertEquals(Identifier.of("Aa"), decl.getTypeParameters().get(0).getIdentifier());
+        assertEquals(Identifier.of("Bb"), decl.getTypeParameters().get(1).getIdentifier());
+    }
+
+    @Test
+    public void testFunctionWithTypeParams() throws Exception {
+        ModuleDeclaration ast = buildASTfrom("genericClass");
+        final FunctionDeclaration decl = SearchAST.forNode(FunctionDeclaration.class)
+                .where(Predicates.hasName("funtionWithTypeParams"))
+                .in(ast)
+                .get();
+
+        assertEquals(Identifier.of("A"), decl.getTypeParameters().get(0).getIdentifier());
+        assertEquals(Identifier.of("B"), decl.getTypeParameters().get(1).getIdentifier());
+    }
+
+    @Test
+    public void testProcedureWithTypeParams() throws Exception {
+        ModuleDeclaration ast = buildASTfrom("genericClass");
+        final ProcedureDeclaration decl = SearchAST.forNode(ProcedureDeclaration.class)
+                .where(Predicates.hasName("procedureWithTypeParams"))
+                .in(ast)
+                .get();
+
+        assertEquals(Identifier.of("A"), decl.getTypeParameters().get(0).getIdentifier());
+        assertEquals(Identifier.of("B"), decl.getTypeParameters().get(1).getIdentifier());
+    }
+
+    @Test
+    public void testGenericFunctionCall() throws Exception {
+        ModuleDeclaration ast = buildASTfrom("genericClass");
+        final FunctionCall call = SearchAST.forNode(FunctionCall.class)
+                .where(Predicates.hasName("functionWithTypeParams"))
+                .in(ast)
+                .get();
+
+        assertEquals(Identifier.of("Int"), call.getTypeArguments().get(0).getIdentifier());
+        assertEquals(Identifier.of("Int"), call.getTypeArguments().get(1).getIdentifier());
     }
 
     @Test

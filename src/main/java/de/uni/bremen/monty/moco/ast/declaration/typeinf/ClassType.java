@@ -214,7 +214,7 @@ public class ClassType extends Type {
         final StringBuilder b = new StringBuilder();
         b.append(getName().toString());
         appendQuantification(b);
-        if (!this.superClasses.isEmpty()) {
+        /*if (!this.superClasses.isEmpty()) {
             b.append(" : ");
             final Iterator<ClassType> it = this.superClasses.iterator();
             while (it.hasNext()) {
@@ -225,7 +225,7 @@ public class ClassType extends Type {
                     b.append(", ");
                 }
             }
-        }
+        }*/
         return b.toString();
     }
 

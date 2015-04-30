@@ -2,21 +2,22 @@ package de.uni.bremen.monty.moco.visitor.typeinf;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.Location;
-import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
-abstract class TypeResolverFragment {
+abstract class TypeResolverFragment implements TypeResolver {
 
-    private final BaseVisitor resolver;
+    private final TypeResolver resolver;
 
-    public TypeResolverFragment(BaseVisitor resolver) {
+    public TypeResolverFragment(TypeResolver resolver) {
         this.resolver = resolver;
     }
 
-    protected void resolveTypeOf(ASTNode node) {
-        node.visit(this.resolver);
+    @Override
+    public void resolveTypeOf(ASTNode node) {
+        this.resolver.resolveTypeOf(node);
     }
 
-    protected void reportError(Location location, String message, Object...format) {
+    @Override
+    public void reportError(Location location, String message, Object... format) {
         throw new TypeInferenceException(location, String.format(message, format));
     }
 }

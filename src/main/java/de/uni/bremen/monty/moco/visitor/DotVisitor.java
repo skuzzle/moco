@@ -215,14 +215,19 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
 
     @Override
     public void visit(FunctionCall node) {
+
         this.dotBuilder.printNode(node,
-                String.format("Call '%s'", node.getIdentifier()),
+                String.format("Call '%s' (c'tor: %b)", node.getIdentifier(), node.isConstructorCall()),
                 node.getPosition().toString());
 
         super.visit(node);
 
+        for (final TypeInstantiation inst : node.getTypeArguments()) {
+            this.dotBuilder.printEdge(node, inst, "typeArg");
+        }
+
         for (final Expression parameter : node.getArguments()) {
-            this.dotBuilder.printEdge(node, parameter, "");
+            this.dotBuilder.printEdge(node, parameter, "arg");
         }
     }
 

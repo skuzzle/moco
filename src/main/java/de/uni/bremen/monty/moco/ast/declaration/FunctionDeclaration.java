@@ -94,7 +94,13 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
+        for (final TypeVariableDeclaration typeVar : this.typeParameters) {
+            typeVar.visit(visitor);
+        }
         this.returnTypeIdentifier.visit(visitor);
-		super.visitChildren(visitor);
+        for (VariableDeclaration variableDeclaration : this.parameter) {
+            variableDeclaration.visit(visitor);
+        }
+        this.body.visit(visitor);
 	}
 }

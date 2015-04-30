@@ -6,11 +6,10 @@ import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
 import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
-import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class DeclarationTypeResolver extends TypeResolverFragment {
 
-    public DeclarationTypeResolver(BaseVisitor resolver) {
+    public DeclarationTypeResolver(TypeResolver resolver) {
         super(resolver);
     }
 

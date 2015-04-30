@@ -75,6 +75,7 @@ import de.uni.bremen.monty.moco.antlr.MontyParser.StatementContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.TryStatementContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.TypeContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.TypeListContext;
+import de.uni.bremen.monty.moco.antlr.MontyParser.TypeParamDeclarationContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.VariableDeclarationContext;
 import de.uni.bremen.monty.moco.antlr.MontyParser.WhileStatementContext;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
@@ -85,6 +86,7 @@ import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration.DeclarationType;
 import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
 import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation.Builder;
+import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.CastExpression;
 import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
@@ -193,16 +195,34 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	    }
 	}
 
+    private List<TypeInstantiation> getTypeList(TypeListContext ctx) {
+        final List<TypeInstantiation> typeArgs = new ArrayList<>();
+        if (ctx == null) {
+            return typeArgs;
+        }
+        for (TypeContext type : ctx.type()) {
+            final Builder builder = TypeInstantiation
+                    .forTypeName(type.ClassIdentifier().getText());
+
+            collectTypeArgs(builder, type.typeList());
+            typeArgs.add(builder.create());
+        }
+        return typeArgs;
+    }
+
 	@Override
 	public ASTNode visitFunctionCall(FunctionCallContext ctx) {
-		ArrayList<Expression> arguments = new ArrayList<>();
+        final List<Expression> arguments = new ArrayList<>();
 		String identifier;
 		if (ctx.Identifier() == null) {
 			identifier = ctx.ClassIdentifier().getText();
 		} else {
 			identifier = ctx.Identifier().getText();
 		}
-		FunctionCall func = new FunctionCall(position(ctx.getStart()), new ResolvableIdentifier(identifier), arguments);
+
+        final List<TypeInstantiation> typeArgs = getTypeList(ctx.typeList());
+        final FunctionCall func = new FunctionCall(position(ctx.getStart()),
+                new ResolvableIdentifier(identifier), arguments, typeArgs);
 		if (ctx.expressionList() != null) {
 			for (ExpressionContext exprC : ctx.expressionList().expression()) {
 
@@ -219,6 +239,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	private void buildDefaultProcedures(boolean functionDeclaration, List<DefaultParameterContext> defaultParameter,
 	        List<VariableDeclaration> allVariableDeclarations, List<VariableDeclaration> params,
 	        List<Expression> defaultExpression, List<VariableDeclaration> defaultVariableDeclaration,
+            List<TypeVariableDeclaration> typeVarDecls,
             Identifier identifier, Token token, TypeInstantiation returnType,
             DeclarationType declarationTypeCopy) {
 
@@ -242,8 +263,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			List<VariableDeclaration> subParams =
 			        allVariableDeclarations.subList(0, params.size() + defaultParameterIdx);
 
-			Expression expression =
-			        new FunctionCall(position(token), new ResolvableIdentifier(identifier.getSymbol()), l);
+            Expression expression = new FunctionCall(position(token),
+                    new ResolvableIdentifier(identifier.getSymbol()), l, new ArrayList<>());
 
 			if (declarationTypeCopy == ProcedureDeclaration.DeclarationType.METHOD) {
 				expression = new MemberAccess(position(token), new SelfExpression(position(token)), expression);
@@ -258,15 +279,18 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			} else {
 				block.addStatement((Statement) expression);
 				block.addStatement(new ReturnStatement(new Position(), null));
-				procDecl1 =
-				        new ProcedureDeclaration(position(token), identifier, block, subParams, declarationTypeCopy);
+                procDecl1 = new ProcedureDeclaration(position(token), identifier, block,
+                        subParams, declarationTypeCopy);
 			}
+            procDecl1.setTypeParameters(typeVarDecls);
 			this.currentBlocks.peek().addDeclaration(procDecl1);
 		}
 	}
 
 	private ProcedureDeclaration buildProcedures(boolean functionDeclaration,
-	        ParameterListContext parameterListContext, Token token, TypeContext typeContext,
+            ParameterListContext parameterListContext, Token token,
+            TypeContext returnTypeContext,
+            TypeParamDeclarationContext typeParamContext,
 	        StatementBlockContext statementBlockContext, Identifier identifier) {
 
 		ProcedureDeclaration.DeclarationType declarationTypeCopy = this.currentProcedureContext;
@@ -285,17 +309,20 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		allVariableDeclarations.addAll(defaultVariableDeclaration);
 
         final TypeInstantiation returnType;
-        if (typeContext == null) {
+        if (returnTypeContext == null) {
             // procedure
             returnType = TypeInstantiation
                     .forTypeName(CoreClasses.voidType().getIdentifier())
                     .create();
         } else {
-            final String returnTypeName = getTypeName(typeContext);
+            final String returnTypeName = getTypeName(returnTypeContext);
             final Builder retTypeBuilder = TypeInstantiation.forTypeName(returnTypeName);
-            collectTypeArgs(retTypeBuilder, typeContext.typeList());
+            collectTypeArgs(retTypeBuilder, returnTypeContext.typeList());
             returnType = retTypeBuilder.create();
         }
+        final List<TypeVariableDeclaration> typeArgs =
+                getTypeVarDeclarations(typeParamContext);
+
 		buildDefaultProcedures(
 		        functionDeclaration,
 		        defaultParameter,
@@ -303,6 +330,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		        params,
 		        defaultExpression,
 		        defaultVariableDeclaration,
+                typeArgs,
 		        identifier,
 		        token,
                 returnType,
@@ -311,14 +339,15 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 		ProcedureDeclaration procDecl2;
 
 		if (functionDeclaration) {
-			procDecl2 =
-			        new FunctionDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
-                            allVariableDeclarations, declarationTypeCopy, returnType);
+            procDecl2 = new FunctionDeclaration(position(token), identifier,
+                    (Block) visit(statementBlockContext), allVariableDeclarations,
+                    declarationTypeCopy, returnType);
 		} else {
-			procDecl2 =
-			        new ProcedureDeclaration(position(token), identifier, (Block) visit(statementBlockContext),
-			                allVariableDeclarations, declarationTypeCopy);
+            procDecl2 = new ProcedureDeclaration(position(token), identifier,
+                    (Block) visit(statementBlockContext), allVariableDeclarations,
+                    declarationTypeCopy);
 		}
+        procDecl2.setTypeParameters(typeArgs);
 		return procDecl2;
 	}
 
@@ -331,14 +360,15 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			identifier = new Identifier("operator" + ctx.binaryOperation().getText());
 		}
 
-		return buildProcedures(true, ctx.parameterList(), ctx.getStart(), ctx.type(), ctx.statementBlock(), identifier);
+        return buildProcedures(true, ctx.parameterList(), ctx.getStart(), ctx.type(),
+                ctx.typeParamDeclaration(), ctx.statementBlock(), identifier);
 	}
 
 	@Override
 	public ASTNode visitProcedureDeclaration(ProcedureDeclarationContext ctx) {
-		ProcedureDeclaration proc =
-		        buildProcedures(false, ctx.parameterList(), ctx.start, null, ctx.statementBlock(), new Identifier(
-		                getText(ctx.Identifier())));
+        final ProcedureDeclaration proc = buildProcedures(false, ctx.parameterList(),
+                ctx.start, null, ctx.typeParamDeclaration(), ctx.statementBlock(),
+                Identifier.of(getText(ctx.Identifier())));
 
 		List<Statement> list = proc.getBody().getStatements();
 		if ((list.isEmpty()) || !(list.get(list.size() - 1) instanceof ReturnStatement)) {
@@ -359,29 +389,33 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
         }
     }
 
+    private List<TypeVariableDeclaration> getTypeVarDeclarations(
+            TypeParamDeclarationContext ctx) {
+        final List<TypeVariableDeclaration> result = new ArrayList<>();
+        if (ctx == null) {
+            return result;
+        }
+        for (final TerminalNode param : ctx.ClassIdentifier()) {
+            final Identifier id = Identifier.of(param.getText());
+            final TypeVariableDeclaration decl =
+                    new TypeVariableDeclaration(position(param.getSymbol()), id);
+            result.add(decl);
+        }
+        return result;
+    }
+
 	@Override
 	public ASTNode visitClassDeclaration(ClassDeclarationContext ctx) {
-        List<TypeInstantiation> superClasses = new ArrayList<>();
-		if (ctx.typeList() != null) {
-			for (TypeContext type : ctx.typeList().type()) {
-                final Builder builder = TypeInstantiation
-                        .forTypeName(type.ClassIdentifier().getText());
+        final List<TypeInstantiation> superClasses = getTypeList(ctx.typeList());
+        final ClassDeclaration cl = new ClassDeclaration(
+                position(ctx.getStart()),
+                Identifier.of(ctx.ClassIdentifier().getText()),
+                superClasses,
+                new Block(position(ctx.getStart())));
 
-                collectTypeArgs(builder, type.typeList());
-
-                superClasses.add(builder.create());
-			}
-		}
-		ClassDeclaration cl =
-		        new ClassDeclaration(position(ctx.getStart()), new Identifier(ctx.ClassIdentifier().getText()),
-		                superClasses, new Block(position(ctx.getStart())));
-
-        if (ctx.typeParamDeclaration() != null) {
-            for (final TerminalNode param : ctx.typeParamDeclaration().ClassIdentifier()) {
-                final Identifier id = new Identifier(param.getText());
-                cl.addTypeParameter(id);
-            }
-        }
+        final List<TypeVariableDeclaration> typeVars =
+                getTypeVarDeclarations(ctx.typeParamDeclaration());
+        cl.setTypeParameters(typeVars);
 
 		this.currentBlocks.push(cl.getBlock());
 		for (MemberDeclarationContext member : ctx.memberDeclaration()) {
@@ -577,7 +611,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			return visit(ctx.functionCall());
 		} else if (ctx.array != null) {
 			List<Expression> arguments = Arrays.asList((Expression) visit(ctx.array), (Expression) visit(ctx.index));
-			return new FunctionCall(position(ctx.getStart()), new ResolvableIdentifier("operator[]"), arguments);
+            return new FunctionCall(position(ctx.getStart()), new ResolvableIdentifier("operator[]"), arguments, new ArrayList<>());
 		} else if (ctx.accessOperator() != null) {
 
 			return visitMemberAccessExpr(ctx);
@@ -726,20 +760,20 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 			underscore = "_";
 		}
 		Expression self = (Expression) visit(left);
-		FunctionCall operatorCall =
-		        new FunctionCall(position, new ResolvableIdentifier("operator" + underscore + operator),
-		                Arrays.asList((Expression) visit(right)));
+        FunctionCall operatorCall = new FunctionCall(position,
+                ResolvableIdentifier.of("operator" + underscore + operator),
+                Arrays.asList((Expression) visit(right)));
 		return new MemberAccess(position, self, operatorCall);
 	}
 
 	private CastExpression visitCastExpression(ExpressionContext ctx) {
-		return new CastExpression(position(ctx.getStart()), (Expression) visit(ctx.expr), new ResolvableIdentifier(
-		        getText(ctx.ClassIdentifier())));
+        return new CastExpression(position(ctx.getStart()), (Expression) visit(ctx.expr),
+                ResolvableIdentifier.of(getText(ctx.ClassIdentifier())));
 	}
 
 	private IsExpression visitIsExpression(ExpressionContext ctx) {
-		return new IsExpression(position(ctx.getStart()), (Expression) visit(ctx.expr), new ResolvableIdentifier(
-		        getText(ctx.ClassIdentifier())));
+        return new IsExpression(position(ctx.getStart()), (Expression) visit(ctx.expr),
+                ResolvableIdentifier.of(getText(ctx.ClassIdentifier())));
 	}
 
 	@Override

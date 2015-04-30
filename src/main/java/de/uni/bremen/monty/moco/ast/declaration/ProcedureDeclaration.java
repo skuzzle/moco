@@ -50,19 +50,20 @@ import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 /** A ProcedureDeclaration represents the declaration of a procedure in the AST.
  * <p>
  * It can be used as a type. */
-public class ProcedureDeclaration extends TypeDeclaration {
+public class ProcedureDeclaration extends TypeDeclaration implements
+        QuantifiedDeclaration {
 	public enum DeclarationType {
 		INITIALIZER, METHOD, UNBOUND
 	}
 
 	/** The declarations and statements within this declaration. */
-	private final Block body;
+    protected final Block body;
 
 	/** The parameters of this declaration. */
-	private final List<VariableDeclaration> parameter;
+    protected final List<VariableDeclaration> parameter;
 
     /** The type parameters of this declaration */
-    private final List<TypeVariableDeclaration> typeParameters;
+    protected List<TypeVariableDeclaration> typeParameters;
 
     /** The return statements which occurred within the body of this declaration */
     private final List<ReturnStatement> returnStatements;
@@ -111,8 +112,13 @@ public class ProcedureDeclaration extends TypeDeclaration {
         return this.returnStatements;
     }
 
+    @Override
     public List<TypeVariableDeclaration> getTypeParameters() {
         return this.typeParameters;
+    }
+
+    public void setTypeParameters(List<TypeVariableDeclaration> typeParameters) {
+        this.typeParameters = typeParameters;
     }
 
 	/** Get the body block.
@@ -179,9 +185,12 @@ public class ProcedureDeclaration extends TypeDeclaration {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
+        for (final TypeVariableDeclaration typeVar : this.typeParameters) {
+            typeVar.visit(visitor);
+        }
 		for (VariableDeclaration variableDeclaration : this.parameter) {
-			visitor.visitDoubleDispatched(variableDeclaration);
+            variableDeclaration.visit(visitor);
 		}
-		visitor.visitDoubleDispatched(this.body);
+        this.body.visit(visitor);
 	}
 }

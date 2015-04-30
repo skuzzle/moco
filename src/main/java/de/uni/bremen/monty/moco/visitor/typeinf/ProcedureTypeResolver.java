@@ -12,16 +12,16 @@ import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
-import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 class ProcedureTypeResolver extends TypeResolverFragment {
 
-    public ProcedureTypeResolver(BaseVisitor resolver) {
+    public ProcedureTypeResolver(TypeResolver resolver) {
         super(resolver);
     }
 
@@ -37,11 +37,28 @@ class ProcedureTypeResolver extends TypeResolverFragment {
 
     private void resolveConstructorType(ProcedureDeclaration node) {
         assert node.isInitializer();
+
         final ClassDeclaration classDecl = SearchAST
-                .forParent(ClassDeclaration.class).in(node).get();
+                .forParent(ClassDeclaration.class)
+                .in(node).get();
+
+        // Constructors must be quantified equally to the classes they create
+        final List<Type> fresh = new ArrayList<>(classDecl.getTypeParameters().size());
+        final List<TypeVariableDeclaration> typeVarDecls = new ArrayList<>();
+        for (final TypeVariableDeclaration typeVar : classDecl.getTypeParameters()) {
+            final TypeVariableDeclaration copy = new TypeVariableDeclaration(
+                    typeVar.getPosition(), typeVar.getIdentifier());
+            copy.setType(typeVar.getType());
+            fresh.add(typeVar.getType());
+            typeVarDecls.add(copy);
+        }
+        node.setTypeParameters(typeVarDecls);
+
         final Type returnType = classDecl.getType();
+
         final List<Type> signature = getParameterTypes(node.getParameter());
         final Optional<Type> bodyType = getBodyType(node, returnType);
+
         if (!bodyType.isPresent()) {
             reportError(node, "Could not uniquely determine type of function's body");
         } else if (bodyType.get() != CoreClasses.voidType().getType()) {
@@ -50,12 +67,16 @@ class ProcedureTypeResolver extends TypeResolverFragment {
         final Function nodeType = Function.named(classDecl.getIdentifier())
                 .atLocation(node)
                 .returning(returnType)
+                .quantifiedBy(fresh)
                 .andParameters(signature)
                 .createType();
-        node.setType(nodeType);
+        final Function unified = nodeType;
+        node.setType(unified);
     }
 
     private void resolveProcedureType(ProcedureDeclaration node) {
+        final List<Type> typeArgs = getTypeParameters(node.getTypeParameters());
+
         final Type returnType = CoreClasses.voidType().getType();
         final List<Type> signature = getParameterTypes(node.getParameter());
         final Optional<Type> bodyType = getBodyType(node, returnType);
@@ -73,6 +94,8 @@ class ProcedureTypeResolver extends TypeResolverFragment {
     }
 
     private void resolveFunctionType(FunctionDeclaration node) {
+        final List<Type> typeArgs = getTypeParameters(node.getTypeParameters());
+
         resolveTypeOf(node.getReturnTypeIdentifier());
         final Type declaredReturnType = node.getReturnTypeIdentifier().getType();
         final List<Type> signature = getParameterTypes(node.getParameter());
@@ -108,6 +131,15 @@ class ProcedureTypeResolver extends TypeResolverFragment {
                 .andParameters(signature)
                 .createType();
         node.setType(nodeType);
+    }
+
+    private List<Type> getTypeParameters(Collection<TypeVariableDeclaration> typeParams) {
+        final List<Type> types = new ArrayList<>(typeParams.size());
+        for (final TypeVariableDeclaration typeParam : typeParams) {
+            resolveTypeOf(typeParam);
+            types.add(typeParam.getType());
+        }
+        return types;
     }
 
     private List<Type> getParameterTypes(Collection<VariableDeclaration> parameters) {

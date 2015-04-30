@@ -49,7 +49,7 @@ public class MontyBaseException extends RuntimeException {
 	}
 
     public MontyBaseException(Location location, String message) {
-		super(message);
+        super(message + ". " + location.getPosition());
         this.location = location;
 	}
 

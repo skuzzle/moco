@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 import de.uni.bremen.monty.moco.ast.Scope;
 
@@ -57,9 +58,15 @@ public class Unification {
 
     public static final class TestIfBuilder {
         private final Type first;
+        private final TypeContext context;
 
         private TestIfBuilder(Type first) {
+            this(first, var -> false);
+        }
+
+        private TestIfBuilder(Type first, TypeContext context) {
             this.first = first;
+            this.context = context;
         }
 
         public Unification isA(Typed typedNode) {
@@ -74,11 +81,28 @@ public class Unification {
             final TypePair pair = new TypePair(this.first, second);
             Unification unification = UNIFICATION_CACHE.get(pair);
             if (unification == null) {
-                final Unifier unifier = new Unifier();
-                unification = unifier.unify(this.first, second);
-                UNIFICATION_CACHE.put(pair, unification);
+                final Unifier unifier = new Unifier(this.context);
+                unification = unifier.unify(this.first, second).deep();
+                // XXX: caching disabled!
+                // UNIFICATION_CACHE.put(pair, unification);
             }
             return unification;
+        }
+    }
+
+    public static final class GivenBuilder {
+        private final TypeContext context;
+
+        private GivenBuilder(TypeContext context) {
+            this.context = context;
+        }
+
+        public TestIfBuilder testIf(Type type) {
+            return new TestIfBuilder(type, this.context);
+        }
+
+        public TestIfBuilder testIf(Typed typed) {
+            return new TestIfBuilder(typed.getType(), this.context);
         }
     }
 
@@ -103,6 +127,14 @@ public class Unification {
             return simultaneousFor(types.iterator());
         }
 
+        public Unification simultaneousForFresh() {
+            final Map<TypeVariable, Type> subst = new HashMap<>();
+            while (this.typeVars.hasNext()) {
+                subst.put(this.typeVars.next(), TypeVariable.anonymous().createType());
+            }
+            return Unification.successful(subst);
+        }
+
         public Unification simultaneousFor(Iterator<? extends Type> types) {
             if (types == null) {
                 throw new IllegalArgumentException("types is null");
@@ -119,6 +151,10 @@ public class Unification {
             }
             return Unification.successful(subst);
         }
+    }
+
+    public static GivenBuilder given(TypeContext context) {
+        return new GivenBuilder(context);
     }
 
     public static TestIfBuilder testIf(Type first) {
@@ -153,6 +189,13 @@ public class Unification {
 
     public static SimultaneousBuilder substitute(Collection<? extends Type> typeVars) {
         return new SimultaneousBuilder(typeVars.stream().map(Type::asVariable).iterator());
+    }
+
+    public static SimultaneousBuilder substitute(Stream<? extends Typed> stream) {
+        return new SimultaneousBuilder(stream
+                .map(Typed::getType)
+                .map(Type::asVariable)
+                .iterator());
     }
 
     /**
@@ -205,6 +248,15 @@ public class Unification {
     private Unification(boolean success, Map<TypeVariable, Type> subst) {
         this.success = success;
         this.subst = subst;
+    }
+
+    private Unification deep() {
+        if (this.success) {
+            for (final Entry<TypeVariable, Type> e : this.subst.entrySet()) {
+                e.setValue(apply(e.getValue()));
+            }
+        }
+        return this;
     }
 
     /**
@@ -338,12 +390,56 @@ public class Unification {
         } else if (!other.isSuccessful()) {
             throw new IllegalArgumentException(
                     "Can not merge from unsuccessful unification");
+        } else if (other == this) {
+            return this;
         }
         final Map<TypeVariable, Type> resultMap = new HashMap<>(
                 this.subst.size() + other.subst.size());
         resultMap.putAll(this.subst);
         resultMap.putAll(other.subst);
         return Unification.successful(resultMap);
+    }
+
+    /**
+     * Creates a unification containing the substitutions from both this
+     * Unification and the given {@code other} Unification object. If there
+     * exist two substitutions for the same variable, the one from {@code other}
+     * takes precedence.
+     *
+     * <p>
+     * if either this or the other unification is not successful, then
+     * {@code this} is returned with no modifications
+     * </p>
+     *
+     * @param other The Unification to merge with this one.
+     * @return A new successful unification, containing all substitutions from
+     *         this and {@code other}
+     */
+    public Unification mergeIfSuccessful(Unification other) {
+        if (other == null) {
+            throw new IllegalArgumentException("other is null");
+        }
+        if (!isSuccessful() || !other.isSuccessful()) {
+            return this;
+        }
+        final Map<TypeVariable, Type> resultMap = new HashMap<>(
+                this.subst.size() + other.subst.size());
+        resultMap.putAll(this.subst);
+        resultMap.putAll(other.subst);
+        return Unification.successful(resultMap);
+    }
+
+    /**
+     * Determines whether this Unification contains substitutions for all types
+     * in the given collection.
+     *
+     * @param types The types to check for.
+     * @return Whether all given types are substituted by this Unification.
+     */
+    public boolean substitutesAll(Collection<? extends Typed> types) {
+        return isSuccessful()
+                && types.stream().map(Typed::getType)
+                        .allMatch(this.subst.keySet()::contains);
     }
 
     @Override

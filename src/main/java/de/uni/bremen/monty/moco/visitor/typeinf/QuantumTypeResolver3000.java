@@ -1,7 +1,6 @@
 package de.uni.bremen.monty.moco.visitor.typeinf;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -10,7 +9,6 @@ import java.util.Set;
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.ClassScope;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
-import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.Scope;
@@ -24,28 +22,29 @@ import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType.ClassNamed;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
-import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
 import de.uni.bremen.monty.moco.ast.expression.ParentExpression;
 import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
-import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
-import de.uni.bremen.monty.moco.exception.UnknownTypeException;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
-public class QuantumTypeResolver3000 extends BaseVisitor {
+public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver {
 
     private final Set<ASTNode> visited = new HashSet<>();
 
     private boolean shouldVisit(ASTNode node) {
         return this.visited.add(node);
+    }
+
+    @Override
+    public void resolveTypeOf(ASTNode node) {
+        node.visit(this);
     }
 
     @Override
@@ -58,8 +57,6 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
 
         final Scope scope = node.getScope();
         final ResolvableIdentifier typeName = node.getIdentifier();
-        final TypeDeclaration typeDecl = scope.resolveType(node, typeName);
-
         final Type typeBinding = scope.resolveTypeBinding(node, node.getIdentifier());
 
         if (typeName.isTypeVariableIdentifier() &&
@@ -77,6 +74,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
                 final TypeVariableDeclaration typeVar = new TypeVariableDeclaration(
                         node.getPosition(), typeBinding.getName());
                 typeVar.setType(typeBinding);
+                typeVar.setArtificial(true);
                 scope.define(typeVar);
             }
             node.setType(typeBinding);
@@ -100,18 +98,33 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
             reportError(node, "Type parameter count mismatch");
         }
 
+        Unification merged = Unification.EMPTY;
         final List<Type> typeArgs = new ArrayList<>(node.getTypeArguments().size());
         for (final TypeInstantiation arg : node.getTypeArguments()) {
             typeArgs.add(arg.getType());
+            merged = merged.merge(arg.getUnification());
         }
 
         final Unification unification = Unification
                 .substitute(classBinding.getTypeParameters())
-                .simultaneousFor(typeArgs);
+                .simultaneousFor(typeArgs)
+                .merge(merged);
 
         final Type instance = unification.apply(typeBinding);
         node.setType(instance);
         node.setUnification(unification);
+    }
+
+    @Override
+    public void visit(TypeVariableDeclaration node) {
+        if (!shouldVisit(node)) {
+            return;
+        }
+        final Type var = TypeVariable
+                .named(node.getIdentifier())
+                .atLocation(node)
+                .createType();
+        node.setType(var);
     }
 
     @Override
@@ -127,16 +140,10 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
         final ClassScope scope = node.getScope();
 
         // Define type arguments
-        for (final Identifier typeParam : node.getTypeParameters()) {
-            final TypeDeclaration decl = new TypeVariableDeclaration(node.getPosition(),
-                    typeParam);
-            final Type var = TypeVariable
-                    .named(typeParam)
-                    .atLocation(decl)
-                    .createType();
-            decl.setType(var);
-            builder.addTypeParameter(var);
-            scope.getParentScope().define(decl);
+        for (final TypeVariableDeclaration typeParam : node.getTypeParameters()) {
+            typeParam.visit(this);
+            builder.addTypeParameter(typeParam.getType());
+            // scope.getParentScope().define(decl);
         }
 
         // resolve super classes
@@ -163,7 +170,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
         }
 
         node.setType(builder.createType());
-        super.visit(node);
+        node.getBlock().visit(this);
     }
 
     @Override
@@ -184,39 +191,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
 
     @Override
     public void visit(FunctionCall node) {
-        // resolve parameter types
-        final List<Type> signature = new ArrayList<>(node.getArguments().size());
-        for (final Expression param : node.getArguments()) {
-            param.visit(this);
-            signature.add(param.getType());
-        }
-
-        List<ProcedureDeclaration> overloads;
-        if (checkIsConstructorCall(node)) {
-            overloads = getConstructorOverloads(node, node.getConstructorType());
-        } else {
-            overloads = node.getScope().resolveProcedure(node, node.getIdentifier());
-        }
-
-        // sort out recursive call
-        overloads = sortOutSelf(node, overloads);
-
-        final Optional<ProcedureDeclaration> target = TypeHelper.bestFit(overloads, node, this);
-        if (!target.isPresent()) {
-            reportError(node, "Could not uniquely resolve overload of <%s>",
-                    node.getIdentifier());
-        }
-        assert target.get().isTypeResolved();
-
-        final Function fun = target.get().getType().asFunction();
-        final Function call = Function.named(node.getIdentifier())
-                .atLocation(node).returning(fun.getReturnType())
-                .andParameters(signature).createType();
-
-        final Unification unification = Unification.testIf(call).isA(fun);
-        final Function unified = unification.apply(fun);
-        node.setDeclaration(target.get());
-        node.setType(unified.getReturnType());
+        new CallTypeResolver(this).resolveType(node);
     }
 
     private List<ProcedureDeclaration> sortOutSelf(ASTNode call,
@@ -234,30 +209,6 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
             }
         }
         return result;
-    }
-
-    private List<ProcedureDeclaration> getConstructorOverloads(Location location,
-            ClassDeclaration decl) {
-        try {
-            return decl.getScope().resolveProcedure(location,
-                ResolvableIdentifier.of("initializer"));
-        } catch (UnknownIdentifierException e) {
-            return Collections.singletonList(decl.getDefaultInitializer());
-        }
-    }
-
-    private boolean checkIsConstructorCall(FunctionCall call) {
-        final Scope scope = call.getScope();
-        try {
-            final TypeDeclaration typeDecl = scope.resolveType(call, call.getIdentifier());
-            if (!(typeDecl instanceof ClassDeclaration)) {
-                reportError(call, "<%s> is not callable", call.getIdentifier());
-            }
-            call.setConstructorCall(typeDecl);
-            return true;
-        } catch (UnknownTypeException | UnknownIdentifierException e) {
-        }
-        return false;
     }
 
     @Override
@@ -282,7 +233,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
         varDecl.visit(this);
 
         assert varDecl.isTypeResolved();
-        node.setType(varDecl.getType().fresh(scope));
+        node.setType(varDecl.getType());
         node.setDeclaration(decl);
     }
 
@@ -298,12 +249,17 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
         final ClassType instanceType = node.getLeft().getType().asClass();
         final TypeDeclaration raw = node.getScope().resolveType(node, instanceType);
 
-
+        final Unification subst = Unification.testIf(instanceType).isA(raw.getType());
         // Resolve type of the right hand node in the scope of the left hand
         // node. This will yield the raw (declared type) of the right hand node.
         // It must therefore be run through the substitution which binds type
         // variables
-        node.getRight().setScope(raw.getScope());
+
+        // Create a sub scope in which type variables of the LHS are defined
+        final Scope memberScope = new Scope("$member" + raw.getIdentifier(),
+                raw.getScope());
+        memberScope.defineSubstitutions(subst);
+        node.getRight().setScope(memberScope);
         node.getRight().visit(this);
 
         assert node.getRight().isTypeResolved();
@@ -328,6 +284,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
         node.getRight().visit(this);
 
         final Unification unification = Unification
+                .given(node.getScope())
                 .testIf(node.getRight())
                 .isA(node.getLeft());
 
@@ -375,7 +332,8 @@ public class QuantumTypeResolver3000 extends BaseVisitor {
         node.setType(superClass.get().getType());
     }
 
-    private void reportError(Location location, String message, Object... content) {
+    @Override
+    public void reportError(Location location, String message, Object... content) {
         throw new TypeInferenceException(location, String.format(message, content));
     }
 }
