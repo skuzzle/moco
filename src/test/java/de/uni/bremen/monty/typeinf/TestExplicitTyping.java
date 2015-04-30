@@ -23,6 +23,7 @@ public class TestExplicitTyping extends AbstractTypeInferenceTest {
                 .where(Predicates.hasName("bar"))
                 .in(root).get();
         assertUniqueTypeIs(CoreClasses.stringType().getType(), decl);
+        assertAllTypesResolved(root);
     }
 
     @Test
@@ -38,6 +39,7 @@ public class TestExplicitTyping extends AbstractTypeInferenceTest {
                 .createType();
         assertUniqueTypeIs(expected, decl);
         assertEquals(expected.getReturnType(), decl.getType().asFunction().getReturnType());
+        assertAllTypesResolved(root);
     }
 
     @Test
@@ -49,6 +51,7 @@ public class TestExplicitTyping extends AbstractTypeInferenceTest {
                         .where(Predicates.hasName("add")))
                 .in(root).get();
         assertUniqueTypeIs(CoreClasses.intType().getType(), decl);
+        assertAllTypesResolved(root);
     }
 
     @Test
@@ -64,6 +67,7 @@ public class TestExplicitTyping extends AbstractTypeInferenceTest {
                 .createType();
         assertUniqueTypeIs(expected, decl);
         assertEquals(expected.getReturnType(), CoreClasses.voidType().getType());
+        assertAllTypesResolved(root);
     }
 
     @Test
@@ -74,6 +78,7 @@ public class TestExplicitTyping extends AbstractTypeInferenceTest {
                 .and(SearchAST.forExactParent(ProcedureDeclaration.class))
                 .in(root).get();
         assertUniqueTypeIs(CoreClasses.stringType().getType(), decl);
+        assertAllTypesResolved(root);
     }
 
     @Test(expected = TypeInferenceException.class)

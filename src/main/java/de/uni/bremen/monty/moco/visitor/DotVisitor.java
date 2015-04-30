@@ -16,6 +16,7 @@ import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
+import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.CastExpression;
 import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
@@ -61,6 +62,12 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
     }
 
     @Override
+    public void visit(TypeVariableDeclaration node) {
+        this.dotBuilder.printNode(node, String.format("TypeParam '%s'",
+                node.getIdentifier()));
+    }
+
+    @Override
     public void visit(FunctionDeclaration node) {
         final String description = String.format("FuncDecl (%s) '%s'",
                 node.getDeclarationType(), node.getIdentifier());
@@ -71,9 +78,13 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
 
         super.visit(node);
 
+        for (final TypeVariableDeclaration typeVars : node.getTypeParameters()) {
+            this.dotBuilder.printEdge(node, typeVars, "typeParam");
+        }
         for (final VariableDeclaration param : node.getParameter()) {
             this.dotBuilder.printEdge(node, param, "param");
         }
+        this.dotBuilder.printEdge(node, node.getReturnTypeIdentifier(), "return");
         this.dotBuilder.printEdge(node, node.getBody(), "body");
     }
 

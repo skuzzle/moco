@@ -37,7 +37,45 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 .addTypeParameter(TypeVariable.anonymous().createType())
                 .createType();
         assertTrue(Unification.testIf(decl.getType()).isA(expected).isSuccessful());
+        assertAllTypesResolved(root);
 
+    }
+
+    @Test
+    public void testStaticGenericFunction() throws Exception {
+        final ASTNode root = getASTFromString("testStaticGenericFunction.monty",
+                code -> code
+                        .append("? x := identity<String>(\"5\")")
+                        .append("<A> A identity(A a):").indent()
+                        .append("return a"));
+
+        final VariableDeclaration x = SearchAST.forNode(VariableDeclaration.class)
+                .where(Predicates.hasName("x"))
+                .in(root)
+                .get();
+
+        assertUniqueTypeIs(CoreClasses.stringType().getType(), x);
+        assertAllTypesResolved(root);
+    }
+
+    @Test
+    public void testStaticGenericRecursiveFunction() throws Exception {
+        final ASTNode root = getASTFromString("testStaticGenericRecursiveFunction.monty",
+                code -> code
+                        .append("Int x := factorial<String>(5, \"5\")")
+                        .append("<A> Int factorial(Int n, A a):").indent()
+                        .append("if (n<=1):").indent()
+                        .append("return 1").dedent()
+                        .append("else:").indent()
+                        .append("return n * factorial<A>(n - 1, a)"));
+
+        final VariableDeclaration x = SearchAST.forNode(VariableDeclaration.class)
+                .where(Predicates.hasName("x"))
+                .in(root)
+                .get();
+
+        assertUniqueTypeIs(CoreClasses.intType().getType(), x);
+        assertAllTypesResolved(root);
     }
 
     @Test
@@ -67,6 +105,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
         assertTrue(Unification.testIf(decl.getType()).isA(expected1).isSuccessful());
         assertTrue(Unification.testIf(decl.getType()).isA(expected2).isSuccessful());
+        assertAllTypesResolved(root);
     }
 
     @Test
@@ -89,6 +128,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 .createType();
 
         assertTrue(Unification.testIf(superClassDecl.getType()).isA(expectedTypeInst).isSuccessful());
+        assertAllTypesResolved(root);
     }
 
     @Test(expected = TypeInferenceException.class)
@@ -153,6 +193,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
         assertEquals(expected, ctor.getType());
         assertEquals(expected, decl.getType());
+        assertAllTypesResolved(root);
     }
 
     @Test
@@ -191,6 +232,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 .createType();
 
         assertUniqueTypeIs(expected, call);
+        assertAllTypesResolved(root);
     }
 
     @Test(expected = TypeInferenceException.class)
@@ -205,12 +247,13 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
     @Test
     public void testGenericConstructor() throws Exception {
-        getASTFromString("testGenericConstructor.monty",
+        final ASTNode root = getASTFromString("testGenericConstructor.monty",
                 code -> code
                         .append("class Foo<X>:").indent()
                         .append("+X x")
                         .append("+initializer(X x):").indent()
                         .append("self.x := x"));
+        assertAllTypesResolved(root);
     }
 
     @Test(expected = TypeInferenceException.class)

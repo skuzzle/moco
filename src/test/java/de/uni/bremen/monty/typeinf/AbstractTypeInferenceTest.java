@@ -49,6 +49,26 @@ public class AbstractTypeInferenceTest {
     }
 
     /**
+     * Asserts that every type-able node reachable from given root node has a
+     * type assigned.
+     *
+     * @param root The root.
+     */
+    protected static void assertAllTypesResolved(ASTNode root) {
+        root.visit(new BaseVisitor() {
+            {
+                setStopOnFirstError(true);
+            }
+            @Override
+            protected void onEnterEachNode(ASTNode node) {
+                if (node instanceof Typed) {
+                    assert ((Typed) node).isTypeResolved();
+                }
+            }
+        });
+    }
+
+    /**
      * Searches for AST nodes which reside in the file specified in the
      * constructor.
      *

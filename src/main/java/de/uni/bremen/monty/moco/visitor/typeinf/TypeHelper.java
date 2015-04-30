@@ -121,11 +121,6 @@ public final class TypeHelper {
             return this.matches.get(0);
         }
 
-        private void reconstructTypeArguments() {
-            assert isUnique();
-            final ProcedureDeclaration decl = getBestMatch();
-        }
-
         private BestFit checkIsUnique(FunctionCall call, TypeResolver typeResolver) {
             if (this.matches.isEmpty()) {
                 typeResolver.reportError(call,
@@ -213,6 +208,7 @@ public final class TypeHelper {
             final Function candidateType = context.apply(candidate).asFunction();
 
             unification = Unification
+                    .given(call.getScope())
                     .testIf(callType)
                     .isA(candidateType)
                     .mergeIfSuccessful(context);
