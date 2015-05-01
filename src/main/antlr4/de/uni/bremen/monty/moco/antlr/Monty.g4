@@ -137,7 +137,7 @@ compoundSymbol
   ;
 
 functionCall
-  : (ClassIdentifier | Identifier) ('<' typeList '>')? '(' expressionList? ')'
+  : (ClassIdentifier | Identifier) ('<' typeList? '>')? '(' expressionList? ')'
   ;
 
 expressionList
