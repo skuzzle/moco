@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.util.function.Consumer;
 
@@ -32,7 +33,10 @@ public class AbstractTypeInferenceTest {
     /** Path to resource folder from which test monty files are read */
     private static final String TEST_DIR = "testTypeInference/";
 
-    private static final String DOT_OUT_PUT = "target/dot/type-inf/";
+    /** Path to folder where generated .monty files will be stored -´ */
+    private static final String TEST_OUTPUT = "target/test-output/type-inf/";
+
+    private static final String DOT_OUTPUT = "target/dot/type-inf/";
 
     /**
      * Asserts that the given node's unique type is equal to the given expected
@@ -112,11 +116,11 @@ public class AbstractTypeInferenceTest {
     private ASTNode createAST(String testFilename, Params params) throws Exception {
         final PackageBuilder builder = new PackageBuilder(params);
         final Package mainPackage = builder.buildPackage();
-        executeVisitorChain(testFilename, mainPackage);
+        executeVisitorChain(testFilename, params.getInputCode(), mainPackage);
         return mainPackage;
     }
 
-    private void executeVisitorChain(String testFileName, ASTNode root)
+    private void executeVisitorChain(String testFileName, String code, ASTNode root)
             throws Exception {
         final BaseVisitor[] visitors = new BaseVisitor[] {
                 new SetParentVisitor(),
@@ -141,13 +145,30 @@ public class AbstractTypeInferenceTest {
         writeDotFile(testFileName, root);
         if (error != null) {
             throw error;
+        } else if (code != null) {
+            writeTestMontyFile(testFileName, code);
+        }
+    }
+
+    private void writeTestMontyFile(String testFileName, String content)
+            throws IOException {
+        final String originalFileName = getFileName(testFileName);
+        final String montyFileName = originalFileName + ".monty";
+        final File targetFile = new File(TEST_OUTPUT, montyFileName);
+
+        if (!targetFile.getParentFile().exists()) {
+            targetFile.getParentFile().mkdirs();
+        }
+
+        try (PrintWriter w = new PrintWriter(targetFile)) {
+            w.println(content);
         }
     }
 
     private void writeDotFile(String testFileName, ASTNode root) throws IOException {
         final String originalFileName = getFileName(testFileName);
         final String dotFileName = originalFileName + ".dot";
-        final File targetDotFile = new File(DOT_OUT_PUT, dotFileName);
+        final File targetDotFile = new File(DOT_OUTPUT, dotFileName);
 
         if (!targetDotFile.getParentFile().exists()) {
             targetDotFile.getParentFile().mkdirs();

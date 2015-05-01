@@ -10,6 +10,7 @@ import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
+import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 import de.uni.bremen.monty.moco.visitor.typeinf.TypeInferenceException;
@@ -197,5 +198,51 @@ public class ImplicitGenericsTest extends AbstractTypeInferenceTest {
                         .blankLine()
                         .append("+Int bar(X x):").indent()
                         .append("return 2"));
+    }
+
+    @Test
+    public void testRecursiveType() throws Exception {
+        final ASTNode root = getASTFromString("testRecursiveType_implicit.monty",
+                code -> code
+                        .append("? root := Node(\"a\")")
+                        .append("? child := Node(\"b\")")
+                        .append("root.next := child")
+                        .append("class Node<A>:").indent()
+                        .append("-A data")
+                        .append("+Node<A> next")
+                        .append("+initializer(A data):").indent()
+                        .append("self.data := data"));
+
+        final VariableDeclaration child = searchFor(VariableDeclaration.class)
+                .where(Predicates.hasName("child"))
+                .in(root).get();
+
+        final VariableAccess var = searchFor(VariableAccess.class)
+                .where(Predicates.hasName("next"))
+                .and(Predicates.onLine(3))
+                .in(root).get();
+        final Type expected = ClassType.classNamed("Node")
+                .withSuperClass(CoreClasses.objectType().getType().asClass())
+                .addTypeParameter(CoreClasses.stringType().getType())
+                .createType();
+
+        assertUniqueTypeIs(expected, var);
+        assertUniqueTypeIs(expected, child);
+        assertAllTypesResolved(root);
+    }
+
+    @Test(expected = TypeInferenceException.class)
+    public void testRecursiveTypeFail() throws Exception {
+        final ASTNode root = getASTFromString("testRecursiveTypeFail_implicit.monty",
+                code -> code
+                        .append("? root := Node(\"a\")")
+                        .append("? child := Node(4)")
+                        .append("root.next := child")
+                        .append("class Node<A>:").indent()
+                        .append("-A data")
+                        .append("+Node<A> next")
+                        .append("+initializer(A data):").indent()
+                        .append("self.data := data"));
+        assertAllTypesResolved(root);
     }
 }

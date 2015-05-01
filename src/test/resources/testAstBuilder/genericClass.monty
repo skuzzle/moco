@@ -3,7 +3,8 @@ foo():
     Ab<Xy<Int>> b := Ab()
 
     Ab<Int, Int> c := functionWithTypeParams<Int, Int>()
-
+    Ab<Int, Int> e := functionWithTypeParamsX<>()
+    
 Ab<Int, String> genericFunction():
     pass
     

@@ -233,7 +233,8 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         varDecl.visit(this);
 
         assert varDecl.isTypeResolved();
-        node.setType(varDecl.getType());
+        final Type nodeType = node.getScope().getSubstitutions().apply(varDecl.getType());
+        node.setType(nodeType);
         node.setDeclaration(decl);
     }
 
@@ -266,7 +267,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
 
         if (raw instanceof ClassDeclaration) {
             final ClassScope rawScope = (ClassScope) raw.getScope();
-            final Unification typeVarBindings = rawScope.getSubstitutions();
+            final Unification typeVarBindings = rawScope.getSubstitutions().merge(subst);
             // We need to substitute type variables of the right with their
             // bindings from
             // the left scope
