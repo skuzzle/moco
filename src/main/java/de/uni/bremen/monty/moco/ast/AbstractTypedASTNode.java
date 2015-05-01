@@ -33,4 +33,15 @@ public abstract class AbstractTypedASTNode extends BasicASTNode implements Typed
         }
         this.type = type;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder b = new StringBuilder(super.toString());
+        if (isTypeResolved()) {
+            b.append(" [ ").append(this.type).append(" ] ");
+        } else {
+            b.append(" [ unknown ] ");
+        }
+        return b.toString();
+    }
 }

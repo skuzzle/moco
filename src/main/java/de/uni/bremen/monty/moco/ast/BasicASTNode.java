@@ -39,6 +39,7 @@
 package de.uni.bremen.monty.moco.ast;
 
 
+
 /** Baseclass for every node in the AST. */
 public abstract class BasicASTNode implements ASTNode {
 
@@ -62,7 +63,13 @@ public abstract class BasicASTNode implements ASTNode {
 	/** {@inheritDoc} */
 	@Override
 	public String toString() {
-		return getClass().getSimpleName();
+        final StringBuilder b = new StringBuilder();
+        b.append(getClass().getSimpleName());
+        if (this instanceof NamedNode) {
+            final NamedNode me = (NamedNode) this;
+            b.append(" '").append(me.getIdentifier()).append("'");
+        }
+        return b.toString();
 	}
 
 	/** Get parent node.

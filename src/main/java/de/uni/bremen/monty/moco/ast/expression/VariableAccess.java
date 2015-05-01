@@ -38,12 +38,15 @@
  */
 package de.uni.bremen.monty.moco.ast.expression;
 
-import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.NamedNode;
+import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 /** VariableAccess is an expression that references a local variable or a member of an object. */
-public class VariableAccess extends Expression {
+public class VariableAccess extends Expression implements NamedNode {
 
 	/** Identifier of the variable to access. */
 	private final ResolvableIdentifier identifier;
@@ -58,10 +61,11 @@ public class VariableAccess extends Expression {
 	}
 
 	/** Get the identifier of the variable to access.
-	 * 
+	 *
 	 * @return the identifier */
-	public ResolvableIdentifier getIdentifier() {
-		return identifier;
+	@Override
+    public ResolvableIdentifier getIdentifier() {
+		return this.identifier;
 	}
 
 	/** {@inheritDoc} */
@@ -77,19 +81,19 @@ public class VariableAccess extends Expression {
 
 	/** Mark this VariableAccess as a L-value. */
 	public void setLValue() {
-		lValue = true;
+		this.lValue = true;
 	}
 
 	/** Is this a L-value?
-	 * 
+	 *
 	 * @return if L-value */
 	public boolean getLValue() {
-		return lValue;
+		return this.lValue;
 	}
 
 	/** @return the declaration */
 	public Declaration getDeclaration() {
-		return declaration;
+		return this.declaration;
 	}
 
 	/** @param declaration
@@ -99,9 +103,9 @@ public class VariableAccess extends Expression {
 	}
 
 	/** Get mangled identifier
-	 * 
+	 *
 	 * @return the mangled identifier */
 	public Identifier getMangledIdentifier() {
-		return declaration.getMangledIdentifier();
+		return this.declaration.getMangledIdentifier();
 	}
 }
