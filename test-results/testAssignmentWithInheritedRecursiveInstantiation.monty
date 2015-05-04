@@ -1,0 +1,8 @@
+Pair<Int, String> test := Recursive<Int>()
+class Pair<A, B>:
+    pass
+
+
+class Recursive<A> inherits Pair<A, String>:
+    pass
+

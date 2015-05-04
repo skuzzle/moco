@@ -1,0 +1,9 @@
+? root := Node("a")
+? child := Node("b")
+root.next := child
+class Node<A>:
+    -A data
+    +Node<A> next
+    +initializer(A data):
+        self.data := data
+

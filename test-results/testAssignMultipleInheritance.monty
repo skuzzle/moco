@@ -1,0 +1,22 @@
+X x := Pair<String, String>()
+Y y := Pair<String, String>()
+Pair<String, String> p := Pair<String, String>()
+x.barX()
+p.barX()
+p.barY()
+p.foo()
+
+class X:
+    +barX():
+        pass
+    
+
+class Y:
+    +barY():
+        pass
+    
+
+class Pair<A, B> inherits X, Y:
+    +foo():
+        pass
+

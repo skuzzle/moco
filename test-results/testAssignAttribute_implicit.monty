@@ -1,0 +1,7 @@
+? a := Foo<String>()
+? temp := Foo<String>()
+a.x := "b"
+temp.x := a.x
+class Foo<X>:
+    +X x
+

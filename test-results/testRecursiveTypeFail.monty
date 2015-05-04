@@ -1,0 +1,9 @@
+Node<String> root := Node<String>("a")
+Node<Int> child := Node<Int>(4)
+root.next := child
+class Node<A>:
+    -A data
+    +Node<A> next
+    +initializer(A data):
+        self.data := data
+

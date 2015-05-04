@@ -1,0 +1,14 @@
+class Foo<X>:
+    +X x
+    +initializer(X x):
+        pass
+    
+    +? get():
+        return x
+    
+
+<Y> Y callFoo(Foo<Y> foo):
+    return foo.get()
+
+Int a := callFoo(Foo(1337))
+

@@ -1,0 +1,8 @@
+Pair<Char, String> test := Bc()
+class Pair<A, B>:
+    pass
+
+
+class Bc inherits Pair<Char, String>:
+    pass
+

@@ -1,0 +1,18 @@
+class Pair<A, B>:
+    -A t1
+    -B t2
+    
+    +initializer(A f, B s):
+        t1 := f
+        t2 := s
+    
+    +A get1():
+        return t1
+    
+    +B get2():
+        return t2
+    
+
+foo():
+    Pair<Int, String> pair := Pair<Int, String>(2, "5")
+

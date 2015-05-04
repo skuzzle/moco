@@ -1,0 +1,5 @@
+class Foo<X>:
+    +X x
+    +initializer(X x):
+        self.x := x
+
