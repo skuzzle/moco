@@ -8,11 +8,18 @@ import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.NamedNode;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration.DeclarationType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.util.ASTUtil;
 
 public class Predicates {
+
+    public static <C extends VariableDeclaration> Predicate<C> declarationTypeIs(
+            DeclarationType type) {
+        return c -> c.getDeclarationType() == type;
+    }
 
     public static <C extends ASTNode> Predicate<C> onLine(int line) {
         return c -> c.getPosition().getLineNumber() == line;
@@ -48,4 +55,5 @@ public class Predicates {
                 .map(Typed::getType)
                 .collect(Collectors.toList()));
     }
+
 }

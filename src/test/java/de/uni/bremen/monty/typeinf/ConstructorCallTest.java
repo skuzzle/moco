@@ -13,6 +13,7 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
+import de.uni.bremen.monty.moco.visitor.typeinf.TypeInferenceException;
 
 public class ConstructorCallTest extends AbstractTypeInferenceTest {
 
@@ -20,10 +21,10 @@ public class ConstructorCallTest extends AbstractTypeInferenceTest {
     public void testAssignCtorCallToDeclaration() throws Exception {
         final ASTNode root = getASTFromString("testAssignCtorCallToDeclaration.monty",
                 code -> code
-                .append("class Circle:").indent()
-                .append("pass")
-                .dedent()
-                .append("test():").indent()
+                        .append("class Circle:").indent()
+                        .append("pass")
+                        .dedent()
+                        .append("test():").indent()
                         .append("? var := Circle()"));
 
         final VariableDeclaration decl = searchFor(VariableDeclaration.class)
@@ -44,5 +45,16 @@ public class ConstructorCallTest extends AbstractTypeInferenceTest {
         assertEquals(circle, call.getType());
         assertEquals(expectedCallDeclType, call.getDeclaration().getType());
         assertEquals(circle, decl.getType());
+    }
+
+    @Test(expected = TypeInferenceException.class)
+    public void testConstructorWithExplicitTypeArg() throws Exception {
+        // c'tor can not specify a type arg named the same as in surrounding
+        // class
+        getASTFromString("testConstructorWithExplicitTypeArg.monty",
+                code -> code
+                        .append("class Foo<X>:").indent()
+                        .append("+<X> initializer(X x):").indent()
+                        .append("pass"));
     }
 }

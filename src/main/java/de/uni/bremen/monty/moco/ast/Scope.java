@@ -332,7 +332,7 @@ public class Scope implements TypeContext {
             final TypeVariableDeclaration type = (TypeVariableDeclaration) resolveType(variable, ri);
             assert type instanceof TypeVariableDeclaration;
             // assert type.getType() == variable;
-            return !type.isArtificial();
+            return type.getType() == variable && !type.isArtificial();
         } catch (UnknownTypeException e) {
             return false;
         }

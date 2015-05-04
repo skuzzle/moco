@@ -250,7 +250,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         final ClassType instanceType = node.getLeft().getType().asClass();
         final TypeDeclaration raw = node.getScope().resolveType(node, instanceType);
 
-        final Unification subst = Unification.testIf(instanceType).isA(raw.getType());
+        final Unification subst = Unification.testIf(raw.getType()).isA(instanceType);
         // Resolve type of the right hand node in the scope of the left hand
         // node. This will yield the raw (declared type) of the right hand node.
         // It must therefore be run through the substitution which binds type

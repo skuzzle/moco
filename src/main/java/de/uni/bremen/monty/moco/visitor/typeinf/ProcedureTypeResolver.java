@@ -5,9 +5,12 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.NamedNode;
 import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
@@ -42,9 +45,15 @@ class ProcedureTypeResolver extends TypeResolverFragment {
                 .forParent(ClassDeclaration.class)
                 .in(node).get();
 
+        // explicit type args on constructor
+        final List<Type> typeArgs = getTypeParametersForConstructor(
+                node.getTypeParameters(), classDecl);
+
+        final List<TypeVariableDeclaration> typeVarDecls =
+                new ArrayList<>(node.getTypeParameters());
         // Constructors must be quantified equally to the classes they create
-        final List<Type> fresh = new ArrayList<>(classDecl.getTypeParameters().size());
-        final List<TypeVariableDeclaration> typeVarDecls = new ArrayList<>();
+        final List<Type> fresh = new ArrayList<>(typeArgs);
+
         for (final TypeVariableDeclaration typeVar : classDecl.getTypeParameters()) {
             final TypeVariableDeclaration copy = new TypeVariableDeclaration(
                     typeVar.getPosition(), typeVar.getIdentifier());
@@ -89,6 +98,7 @@ class ProcedureTypeResolver extends TypeResolverFragment {
                 .atLocation(node)
                 .returning(returnType)
                 .andParameters(signature)
+                .quantifiedBy(typeArgs)
                 .createType();
         node.setType(nodeType);
     }
@@ -104,6 +114,7 @@ class ProcedureTypeResolver extends TypeResolverFragment {
                 .atLocation(node)
                 .returning(declaredReturnType)
                 .andParameters(signature)
+                .quantifiedBy(typeArgs)
                 .createType();
 
         // set intermediate type
@@ -136,6 +147,25 @@ class ProcedureTypeResolver extends TypeResolverFragment {
     private List<Type> getTypeParameters(Collection<TypeVariableDeclaration> typeParams) {
         final List<Type> types = new ArrayList<>(typeParams.size());
         for (final TypeVariableDeclaration typeParam : typeParams) {
+            resolveTypeOf(typeParam);
+            types.add(typeParam.getType());
+        }
+        return types;
+    }
+
+    private List<Type> getTypeParametersForConstructor(
+            Collection<TypeVariableDeclaration> typeParams, ClassDeclaration classDecl) {
+        final Set<String> names = classDecl.getTypeParameters().stream()
+                .map(NamedNode::getIdentifier)
+                .map(Identifier::getSymbol)
+                .collect(Collectors.toSet());
+        final List<Type> types = new ArrayList<>(typeParams.size());
+        for (final TypeVariableDeclaration typeParam : typeParams) {
+            if (names.contains(typeParam.getIdentifier().getSymbol())) {
+                reportError(typeParam,
+                        "Constructor can not redeclared generic parameter <%s>",
+                        typeParam.getIdentifier());
+            }
             resolveTypeOf(typeParam);
             types.add(typeParam.getType());
         }

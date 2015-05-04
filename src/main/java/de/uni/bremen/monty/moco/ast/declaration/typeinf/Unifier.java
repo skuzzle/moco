@@ -39,8 +39,7 @@ final class Unifier {
         return representative;
     }
 
-    private void union(Type m, Type n,
-            Map<TypeVariable, Type> subst) {
+    private void union(Type m, Type n) {
 
         final Type rep_m = find(m);
         final Type rep_n = find(n);
@@ -52,25 +51,31 @@ final class Unifier {
                 ? rep_m
                 : rep_n;
         makeEquivalent(equiv, representative, other);
-
-        if (other instanceof TypeVariable) {
-            subst.put((TypeVariable) other, representative);
-        }
     }
 
     private Type chooseRepresentative(Type rep_m, Type rep_n) {
-        // preferably choose type which is *not* a type var, or, if both are a
-        // type var,
-        // preferably choose the one which is not an 'inferred' variable
         if (rep_m.isVariable() && rep_n.isVariable()) {
-            return rep_m.getName().isTypeVariableIdentifier()
-                    ? rep_n
-                    : rep_m;
+            return chooseFree(rep_m.asVariable(), rep_n.asVariable());
         } else if (rep_m.isVariable()) {
             return rep_n;
-        } else {
+        } else if (rep_n.isVariable()) {
             return rep_m;
         }
+        return rep_m;
+    }
+
+    private Type chooseFree(TypeVariable m, TypeVariable n) {
+        if (this.context.isFree(m)) {
+            return m;
+        }
+        if (this.context.isFree(n)) {
+            return n;
+        }
+
+        // none is free, no matter which becomes representative
+        // XXX: there is actually something magic with returning n which makes
+        // the test work. needs to be observed
+        return n;
     }
 
     private void makeEquivalent(int equivClass, Type representative,
@@ -82,14 +87,30 @@ final class Unifier {
     }
 
     public Unification unify(Type first, Type second) {
-        final Map<TypeVariable, Type> subst = new HashMap<>();
-        final boolean success = unifyInternal(first, second, subst);
-        return success
-                ? Unification.successful(subst)
-                : Unification.failed();
+        final boolean success = unifyInternal(first, second);
+        if (success) {
+            final Map<TypeVariable, Type> subst = buildSubstitutions();
+            return Unification.successful(subst);
+        }
+        return Unification.failed();
     }
 
-    private boolean unifyInternal(Type m, Type n, Map<TypeVariable, Type> subst) {
+    private Map<TypeVariable, Type> buildSubstitutions() {
+        final Map<TypeVariable, Type> result = new HashMap<>();
+        this.typeToClass.forEach((type, cls) -> {
+            if (type.isVariable()) {
+                final Type representative = this.classToType.get(cls);
+
+                // no need to add identity mapping
+                if (representative != type) {
+                    result.put(type.asVariable(), representative);
+                }
+            }
+        });
+        return result;
+    }
+
+    private boolean unifyInternal(Type m, Type n) {
         final Type s = find(m);
         final Type t = find(n);
 
@@ -104,23 +125,23 @@ final class Unifier {
             final ClassType cts = s.asClass();
             final ClassType ctt = t.asClass();
 
-            return isA(cts, ctt, subst);
+            return isA(cts, ctt);
         } else if (s instanceof Function && t instanceof Function) {
-            union(s, t, subst);
+            union(s, t);
             final Function fs = s.asFunction();
             final Function ft = t.asFunction();
 
-            if (!unifyInternal(fs.getReturnType(), ft.getReturnType(), subst)) {
+            if (!unifyInternal(fs.getReturnType(), ft.getReturnType())) {
                 return false;
             }
 
-            if (!unifyInternal(fs.getParameters(), ft.getParameters(), subst)) {
+            if (!unifyInternal(fs.getParameters(), ft.getParameters())) {
                 return false;
             }
 
             return true;
         } else if (s instanceof Product && t instanceof Product) {
-            union(s, t, subst);
+            union(s, t);
             final Product ps = s.asProduct();
             final Product pt = t.asProduct();
 
@@ -130,13 +151,13 @@ final class Unifier {
 
             final Iterator<Type> pIt = pt.getComponents().iterator();
             for (final Type ts : ps.getComponents()) {
-                if (!unifyInternal(ts, pIt.next(), subst)) {
+                if (!unifyInternal(ts, pIt.next())) {
                     return false;
                 }
             }
             return true;
         } else if (canUnifyVariables(s, t)) {
-            union(s, t, subst);
+            union(s, t);
             return true;
         } else {
             return false;
@@ -144,7 +165,10 @@ final class Unifier {
     }
 
     private boolean canUnifyVariables(Type s, Type t) {
-        if (s.isVariable()) {
+        if (s.isVariable() && t.isVariable()) {
+            return !this.context.isFree(s.asVariable()) ||
+                !this.context.isFree(t.asVariable());
+        } else if (s.isVariable()) {
             return !this.context.isFree(s.asVariable());
         } else if (t.isVariable()) {
             return !this.context.isFree(t.asVariable());
@@ -157,10 +181,9 @@ final class Unifier {
      *
      * @param is The first type.
      * @param a The type to check whether the first is an instance of.
-     * @param subst Substitution map.
      * @return Whether {@code is} is an instance of {@code a}.
      */
-    private boolean isA(ClassType is, ClassType a, Map<TypeVariable, Type> subst) {
+    private boolean isA(ClassType is, ClassType a) {
         if (is == a) {
             return true;
         } else if (is.getName().equals(a.getName())) {
@@ -169,7 +192,7 @@ final class Unifier {
 
             final Iterator<Type> otherIt = a.getTypeParameters().iterator();
             for (final Type typeParam : is.getTypeParameters()) {
-                if (!unifyInternal(typeParam, otherIt.next(), subst)) {
+                if (!unifyInternal(typeParam, otherIt.next())) {
                     return false;
                 }
             }
@@ -178,7 +201,7 @@ final class Unifier {
 
         boolean result = false;
         for (final ClassType superType : is.getSuperClasses()) {
-            result |= isA(superType, a, subst);
+            result |= isA(superType, a);
         }
         return result;
     }
