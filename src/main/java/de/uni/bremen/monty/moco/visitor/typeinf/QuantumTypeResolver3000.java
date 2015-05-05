@@ -194,23 +194,6 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         new CallTypeResolver(this).resolveType(node);
     }
 
-    private List<ProcedureDeclaration> sortOutSelf(ASTNode call,
-            List<ProcedureDeclaration> overloads) {
-        final Optional<ProcedureDeclaration> parent = SearchAST
-                .forParent(ProcedureDeclaration.class)
-                .in(call);
-        if (!parent.isPresent() || overloads.size() == 1) {
-            return overloads;
-        }
-        final List<ProcedureDeclaration> result = new ArrayList<>(overloads.size() - 1);
-        for (final ProcedureDeclaration overload : overloads) {
-            if (overload != parent.get()) {
-                result.add(overload);
-            }
-        }
-        return result;
-    }
-
     @Override
     public void visit(VariableDeclaration node) {
         if (!shouldVisit(node)) {
