@@ -167,11 +167,7 @@ public final class TypeHelper {
     public static BestFit bestFit(Collection<ProcedureDeclaration> candidates,
             FunctionCall call, TypeResolver typeResolver) {
 
-        final List<Type> actualSignature = new ArrayList<>(call.getArguments().size());
-        for (final Expression actual : call.getArguments()) {
-            typeResolver.resolveTypeOf(actual);
-            actualSignature.add(actual.getType());
-        }
+        final List<Type> actualSignature = typeResolver.resolveTypesOf(call.getArguments());
 
         final Function callType = Function.named(call.getIdentifier())
                 .atLocation(call)
@@ -215,7 +211,8 @@ public final class TypeHelper {
             if (!unification.isSuccessful()) {
                 continue outer;
             }
-            int rating = rateSignature(callType.getParameters(),
+
+            int rating = rateSignature(unification, callType.getParameters(),
                     candidateType.getParameters());
 
             if (rating < bestRating) {
@@ -237,10 +234,14 @@ public final class TypeHelper {
                 .checkIsUnique(call, typeResolver);
     }
 
-    private static int rateSignature(Product fun1, Product fun2) {
-        assert fun1.getComponents().size() == fun2.getComponents().size();
-        final Iterator<Type> fun1It = fun1.getComponents().iterator();
-        final Iterator<Type> fun2It = fun2.getComponents().iterator();
+    private static int rateSignature(Unification subst, Product call, Product candidate) {
+        assert call.getComponents().size() == candidate.getComponents().size();
+
+        final Product fun1Unified = subst.apply(call);
+        final Product fun2Unified = candidate;
+
+        final Iterator<Type> fun1It = fun1Unified.getComponents().iterator();
+        final Iterator<Type> fun2It = fun2Unified.getComponents().iterator();
 
         int rate = 0;
         while (fun1It.hasNext()) {
@@ -258,7 +259,8 @@ public final class TypeHelper {
             return Math.abs(t1.asClass().distanceToObject()
                     - t2.asClass().distanceToObject());
         } else if (t1.isVariable() || t2.isVariable()) {
-            return Integer.MAX_VALUE;
+            // TODO: XOR instead of OR?
+            return Integer.MAX_VALUE - 1;
         }
         return 0;
     }
