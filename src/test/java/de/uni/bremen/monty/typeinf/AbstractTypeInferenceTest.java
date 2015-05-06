@@ -26,6 +26,7 @@ import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 import de.uni.bremen.monty.moco.visitor.DeclarationVisitor;
 import de.uni.bremen.monty.moco.visitor.DotVisitor;
 import de.uni.bremen.monty.moco.visitor.SetParentVisitor;
+import de.uni.bremen.monty.moco.visitor.typeinf.QuantumTypeErasor9k;
 import de.uni.bremen.monty.moco.visitor.typeinf.QuantumTypeResolver3000;
 
 public class AbstractTypeInferenceTest {
@@ -66,7 +67,14 @@ public class AbstractTypeInferenceTest {
             @Override
             protected void onEnterEachNode(ASTNode node) {
                 if (node instanceof Typed) {
-                    assert ((Typed) node).isTypeResolved();
+                    final Typed typed = (Typed) node;
+                    if (!typed.isTypeResolved()) {
+                        fail(String.format("Type not resolved on node: <%s>", node));
+                    }
+                    if (!typed.isTypeDeclarationResolved()) {
+                        fail(String.format("TypeDeclaration not resolved on node: <%s>",
+                                node));
+                    }
                 }
             }
         });
@@ -125,7 +133,8 @@ public class AbstractTypeInferenceTest {
         final BaseVisitor[] visitors = new BaseVisitor[] {
                 new SetParentVisitor(),
                 new DeclarationVisitor(),
-                new QuantumTypeResolver3000()
+                new QuantumTypeResolver3000(),
+                new QuantumTypeErasor9k()
         };
         Exception error = null;
         for (final BaseVisitor bv : visitors) {

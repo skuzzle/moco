@@ -62,6 +62,7 @@ public class CoreClasses {
                     name), Collections.<TypeInstantiation> emptyList(), new Block(
                     new Position("Dummy_" + name, 1, 0)));
 
+		    coreClass.setTypeDeclaration(coreClass);
             CoreClasses.setCoreClass(name, coreClass);
 		}
 	}

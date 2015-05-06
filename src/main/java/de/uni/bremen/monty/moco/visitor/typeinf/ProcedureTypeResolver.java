@@ -80,6 +80,7 @@ class ProcedureTypeResolver extends TypeResolverFragment {
                 .createType();
         final Function unified = nodeType;
         node.setType(unified);
+        node.setTypeDeclaration(classDecl);
     }
 
     private void resolveProcedureType(ProcedureDeclaration node) {
@@ -100,6 +101,7 @@ class ProcedureTypeResolver extends TypeResolverFragment {
                 .quantifiedBy(typeArgs)
                 .createType();
         node.setType(nodeType);
+        node.setTypeDeclaration(CoreClasses.voidType());
     }
 
     private void resolveFunctionType(FunctionDeclaration node) {
@@ -141,6 +143,7 @@ class ProcedureTypeResolver extends TypeResolverFragment {
                 .andParameters(signature)
                 .createType();
         node.setType(nodeType);
+        node.setTypeDeclaration(node.getReturnTypeIdentifier().getTypeDeclaration());
     }
 
     private List<Type> getTypeParameters(Collection<TypeVariableDeclaration> typeParams) {

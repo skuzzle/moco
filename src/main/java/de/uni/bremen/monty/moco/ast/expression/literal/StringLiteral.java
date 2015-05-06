@@ -47,6 +47,7 @@ public class StringLiteral extends LiteralExpression<String> {
 	public StringLiteral(Position position, String value) {
 		super(position, value.replaceAll("\"", ""));
         setType(CoreClasses.stringType().getType());
+        setTypeDeclaration(CoreClasses.stringType());
 	}
 
 	@Override

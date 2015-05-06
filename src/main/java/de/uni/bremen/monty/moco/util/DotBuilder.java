@@ -50,6 +50,10 @@ public class DotBuilder implements Closeable {
                     typed.isTypeResolved()
                             ? typed.getType()
                             : "unknown"));
+            attributeList.add(String.format("Erasure: %s",
+                    typed.isTypeDeclarationResolved()
+                            ? typed.getTypeDeclaration()
+                            : "unknown"));
         }
 
         for (int j = 0; j < attributeList.size(); ++j) {
@@ -58,7 +62,6 @@ public class DotBuilder implements Closeable {
                 this.out.print("|");
             }
         }
-
 
         this.out.println("}\"];");
     }

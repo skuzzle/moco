@@ -74,7 +74,6 @@ public class TypeInstantiation extends AbstractTypedASTNode implements NamedNode
 
     private final ResolvableIdentifier typeName;
     private final List<TypeInstantiation> typeArguments;
-    private TypeDeclaration declaration;
     private Unification unification = Unification.EMPTY;
 
     TypeInstantiation(Position position, ResolvableIdentifier typeName,
@@ -82,14 +81,6 @@ public class TypeInstantiation extends AbstractTypedASTNode implements NamedNode
         super(position);
         this.typeName = typeName;
         this.typeArguments = Collections.unmodifiableList(typeArguments);
-    }
-
-    public void setDeclaration(TypeDeclaration declaration) {
-        this.declaration = declaration;
-    }
-
-    public TypeDeclaration getDeclaration() {
-        return this.declaration;
     }
 
     @Override

@@ -9,7 +9,6 @@ import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
-import de.uni.bremen.monty.moco.exception.MontyBaseException;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class QuantumTypeErasor9k extends BaseVisitor {
@@ -22,14 +21,17 @@ public class QuantumTypeErasor9k extends BaseVisitor {
     }
 
     private void enterTypedNode(Location location, Scope scope, Typed node) {
-        final Declaration decl = scope.resolveFromType(node.getType());
+        if (!node.isTypeDeclarationResolved()) {
+            return;
+        }
+        final Declaration decl = node.getTypeDeclaration();
         if (decl instanceof ClassDeclaration) {
             node.setTypeDeclaration((TypeDeclaration) decl);
         } else if (decl instanceof TypeVariableDeclaration) {
             node.setTypeDeclaration(CoreClasses.objectType());
         } else {
-            throw new MontyBaseException(location, String.format(
-                    "Encountered un-erasable type %s", node.getType()));
+            //throw new MontyBaseException(location, String.format(
+            //        "Encountered un-erasable type %s", node.getType()));
         }
     }
 }

@@ -47,6 +47,7 @@ public class IntegerLiteral extends LiteralExpression<Integer> {
 	public IntegerLiteral(Position position, Integer value) {
 		super(position, value);
         setType(CoreClasses.intType().getType());
+        setTypeDeclaration(CoreClasses.intType());
 	}
 
 	@Override

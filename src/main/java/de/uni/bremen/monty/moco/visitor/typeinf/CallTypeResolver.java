@@ -23,18 +23,10 @@ class CallTypeResolver extends TypeResolverFragment {
 
     public void resolveType(FunctionCall node) {
         if (checkIsConstructorCall(node)) {
-            resolveConstructorCall(node);
+            resolveCall(node, this::getConstructorOverloads);
         } else {
-            resolveFunctionCall(node);
+            resolveCall(node, this::getOverloads);
         }
-    }
-
-    private void resolveConstructorCall(FunctionCall node) {
-        resolveCall(node, this::getConstructorOverloads);
-    }
-
-    private void resolveFunctionCall(FunctionCall node) {
-        resolveCall(node, this::getOverloads);
     }
 
     private void resolveCall(
@@ -52,8 +44,9 @@ class CallTypeResolver extends TypeResolverFragment {
         final Function unified = unification.apply(callType);
         node.setType(unified.getReturnType());
         node.setDeclaration(match);
+        node.setTypeDeclarationIfResolved(match);
     }
-    
+
     private List<ProcedureDeclaration> getConstructorOverloads(FunctionCall call) {
         final ClassDeclaration decl = call.getConstructorType();
         try {
@@ -85,7 +78,7 @@ class CallTypeResolver extends TypeResolverFragment {
     private void checkValidTypeParameterDecls(FunctionCall node, BestFit bestFit) {
         final ProcedureDeclaration match = bestFit.getBestMatch();
         if (node.getTypeArguments().size() > 0 &&
-                node.getTypeArguments().size() != match.getTypeParameters().size()) {
+            node.getTypeArguments().size() != match.getTypeParameters().size()) {
             // either specify none or all type parameters
             reportError(node, "Call <%s> only specifies partial type parameters",
                     node.getIdentifier());

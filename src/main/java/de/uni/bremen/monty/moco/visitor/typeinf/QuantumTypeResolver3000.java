@@ -75,7 +75,11 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
                         node.getPosition(), typeBinding.getName());
                 typeVar.setType(typeBinding);
                 typeVar.setArtificial(true);
+                node.setTypeDeclaration(typeVar);
                 scope.define(typeVar);
+            } else {
+                final TypeDeclaration typeDecl = scope.resolveType(node, typeName);
+                node.setTypeDeclaration(typeDecl);
             }
             node.setType(typeBinding);
             node.setUnification(Unification.EMPTY);
@@ -89,7 +93,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         final TypeDeclaration decl = node.getScope()
                 .resolveType(node, typeBinding.asClass());
         decl.visit(this);
-        node.setDeclaration(decl);
+        node.setTypeDeclaration(decl);
 
         // resolve nested quantifications
         super.visit(node);
@@ -125,6 +129,8 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
                 .atLocation(node)
                 .createType();
         node.setType(var);
+        // safe is safe!
+        node.setTypeDeclaration(node);
     }
 
     @Override
@@ -140,11 +146,8 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         final ClassScope scope = node.getScope();
 
         // Define type arguments
-        for (final TypeVariableDeclaration typeParam : node.getTypeParameters()) {
-            typeParam.visit(this);
-            builder.addTypeParameter(typeParam.getType());
-            // scope.getParentScope().define(decl);
-        }
+        final List<Type> types = resolveTypesOf(node.getTypeParameters());
+        builder.addTypeParameters(types);
 
         // resolve super classes
         for (final TypeInstantiation superClass : node.getSuperClassIdentifiers()) {
@@ -157,12 +160,12 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
             }
 
             assert superClass.getType().isClass();
-            assert superClass.getDeclaration() != null;
+            assert superClass.getTypeDeclaration() != null;
 
             // HINT: super classes added here have unbound type variables! (
             // thus their types are not suitable for resolving the type of
             // parent expressions)
-            final ClassDeclaration superClassDecl = (ClassDeclaration) superClass.getDeclaration();
+            final ClassDeclaration superClassDecl = (ClassDeclaration) superClass.getTypeDeclaration();
             node.addSuperClassDeclaration(superClassDecl);
             builder.withSuperClass(superClass.getType().asClass());
             scope.addParentClassScope(superClassDecl.getScope(),
@@ -170,6 +173,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         }
 
         node.setType(builder.createType());
+        node.setTypeDeclaration(node);
         node.getBlock().visit(this);
     }
 
@@ -201,6 +205,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         }
         node.getTypeIdentifier().visit(this);
         node.setType(node.getTypeIdentifier().getType());
+        node.setTypeDeclaration(node.getTypeIdentifier().getTypeDeclaration());
     }
 
     @Override
@@ -219,6 +224,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         final Type nodeType = node.getScope().getSubstitutions().apply(varDecl.getType());
         node.setType(nodeType);
         node.setDeclaration(decl);
+        node.setTypeDeclaration(decl.getTypeDeclaration());
     }
 
     @Override
@@ -260,6 +266,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         } else {
             node.setType(node.getRight().getType());
         }
+        node.setTypeDeclaration(node.getRight().getTypeDeclaration());
     }
 
     @Override
@@ -292,6 +299,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
 
         final ClassDeclaration decl = parent.get();
         node.setType(decl.getType());
+        node.setTypeDeclaration(decl);
     }
 
     @Override
@@ -313,7 +321,10 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
                     node.getParentIdentifier(), decl.getIdentifier());
         }
         node.setSelfType(decl.getType());
+        node.setSelfTypeDecl(decl);
+
         node.setType(superClass.get().getType());
+        node.setTypeDeclaration(superClass.get().getTypeDeclaration());
     }
 
     @Override

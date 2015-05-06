@@ -46,4 +46,11 @@ public interface Typed {
      * @return The resolved type's declaration.
      */
     TypeDeclaration getTypeDeclaration();
+
+    /**
+     * Whether this node has a type declaration assigned.
+     *
+     * @return Whether this node has a type declaration assigned.
+     */
+    boolean isTypeDeclarationResolved();
 }

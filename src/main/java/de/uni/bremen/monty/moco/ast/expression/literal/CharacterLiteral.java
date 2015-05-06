@@ -47,6 +47,7 @@ public class CharacterLiteral extends LiteralExpression<Character> {
 	public CharacterLiteral(Position position, Character value) {
 		super(position, value);
         setType(CoreClasses.charType().getType());
+        setTypeDeclaration(CoreClasses.charType());
 	}
 
 	@Override

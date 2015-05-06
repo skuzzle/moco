@@ -47,6 +47,7 @@ public class BooleanLiteral extends LiteralExpression<Boolean> {
 	public BooleanLiteral(Position position, Boolean value) {
 		super(position, value);
         setType(CoreClasses.boolType().getType());
+        setTypeDeclaration(CoreClasses.boolType());
 	}
 
 	@Override

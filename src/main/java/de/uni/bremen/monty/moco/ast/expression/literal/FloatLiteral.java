@@ -47,6 +47,7 @@ public class FloatLiteral extends LiteralExpression<Float> {
 	public FloatLiteral(Position position, Float value) {
 		super(position, value);
         setType(CoreClasses.floatType().getType());
+        setTypeDeclaration(CoreClasses.floatType());
 	}
 
 	@Override

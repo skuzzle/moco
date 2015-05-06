@@ -160,10 +160,10 @@ public class ClassDeclaration extends TypeDeclaration implements QuantifiedDecla
             if (superClass.getIdentifier().equals(name)) {
                 return Optional.of(superClass);
             }
-            assert superClass.getDeclaration() != null;
-            assert superClass.getDeclaration() instanceof ClassDeclaration;
+            assert superClass.getTypeDeclaration() != null;
+            assert superClass.getTypeDeclaration() instanceof ClassDeclaration;
 
-            final ClassDeclaration decl = (ClassDeclaration) superClass.getDeclaration();
+            final ClassDeclaration decl = (ClassDeclaration) superClass.getTypeDeclaration();
             final Optional<TypeInstantiation> nested = decl.getRecursiveParent(name);
             if (nested.isPresent()) {
                 return nested;
