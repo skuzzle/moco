@@ -40,6 +40,7 @@ package de.uni.bremen.monty.moco.ast.expression;
 
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
@@ -47,6 +48,7 @@ public class ParentExpression extends Expression {
 
 	private final ResolvableIdentifier parentIdentifier;
     private Type selfType;
+    private ClassDeclaration selfTypeDecl;
 
 	public ParentExpression(Position position, ResolvableIdentifier parentIdentifier) {
 		super(position);
@@ -64,6 +66,17 @@ public class ParentExpression extends Expression {
     public void setSelfType(Type selfType) {
 		this.selfType = selfType;
 	}
+
+    public void setSelfTypeDecl(ClassDeclaration selfTypeDecl) {
+        if (selfTypeDecl == null) {
+            throw new IllegalArgumentException("selfTypeDecl is null");
+        }
+        this.selfTypeDecl = selfTypeDecl;
+    }
+
+    public ClassDeclaration getSelfTypeDeclaration() {
+        return this.selfTypeDecl;
+    }
 
 	@Override
 	public void visit(BaseVisitor visitor) {

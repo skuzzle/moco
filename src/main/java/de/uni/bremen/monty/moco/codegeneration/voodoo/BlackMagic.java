@@ -39,21 +39,19 @@
 
 package de.uni.bremen.monty.moco.codegeneration.voodoo;
 
-import de.uni.bremen.monty.moco.codegeneration.Native;
-import de.uni.bremen.monty.moco.codegeneration.context.CodeContext;
-import de.uni.bremen.monty.moco.codegeneration.context.Operations;
-import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifier;
-import de.uni.bremen.monty.moco.codegeneration.types.LLVMType;
-import de.uni.bremen.monty.moco.exception.NotYetImplementedException;
-import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
-
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import de.uni.bremen.monty.moco.codegeneration.Native;
+import de.uni.bremen.monty.moco.codegeneration.context.CodeContext;
+import de.uni.bremen.monty.moco.codegeneration.context.Operations;
+import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifier;
+import de.uni.bremen.monty.moco.exception.NotYetImplementedException;
+
 public class BlackMagic {
-	private Operations operations;
+	private final Operations operations;
 
 	public BlackMagic(Operations operations) {
 		this.operations = operations;
@@ -64,7 +62,7 @@ public class BlackMagic {
 		for (Method method : methods) {
 			if (correctMethod(method, symbol)) {
 				try {
-					return (LLVMIdentifier<?>) method.invoke(operations, mergeArguments(c, arguments));
+					return (LLVMIdentifier<?>) method.invoke(this.operations, mergeArguments(c, arguments));
 				} catch (Exception e) {
 					throw new RuntimeException(e);
 				}

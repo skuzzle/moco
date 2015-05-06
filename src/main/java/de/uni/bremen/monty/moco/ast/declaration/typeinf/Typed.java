@@ -1,5 +1,7 @@
 package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 
+import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+
 
 /**
  * Interface for AST nodes that have a type assigned to them. Typed nodes may
@@ -30,4 +32,18 @@ public interface Typed {
      * @param type The unique type.
      */
     void setType(Type type);
+
+    /**
+     * Sets the declaration which belongs to the resolved type.
+     *
+     * @param typeDecl The type's declaration.
+     */
+    void setTypeDeclaration(TypeDeclaration typeDecl);
+
+    /**
+     * Gets the declaration of the resolved type.
+     *
+     * @return The resolved type's declaration.
+     */
+    TypeDeclaration getTypeDeclaration();
 }

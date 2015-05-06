@@ -39,22 +39,41 @@
 
 package de.uni.bremen.monty.moco.codegeneration.types;
 
+import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.array;
+import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.function;
+import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.int64;
+import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.int8;
+import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.pointer;
+import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.struct;
+import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.voidType;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
-import de.uni.bremen.monty.moco.ast.declaration.*;
-import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifier;
-import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifierFactory;
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.Declaration;
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext;
 import de.uni.bremen.monty.moco.codegeneration.context.CodeContext.Linkage;
-
-import java.util.*;
-
-import static de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.*;
+import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifier;
+import de.uni.bremen.monty.moco.codegeneration.identifier.LLVMIdentifierFactory;
+import de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.LLVMBool;
+import de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.LLVMDouble;
+import de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.LLVMInt;
+import de.uni.bremen.monty.moco.codegeneration.types.LLVMTypeFactory.LLVMInt8;
 
 public class TypeConverter {
-	private Map<TypeDeclaration, LLVMType> typeMap = new HashMap<>();
-	private LLVMIdentifierFactory llvmIdentifierFactory;
-	private CodeContext constantContext;
+	private final Map<TypeDeclaration, LLVMType> typeMap = new HashMap<>();
+	private final LLVMIdentifierFactory llvmIdentifierFactory;
+	private final CodeContext constantContext;
 
 	public TypeConverter(LLVMIdentifierFactory llvmIdentifierFactory, CodeContext constantContext) {
 		this.llvmIdentifierFactory = llvmIdentifierFactory;
@@ -63,8 +82,8 @@ public class TypeConverter {
 	}
 
 	private void initPreDefinedTypes() {
-		typeMap.put(CoreClasses.stringType(), pointer(int8()));
-		typeMap.put(CoreClasses.voidType(), voidType());
+		this.typeMap.put(CoreClasses.stringType(), pointer(int8()));
+		this.typeMap.put(CoreClasses.voidType(), voidType());
 	}
 
 	private LLVMPointer<LLVMFunctionType> convertType(ProcedureDeclaration type) {
@@ -75,11 +94,12 @@ public class TypeConverter {
 			parameter.add(mapToLLVMType(typeDeclaration));
 		}
 		for (VariableDeclaration varDecl : type.getParameter()) {
-			parameter.add(mapToLLVMType(varDecl.getType()));
+			parameter.add(mapToLLVMType(varDecl.getTypeDeclaration()));
 		}
 		if (type instanceof FunctionDeclaration) {
 			FunctionDeclaration func = (FunctionDeclaration) type;
-			return pointer(function(mapToLLVMType(func.getReturnType()), parameter));
+			final TypeDeclaration returnType = func.getReturnTypeIdentifier().getTypeDeclaration();
+			return pointer(function(mapToLLVMType(returnType), parameter));
 		}
 		return pointer(function(voidType(), parameter));
 	}
@@ -126,28 +146,28 @@ public class TypeConverter {
 		llvmClassTypeDeclarations.add(pointer(llvmVMTType));
 
 		LLVMIdentifier<LLVMType> llvmVMTDataIdentifier =
-		        llvmIdentifierFactory.newGlobal(mangledNodeName + "_vmt_data", (LLVMType) llvmVMTType);
+		        this.llvmIdentifierFactory.newGlobal(mangledNodeName + "_vmt_data", (LLVMType) llvmVMTType);
 		List<LLVMIdentifier<LLVMType>> llvmVMTDataInitializer = new ArrayList<>();
 
 		List<ClassDeclaration> recursiveSuperClassDeclarations = classDecl.getSuperClassDeclarationsRecursive();
 		LLVMArrayType llvmCTDataType = array(pointer(int8()), recursiveSuperClassDeclarations.size() + 1);
 		LLVMIdentifier<LLVMType> llvmCTDataIdentifier =
-		        llvmIdentifierFactory.newGlobal(mangledNodeName + "_ct_data", (LLVMType) llvmCTDataType);
+		        this.llvmIdentifierFactory.newGlobal(mangledNodeName + "_ct_data", (LLVMType) llvmCTDataType);
 		List<LLVMIdentifier<LLVMType>> llvmCTDataInitializer = new ArrayList<>();
 
 		llvmVMTTypeDeclarations.add(pointer(llvmCTDataType));
-		llvmVMTDataInitializer.add((LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.pointerTo(llvmCTDataIdentifier));
+		llvmVMTDataInitializer.add((LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) this.llvmIdentifierFactory.pointerTo(llvmCTDataIdentifier));
 
 		for (ClassDeclaration classDeclaration : recursiveSuperClassDeclarations) {
 			// Ensure that addType() was called for this classDeclaration so that a VMT/CT was generated.
 			mapToLLVMType(classDeclaration);
 			LLVMIdentifier<LLVMType> vmtDataIdent =
-			        llvmIdentifierFactory.newGlobal(
+			        this.llvmIdentifierFactory.newGlobal(
 			                classDeclaration.getMangledIdentifier().getSymbol() + "_vmt_data",
 			                (LLVMType) pointer(struct(classDeclaration.getMangledIdentifier().getSymbol() + "_vmt_type")));
-			llvmCTDataInitializer.add(llvmIdentifierFactory.bitcast(vmtDataIdent, pointer(int8())));
+			llvmCTDataInitializer.add(this.llvmIdentifierFactory.bitcast(vmtDataIdent, pointer(int8())));
 		}
-		llvmCTDataInitializer.add((LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) llvmIdentifierFactory.constantNull(pointer(int8())));
+		llvmCTDataInitializer.add((LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) this.llvmIdentifierFactory.constantNull(pointer(int8())));
 
 		if (classDecl == CoreClasses.intType()) {
 			llvmClassTypeDeclarations.add(LLVMTypeFactory.int64());
@@ -162,7 +182,7 @@ public class TypeConverter {
 		for (ClassDeclaration classDeclaration : recursiveSuperClassDeclarations) {
 			for (Declaration decl : classDeclaration.getBlock().getDeclarations()) {
 				if (decl instanceof VariableDeclaration) {
-					llvmClassTypeDeclarations.add(mapToLLVMType(((VariableDeclaration) decl).getType()));
+					llvmClassTypeDeclarations.add(mapToLLVMType(((VariableDeclaration) decl).getTypeDeclaration()));
 				}
 			}
 		}
@@ -170,23 +190,23 @@ public class TypeConverter {
 			if (!procedure.isInitializer()) {
 				LLVMType signature = mapToLLVMType(procedure);
 				llvmVMTTypeDeclarations.add(signature);
-				llvmVMTDataInitializer.add(llvmIdentifierFactory.newGlobal(
+				llvmVMTDataInitializer.add(this.llvmIdentifierFactory.newGlobal(
 				        procedure.getMangledIdentifier().getSymbol(),
 				        signature));
 			}
 		}
-		constantContext.type(llvmVMTType, llvmVMTTypeDeclarations);
-		constantContext.type(llvmClassType, llvmClassTypeDeclarations);
-		constantContext.global(
+		this.constantContext.type(llvmVMTType, llvmVMTTypeDeclarations);
+		this.constantContext.type(llvmClassType, llvmClassTypeDeclarations);
+		this.constantContext.global(
 		        Linkage.priv,
 		        llvmCTDataIdentifier,
 		        true,
-		        llvmIdentifierFactory.constant(llvmCTDataType, llvmCTDataInitializer));
-		constantContext.global(
+		        this.llvmIdentifierFactory.constant(llvmCTDataType, llvmCTDataInitializer));
+		this.constantContext.global(
 		        Linkage.priv,
 		        llvmVMTDataIdentifier,
 		        true,
-		        llvmIdentifierFactory.constant(llvmVMTType, llvmVMTDataInitializer));
+		        this.llvmIdentifierFactory.constant(llvmVMTType, llvmVMTDataInitializer));
 	}
 
 	private void addArray(TypeDeclaration typeDecl) {
@@ -194,7 +214,7 @@ public class TypeConverter {
 		LLVMType llvmType = mapToLLVMType((TypeDeclaration) CoreClasses.intType());
 		List<LLVMType> list = Arrays.asList(int64(), array(llvmType, 0));
 		LLVMStructType type = struct(typeDecl.getMangledIdentifier().getSymbol());
-		constantContext.type(type, list);
+		this.constantContext.type(type, list);
 	}
 
 	public LLVMPointer<LLVMStructType> mapToLLVMType(ClassDeclaration type) {
@@ -206,10 +226,10 @@ public class TypeConverter {
 	}
 
 	public <T extends LLVMType> T mapToLLVMType(TypeDeclaration type) {
-		T llvmType = (T) typeMap.get(type);
+		T llvmType = (T) this.typeMap.get(type);
 		if (llvmType == null) {
 			llvmType = convertType(type);
-			typeMap.put(type, llvmType);
+			this.typeMap.put(type, llvmType);
 			addType(type);
 		}
 		return llvmType;

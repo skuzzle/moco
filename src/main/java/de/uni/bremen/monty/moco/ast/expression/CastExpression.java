@@ -38,14 +38,14 @@
  */
 package de.uni.bremen.monty.moco.ast.expression;
 
-import de.uni.bremen.monty.moco.ast.*;
-import de.uni.bremen.monty.moco.ast.declaration.*;
+import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class CastExpression extends Expression {
 
-	private Expression expression;
-	private ResolvableIdentifier castIdentifier;
+	private final Expression expression;
+	private final ResolvableIdentifier castIdentifier;
 
 	public CastExpression(Position position, Expression expression, ResolvableIdentifier castIdentifier) {
 		super(position);
@@ -54,11 +54,11 @@ public class CastExpression extends Expression {
 	}
 
 	public ResolvableIdentifier getCastIdentifier() {
-		return castIdentifier;
+		return this.castIdentifier;
 	}
 
 	public Expression getExpression() {
-		return expression;
+		return this.expression;
 	}
 
 	@Override
@@ -68,6 +68,6 @@ public class CastExpression extends Expression {
 
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
-		visitor.visitDoubleDispatched(expression);
+		visitor.visitDoubleDispatched(this.expression);
 	}
 }
