@@ -25,6 +25,7 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType.ClassNamed;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
+import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
 import de.uni.bremen.monty.moco.ast.expression.ParentExpression;
@@ -370,6 +371,36 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
 
         node.setType(superClass.get().getType());
         node.setTypeDeclaration(superClass.get().getTypeDeclaration());
+    }
+
+    @Override
+    public void visit(ConditionalExpression node) {
+        resolveTypeOf(node.getCondition());
+        final Unification condition = Unification
+                .testIf(node.getCondition().getType())
+                .isA(CoreClasses.boolType().getType());
+
+        if (!condition.isSuccessful()) {
+            reportError(node.getCondition(), "%s is not a bool",
+                    node.getCondition().getType());
+        }
+
+        // TODO: find common type
+        resolveTypeOf(node.getThenExpression());
+        resolveTypeOf(node.getElseExpression());
+
+        final Optional<Type> common = TypeHelper.findLeastCommonSuperTyped(
+                node.getThenExpression(),
+                node.getElseExpression());
+
+
+        if (!common.isPresent()) {
+            reportError(node, "%s is not a %s", node.getThenExpression().getType(),
+                    node.getElseExpression().getType());
+        }
+        node.setType(common.get());
+        // TODO: use proper type declaration
+        node.setTypeDeclaration(node.getThenExpression().getTypeDeclaration());
     }
 
     @Override

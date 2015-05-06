@@ -1,6 +1,7 @@
 package de.uni.bremen.monty.moco.visitor.typeinf;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
@@ -17,6 +19,7 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Product;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
@@ -30,6 +33,12 @@ public final class TypeHelper {
 
     private TypeHelper() {
         // hidden
+    }
+
+    public static Optional<Type> findLeastCommonSuperTyped(Typed... typedNodes) {
+        return findLeastCommonSuperType(Arrays.stream(typedNodes)
+                .map(Typed::getType)
+                .collect(Collectors.toList()));
     }
 
     /**
