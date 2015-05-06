@@ -38,27 +38,31 @@
  */
 package de.uni.bremen.monty.moco.ast;
 
-import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
-import de.uni.bremen.monty.moco.ast.expression.Expression;
-import de.uni.bremen.monty.moco.ast.expression.literal.BooleanLiteral;
-import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
-import de.uni.bremen.monty.moco.ast.statement.*;
-import de.uni.bremen.monty.moco.exception.InvalidControlFlowException;
-import de.uni.bremen.monty.moco.visitor.ControlFlowVisitor;
-import de.uni.bremen.monty.moco.visitor.DeclarationVisitor;
-import de.uni.bremen.monty.moco.visitor.SetParentVisitor;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.Test;
+
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
+import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
+import de.uni.bremen.monty.moco.ast.expression.Expression;
+import de.uni.bremen.monty.moco.ast.expression.literal.BooleanLiteral;
+import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
+import de.uni.bremen.monty.moco.ast.statement.BreakStatement;
+import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
+import de.uni.bremen.monty.moco.ast.statement.ContinueStatement;
+import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
+import de.uni.bremen.monty.moco.ast.statement.WhileLoop;
+import de.uni.bremen.monty.moco.exception.InvalidControlFlowException;
+import de.uni.bremen.monty.moco.visitor.ControlFlowVisitor;
+import de.uni.bremen.monty.moco.visitor.SetParentVisitor;
 
 public class ControlFlowTest {
 
@@ -174,484 +178,486 @@ public class ControlFlowTest {
 	private int counter = 0;
 
 	public Position nextPosition() {
-		return new Position("TestFile", counter++, 1);
+		return new Position("TestFile", this.counter++, 1);
 	}
 
 	@Before
 	public void setUpAST() {
 
 		// reset counter
-		counter = 0;
+		this.counter = 0;
 
 		// VISITORS ---------------------------
-		setParentVisitor = new SetParentVisitor();
-		setParentVisitor.setStopOnFirstError(true);
-		controlFlowVisitor = new ControlFlowVisitor();
-		controlFlowVisitor.setStopOnFirstError(true);
+		this.setParentVisitor = new SetParentVisitor();
+		this.setParentVisitor.setStopOnFirstError(true);
+		this.controlFlowVisitor = new ControlFlowVisitor();
+		this.controlFlowVisitor.setStopOnFirstError(true);
 
 		// AST --------------------------------
 
 		// MODULE
-		moduleBlock = new Block(nextPosition());
-		moduleImports = new ArrayList<>(); // empty list is fine here ...
-		moduleDeclaration =
-		        new ModuleDeclaration(nextPosition(), new Identifier("TestModule"), moduleBlock, moduleImports);
+		this.moduleBlock = new Block(nextPosition());
+		this.moduleImports = new ArrayList<>(); // empty list is fine here ...
+		this.moduleDeclaration =
+		        new ModuleDeclaration(nextPosition(), new Identifier("TestModule"), this.moduleBlock, this.moduleImports);
 
-		aPackage = new Package(new Identifier(""));
-		aPackage.addModule(moduleDeclaration);
+		this.aPackage = new Package(new Identifier(""));
+		this.aPackage.addModule(this.moduleDeclaration);
 
 		// MODULE LOOP
-		moduleLoopCondition = new BooleanLiteral(nextPosition(), true);
-		moduleLoopBlock = new Block(nextPosition());
-		moduleLoop = new WhileLoop(nextPosition(), moduleLoopCondition, moduleLoopBlock);
-		moduleLoopContinueStatement = new ContinueStatement(nextPosition());
-		moduleLoopBreakStatement = new BreakStatement(nextPosition());
+		this.moduleLoopCondition = new BooleanLiteral(nextPosition(), true);
+		this.moduleLoopBlock = new Block(nextPosition());
+		this.moduleLoop = new WhileLoop(nextPosition(), this.moduleLoopCondition, this.moduleLoopBlock);
+		this.moduleLoopContinueStatement = new ContinueStatement(nextPosition());
+		this.moduleLoopBreakStatement = new BreakStatement(nextPosition());
 		// add module loop to module
-		moduleBlock.addStatement(moduleLoop);
+		this.moduleBlock.addStatement(this.moduleLoop);
 
 		// MODULE LOOP LOOP
-		moduleLoopLoopCondition = new BooleanLiteral(nextPosition(), true);
-		moduleLoopLoopBlock = new Block(nextPosition());
-		moduleLoopLoop = new WhileLoop(nextPosition(), moduleLoopLoopCondition, moduleLoopLoopBlock);
-		moduleLoopLoopContinueStatement = new ContinueStatement(nextPosition());
-		moduleLoopLoopBreakStatement = new BreakStatement(nextPosition());
+		this.moduleLoopLoopCondition = new BooleanLiteral(nextPosition(), true);
+		this.moduleLoopLoopBlock = new Block(nextPosition());
+		this.moduleLoopLoop = new WhileLoop(nextPosition(), this.moduleLoopLoopCondition, this.moduleLoopLoopBlock);
+		this.moduleLoopLoopContinueStatement = new ContinueStatement(nextPosition());
+		this.moduleLoopLoopBreakStatement = new BreakStatement(nextPosition());
 		// add module loop loop to module loop
-		moduleLoopBlock.addStatement(moduleLoopLoop);
-		moduleLoopLoopConditionalStatementCondition = new BooleanLiteral(nextPosition(), true);
-		moduleLoopLoopConditionalStatementThenBlock = new Block(nextPosition());
-		moduleLoopLoopConditionalStatementElseBlock = new Block(nextPosition());
-		moduleLoopLoopConditionalStatement =
-		        new ConditionalStatement(nextPosition(), moduleLoopLoopConditionalStatementCondition,
-		                moduleLoopLoopConditionalStatementThenBlock, moduleLoopLoopConditionalStatementElseBlock);
-		moduleLoopLoopThenConditionalStatementCondition = new BooleanLiteral(nextPosition(), true);
-		moduleLoopLoopThenConditionalStatementThenBlock = new Block(nextPosition());
-		moduleLoopLoopThenConditionalStatementElseBlock = new Block(nextPosition());
-		moduleLoopLoopThenConditionalStatement =
-		        new ConditionalStatement(nextPosition(), moduleLoopLoopThenConditionalStatementCondition,
-		                moduleLoopLoopThenConditionalStatementThenBlock,
-		                moduleLoopLoopThenConditionalStatementElseBlock);
-		moduleLoopLoopElseConditionalStatementCondition = new BooleanLiteral(nextPosition(), true);
-		moduleLoopLoopElseConditionalStatementThenBlock = new Block(nextPosition());
-		moduleLoopLoopElseConditionalStatementElseBlock = new Block(nextPosition());
-		moduleLoopLoopElseConditionalStatement =
-		        new ConditionalStatement(nextPosition(), moduleLoopLoopElseConditionalStatementCondition,
-		                moduleLoopLoopElseConditionalStatementThenBlock,
-		                moduleLoopLoopElseConditionalStatementElseBlock);
+		this.moduleLoopBlock.addStatement(this.moduleLoopLoop);
+		this.moduleLoopLoopConditionalStatementCondition = new BooleanLiteral(nextPosition(), true);
+		this.moduleLoopLoopConditionalStatementThenBlock = new Block(nextPosition());
+		this.moduleLoopLoopConditionalStatementElseBlock = new Block(nextPosition());
+		this.moduleLoopLoopConditionalStatement =
+		        new ConditionalStatement(nextPosition(), this.moduleLoopLoopConditionalStatementCondition,
+		                this.moduleLoopLoopConditionalStatementThenBlock, this.moduleLoopLoopConditionalStatementElseBlock);
+		this.moduleLoopLoopThenConditionalStatementCondition = new BooleanLiteral(nextPosition(), true);
+		this.moduleLoopLoopThenConditionalStatementThenBlock = new Block(nextPosition());
+		this.moduleLoopLoopThenConditionalStatementElseBlock = new Block(nextPosition());
+		this.moduleLoopLoopThenConditionalStatement =
+		        new ConditionalStatement(nextPosition(), this.moduleLoopLoopThenConditionalStatementCondition,
+		                this.moduleLoopLoopThenConditionalStatementThenBlock,
+		                this.moduleLoopLoopThenConditionalStatementElseBlock);
+		this.moduleLoopLoopElseConditionalStatementCondition = new BooleanLiteral(nextPosition(), true);
+		this.moduleLoopLoopElseConditionalStatementThenBlock = new Block(nextPosition());
+		this.moduleLoopLoopElseConditionalStatementElseBlock = new Block(nextPosition());
+		this.moduleLoopLoopElseConditionalStatement =
+		        new ConditionalStatement(nextPosition(), this.moduleLoopLoopElseConditionalStatementCondition,
+		                this.moduleLoopLoopElseConditionalStatementThenBlock,
+		                this.moduleLoopLoopElseConditionalStatementElseBlock);
 
 		// MODULE LOOP CONDITIONAL STATEMENT
-		moduleLoopConditionalStatementCondition = new BooleanLiteral(nextPosition(), true);
-		moduleLoopConditionalStatementThenBlock = new Block(nextPosition());
-		moduleLoopConditionalStatementElseBlock = new Block(nextPosition());
-		moduleLoopConditionalStatement =
-		        new ConditionalStatement(nextPosition(), moduleLoopConditionalStatementCondition,
-		                moduleLoopConditionalStatementThenBlock, moduleLoopConditionalStatementElseBlock);
-		moduleLoopConditionalContinueStatement = new ContinueStatement(nextPosition());
-		moduleLoopConditionalBreakStatement = new BreakStatement(nextPosition());
+		this.moduleLoopConditionalStatementCondition = new BooleanLiteral(nextPosition(), true);
+		this.moduleLoopConditionalStatementThenBlock = new Block(nextPosition());
+		this.moduleLoopConditionalStatementElseBlock = new Block(nextPosition());
+		this.moduleLoopConditionalStatement =
+		        new ConditionalStatement(nextPosition(), this.moduleLoopConditionalStatementCondition,
+		                this.moduleLoopConditionalStatementThenBlock, this.moduleLoopConditionalStatementElseBlock);
+		this.moduleLoopConditionalContinueStatement = new ContinueStatement(nextPosition());
+		this.moduleLoopConditionalBreakStatement = new BreakStatement(nextPosition());
 		// add module loop conditional statement to module loop
-		moduleLoopBlock.addStatement(moduleLoopConditionalStatement);
+		this.moduleLoopBlock.addStatement(this.moduleLoopConditionalStatement);
 
 		// MODULE CONDITIONAL STATEMENT
-		moduleConditionalStatementCondition = new BooleanLiteral(nextPosition(), true);
-		moduleConditionalStatementThenBlock = new Block(nextPosition());
-		moduleConditionalStatementElseBlock = new Block(nextPosition());
-		moduleConditionalStatement =
-		        new ConditionalStatement(nextPosition(), moduleConditionalStatementCondition,
-		                moduleConditionalStatementThenBlock, moduleConditionalStatementElseBlock);
+		this.moduleConditionalStatementCondition = new BooleanLiteral(nextPosition(), true);
+		this.moduleConditionalStatementThenBlock = new Block(nextPosition());
+		this.moduleConditionalStatementElseBlock = new Block(nextPosition());
+		this.moduleConditionalStatement =
+		        new ConditionalStatement(nextPosition(), this.moduleConditionalStatementCondition,
+		                this.moduleConditionalStatementThenBlock, this.moduleConditionalStatementElseBlock);
 		// add statements to module conditional statement (then)
 		// add module conditional statement to module
-		moduleBlock.addStatement(moduleConditionalStatement);
+		this.moduleBlock.addStatement(this.moduleConditionalStatement);
 
 		// MODULE STATETEMENTS
-		moduleContinueStatement = new ContinueStatement(nextPosition());
-		moduleBreakStatement = new BreakStatement(nextPosition());
-		moduleReturnStatementParameter = new StringLiteral(nextPosition(), "return");
-		moduleReturnStatement = new ReturnStatement(nextPosition(), moduleReturnStatementParameter);
+		this.moduleContinueStatement = new ContinueStatement(nextPosition());
+		this.moduleBreakStatement = new BreakStatement(nextPosition());
+		this.moduleReturnStatementParameter = new StringLiteral(nextPosition(), "return");
+		this.moduleReturnStatement = new ReturnStatement(nextPosition(), this.moduleReturnStatementParameter);
 		// add statements to module
 		// moduleBlock.addStatement(moduleContinueStatement);
 		// moduleBlock.addStatement(moduleBreakStatement);
 		// moduleBlock.addStatement(moduleReturnStatement);
 
 		// MODULE FUNCTION
-		moduleFunctionBlock = new Block(nextPosition());
-		moduleFunctionParameter = new ArrayList<>();
-		moduleFunctionDeclaration =
-		        new FunctionDeclaration(nextPosition(), new Identifier("ModuleFunction"), moduleFunctionBlock,
-		                moduleFunctionParameter, new ResolvableIdentifier("String"));
-		moduleFunctionReturnStatementParameter = new StringLiteral(nextPosition(), "return");
-		moduleFunctionReturnStatement = new ReturnStatement(nextPosition(), moduleFunctionReturnStatementParameter);
+		this.moduleFunctionBlock = new Block(nextPosition());
+		this.moduleFunctionParameter = new ArrayList<>();
+
+		final TypeInstantiation returnType = TypeInstantiation.forTypeName("String").create();
+		this.moduleFunctionDeclaration = new FunctionDeclaration(nextPosition(),
+		        new Identifier("ModuleFunction"), this.moduleFunctionBlock,
+		                this.moduleFunctionParameter, returnType);
+		this.moduleFunctionReturnStatementParameter = new StringLiteral(nextPosition(), "return");
+		this.moduleFunctionReturnStatement = new ReturnStatement(nextPosition(), this.moduleFunctionReturnStatementParameter);
 
 		// MODULE FUNCTION PROCEDURE
-		moduleFunctionProcedureBlock = new Block(nextPosition());
-		moduleFunctionProcedureParameter = new ArrayList<>();
-		moduleFunctionProcedureDeclaration =
+		this.moduleFunctionProcedureBlock = new Block(nextPosition());
+		this.moduleFunctionProcedureParameter = new ArrayList<>();
+		this.moduleFunctionProcedureDeclaration =
 		        new ProcedureDeclaration(nextPosition(), new Identifier("ModuleFunctionProcedure"),
-		                moduleFunctionProcedureBlock, moduleFunctionProcedureParameter);
-		moduleFunctionProcedureReturnStatementParameter = new StringLiteral(nextPosition(), "return");
-		moduleFunctionProcedureReturnStatement =
-		        new ReturnStatement(nextPosition(), moduleFunctionProcedureReturnStatementParameter);
+		                this.moduleFunctionProcedureBlock, this.moduleFunctionProcedureParameter);
+		this.moduleFunctionProcedureReturnStatementParameter = new StringLiteral(nextPosition(), "return");
+		this.moduleFunctionProcedureReturnStatement =
+		        new ReturnStatement(nextPosition(), this.moduleFunctionProcedureReturnStatementParameter);
 		// add module function procedure to module function
 		// moduleFunctionBlock.addDeclaration(moduleFunctionProcedureDeclaration);
 
 		// MODULE FUNCTION CONDITIONAL STATEMENT
-		moduleFunctionConditionalStatementCondition = new BooleanLiteral(nextPosition(), false);
-		moduleFunctionConditionalStatementThenBlock = new Block(nextPosition());
-		moduleFunctionConditionalStatementElseBlock = new Block(nextPosition());
-		moduleFunctionConditionalStatement =
-		        new ConditionalStatement(nextPosition(), moduleFunctionConditionalStatementCondition,
-		                moduleFunctionConditionalStatementThenBlock, moduleFunctionConditionalStatementElseBlock);
+		this.moduleFunctionConditionalStatementCondition = new BooleanLiteral(nextPosition(), false);
+		this.moduleFunctionConditionalStatementThenBlock = new Block(nextPosition());
+		this.moduleFunctionConditionalStatementElseBlock = new Block(nextPosition());
+		this.moduleFunctionConditionalStatement =
+		        new ConditionalStatement(nextPosition(), this.moduleFunctionConditionalStatementCondition,
+		                this.moduleFunctionConditionalStatementThenBlock, this.moduleFunctionConditionalStatementElseBlock);
 		// add module function conditional statement to module function
-		moduleFunctionBlock.addStatement(moduleFunctionConditionalStatement);
-		moduleFunctionConditionalReturnThenStatementParameter = new StringLiteral(nextPosition(), "return");
-		moduleFunctionConditionalReturnThenStatement =
-		        new ReturnStatement(nextPosition(), moduleFunctionConditionalReturnThenStatementParameter);
-		moduleFunctionConditionalReturnElseStatementParameter = new StringLiteral(nextPosition(), "return");
-		moduleFunctionConditionalReturnElseStatement =
-		        new ReturnStatement(nextPosition(), moduleFunctionConditionalReturnElseStatementParameter);
-		moduleFunctionConditionalConditionalStatementCondition = new BooleanLiteral(nextPosition(), true);
-		moduleFunctionConditionalConditionalStatementThenBlock = new Block(nextPosition());
-		moduleFunctionConditionalConditionalStatementElseBlock = new Block(nextPosition());
-		moduleFunctionConditionalConditionalStatement =
-		        new ConditionalStatement(nextPosition(), moduleFunctionConditionalConditionalStatementCondition,
-		                moduleFunctionConditionalConditionalStatementThenBlock,
-		                moduleFunctionConditionalConditionalStatementElseBlock);
+		this.moduleFunctionBlock.addStatement(this.moduleFunctionConditionalStatement);
+		this.moduleFunctionConditionalReturnThenStatementParameter = new StringLiteral(nextPosition(), "return");
+		this.moduleFunctionConditionalReturnThenStatement =
+		        new ReturnStatement(nextPosition(), this.moduleFunctionConditionalReturnThenStatementParameter);
+		this.moduleFunctionConditionalReturnElseStatementParameter = new StringLiteral(nextPosition(), "return");
+		this.moduleFunctionConditionalReturnElseStatement =
+		        new ReturnStatement(nextPosition(), this.moduleFunctionConditionalReturnElseStatementParameter);
+		this.moduleFunctionConditionalConditionalStatementCondition = new BooleanLiteral(nextPosition(), true);
+		this.moduleFunctionConditionalConditionalStatementThenBlock = new Block(nextPosition());
+		this.moduleFunctionConditionalConditionalStatementElseBlock = new Block(nextPosition());
+		this.moduleFunctionConditionalConditionalStatement =
+		        new ConditionalStatement(nextPosition(), this.moduleFunctionConditionalConditionalStatementCondition,
+		                this.moduleFunctionConditionalConditionalStatementThenBlock,
+		                this.moduleFunctionConditionalConditionalStatementElseBlock);
 		// add module function conditional conditional statement to module
 		// function conditional else block
-		moduleFunctionConditionalStatementElseBlock.addStatement(moduleFunctionConditionalConditionalStatement);
-		moduleFunctionConditionalConditionalReturnStatementParameter = new StringLiteral(nextPosition(), "return");
-		moduleFunctionConditionalConditionalReturnStatement =
-		        new ReturnStatement(nextPosition(), moduleFunctionConditionalConditionalReturnStatementParameter);
-		moduleFunctionConditionalConditionalConditionalStatementCondition =
+		this.moduleFunctionConditionalStatementElseBlock.addStatement(this.moduleFunctionConditionalConditionalStatement);
+		this.moduleFunctionConditionalConditionalReturnStatementParameter = new StringLiteral(nextPosition(), "return");
+		this.moduleFunctionConditionalConditionalReturnStatement =
+		        new ReturnStatement(nextPosition(), this.moduleFunctionConditionalConditionalReturnStatementParameter);
+		this.moduleFunctionConditionalConditionalConditionalStatementCondition =
 		        new BooleanLiteral(new Position("TestFile", 37, 1), false);
-		moduleFunctionConditionalConditionalConditionalStatementThenBlock = new Block(nextPosition());
-		moduleFunctionConditionalConditionalConditionalStatementElseBlock = new Block(nextPosition());
-		moduleFunctionConditionalConditionalConditionalStatement =
+		this.moduleFunctionConditionalConditionalConditionalStatementThenBlock = new Block(nextPosition());
+		this.moduleFunctionConditionalConditionalConditionalStatementElseBlock = new Block(nextPosition());
+		this.moduleFunctionConditionalConditionalConditionalStatement =
 		        new ConditionalStatement(nextPosition(),
-		                moduleFunctionConditionalConditionalConditionalStatementCondition,
-		                moduleFunctionConditionalConditionalConditionalStatementThenBlock,
-		                moduleFunctionConditionalConditionalConditionalStatementElseBlock);
+		                this.moduleFunctionConditionalConditionalConditionalStatementCondition,
+		                this.moduleFunctionConditionalConditionalConditionalStatementThenBlock,
+		                this.moduleFunctionConditionalConditionalConditionalStatementElseBlock);
 		// add module function conditional conditional conditional statement to
 		// module function conditional conditional then block
-		moduleFunctionConditionalConditionalStatementThenBlock.addStatement(moduleFunctionConditionalConditionalConditionalStatement);
-		moduleFunctionConditionalConditionalConditionalThenReturnStatementParameter =
+		this.moduleFunctionConditionalConditionalStatementThenBlock.addStatement(this.moduleFunctionConditionalConditionalConditionalStatement);
+		this.moduleFunctionConditionalConditionalConditionalThenReturnStatementParameter =
 		        new StringLiteral(nextPosition(), "return");
-		moduleFunctionConditionalConditionalConditionalThenReturnStatement =
+		this.moduleFunctionConditionalConditionalConditionalThenReturnStatement =
 		        new ReturnStatement(nextPosition(),
-		                moduleFunctionConditionalConditionalConditionalThenReturnStatementParameter);
-		moduleFunctionConditionalConditionalConditionalElseReturnStatementParameter =
+		                this.moduleFunctionConditionalConditionalConditionalThenReturnStatementParameter);
+		this.moduleFunctionConditionalConditionalConditionalElseReturnStatementParameter =
 		        new StringLiteral(nextPosition(), "return");
-		moduleFunctionConditionalConditionalConditionalElseReturnStatement =
+		this.moduleFunctionConditionalConditionalConditionalElseReturnStatement =
 		        new ReturnStatement(nextPosition(),
-		                moduleFunctionConditionalConditionalConditionalElseReturnStatementParameter);
+		                this.moduleFunctionConditionalConditionalConditionalElseReturnStatementParameter);
 
 		// MODULE FUNCTION LOOP
-		moduleFunctionLoopCondition = new BooleanLiteral(nextPosition(), true);
-		moduleFunctionLoopBlock = new Block(nextPosition());
-		moduleFunctionLoop = new WhileLoop(nextPosition(), moduleFunctionLoopCondition, moduleFunctionLoopBlock);
+		this.moduleFunctionLoopCondition = new BooleanLiteral(nextPosition(), true);
+		this.moduleFunctionLoopBlock = new Block(nextPosition());
+		this.moduleFunctionLoop = new WhileLoop(nextPosition(), this.moduleFunctionLoopCondition, this.moduleFunctionLoopBlock);
 		// add module function loop to module function
-		moduleFunctionBlock.addStatement(moduleFunctionLoop);
+		this.moduleFunctionBlock.addStatement(this.moduleFunctionLoop);
 
-		moduleFunctionLoopReturnStatementParameter = new StringLiteral(nextPosition(), "return");
-		moduleFunctionLoopReturnStatement =
-		        new ReturnStatement(nextPosition(), moduleFunctionLoopReturnStatementParameter);
+		this.moduleFunctionLoopReturnStatementParameter = new StringLiteral(nextPosition(), "return");
+		this.moduleFunctionLoopReturnStatement =
+		        new ReturnStatement(nextPosition(), this.moduleFunctionLoopReturnStatementParameter);
 
-		moduleFunctionLoopLoopCondition = new BooleanLiteral(nextPosition(), true);
-		moduleFunctionLoopLoopBlock = new Block(nextPosition());
-		moduleFunctionLoopLoop =
-		        new WhileLoop(nextPosition(), moduleFunctionLoopLoopCondition, moduleFunctionLoopLoopBlock);
+		this.moduleFunctionLoopLoopCondition = new BooleanLiteral(nextPosition(), true);
+		this.moduleFunctionLoopLoopBlock = new Block(nextPosition());
+		this.moduleFunctionLoopLoop =
+		        new WhileLoop(nextPosition(), this.moduleFunctionLoopLoopCondition, this.moduleFunctionLoopLoopBlock);
 		// ass module function loop loop to module function loop block
-		moduleFunctionLoopBlock.addStatement(moduleFunctionLoopLoop);
+		this.moduleFunctionLoopBlock.addStatement(this.moduleFunctionLoopLoop);
 
-		moduleFunctionLoopLoopLoopCondition = new BooleanLiteral(nextPosition(), true);
-		moduleFunctionLoopLoopLoopBlock = new Block(nextPosition());
-		moduleFunctionLoopLoopLoop =
-		        new WhileLoop(nextPosition(), moduleFunctionLoopLoopLoopCondition, moduleFunctionLoopLoopLoopBlock);
+		this.moduleFunctionLoopLoopLoopCondition = new BooleanLiteral(nextPosition(), true);
+		this.moduleFunctionLoopLoopLoopBlock = new Block(nextPosition());
+		this.moduleFunctionLoopLoopLoop =
+		        new WhileLoop(nextPosition(), this.moduleFunctionLoopLoopLoopCondition, this.moduleFunctionLoopLoopLoopBlock);
 		// add module function loop loop loop to module function loop loop block
-		moduleFunctionLoopLoopBlock.addStatement(moduleFunctionLoopLoopLoop);
+		this.moduleFunctionLoopLoopBlock.addStatement(this.moduleFunctionLoopLoopLoop);
 
-		moduleFunctionLoopLoopLoopReturnStatementParameter = new StringLiteral(nextPosition(), "return");
-		moduleFunctionLoopLoopLoopReturnStatement =
-		        new ReturnStatement(nextPosition(), moduleFunctionLoopLoopLoopReturnStatementParameter);
+		this.moduleFunctionLoopLoopLoopReturnStatementParameter = new StringLiteral(nextPosition(), "return");
+		this.moduleFunctionLoopLoopLoopReturnStatement =
+		        new ReturnStatement(nextPosition(), this.moduleFunctionLoopLoopLoopReturnStatementParameter);
 
 	}
 
 	@Test
 	public void setUpASTTest() {
-		assertNotNull("setParentVisitor is null", setParentVisitor);
-		assertNotNull("controlFlowVisitor is null", controlFlowVisitor);
+		assertNotNull("setParentVisitor is null", this.setParentVisitor);
+		assertNotNull("controlFlowVisitor is null", this.controlFlowVisitor);
 
 		// MODULE
-		assertNotNull("moduleDeclaration is null", moduleDeclaration);
-		assertNotNull("moduleBlock is null", moduleBlock);
-		assertNotNull("moduleImports is null", moduleImports);
-		assertNotNull("package is null", aPackage);
+		assertNotNull("moduleDeclaration is null", this.moduleDeclaration);
+		assertNotNull("moduleBlock is null", this.moduleBlock);
+		assertNotNull("moduleImports is null", this.moduleImports);
+		assertNotNull("package is null", this.aPackage);
 
 		// MODULE LOOP
-		assertNotNull("moduleLoopCondition is null", moduleLoopCondition);
-		assertNotNull("moduleLoopBlock is null", moduleLoopBlock);
-		assertNotNull("moduleLoop is null", moduleLoop);
-		assertNotNull("moduleLoopContinueStatement is null", moduleLoopContinueStatement);
-		assertNotNull("moduleLoopBreakStatement is null", moduleLoopBreakStatement);
-		assertNotNull("moduleLoopLoopCondition is null", moduleLoopLoopCondition);
-		assertNotNull("moduleLoopLoopBlock is null", moduleLoopLoopBlock);
+		assertNotNull("moduleLoopCondition is null", this.moduleLoopCondition);
+		assertNotNull("moduleLoopBlock is null", this.moduleLoopBlock);
+		assertNotNull("moduleLoop is null", this.moduleLoop);
+		assertNotNull("moduleLoopContinueStatement is null", this.moduleLoopContinueStatement);
+		assertNotNull("moduleLoopBreakStatement is null", this.moduleLoopBreakStatement);
+		assertNotNull("moduleLoopLoopCondition is null", this.moduleLoopLoopCondition);
+		assertNotNull("moduleLoopLoopBlock is null", this.moduleLoopLoopBlock);
 
 		// MODULE LOOP LOOP
-		assertNotNull("moduleLoopLoop is null", moduleLoopLoop);
-		assertNotNull("moduleLoopLoopContinueStatement is null", moduleLoopLoopContinueStatement);
-		assertNotNull("moduleLoopLoopBreakStatement is null", moduleLoopLoopBreakStatement);
+		assertNotNull("moduleLoopLoop is null", this.moduleLoopLoop);
+		assertNotNull("moduleLoopLoopContinueStatement is null", this.moduleLoopLoopContinueStatement);
+		assertNotNull("moduleLoopLoopBreakStatement is null", this.moduleLoopLoopBreakStatement);
 		assertNotNull(
 		        "moduleLoopLoopConditionalStatementCondition is null",
-		        moduleLoopLoopConditionalStatementCondition);
+		        this.moduleLoopLoopConditionalStatementCondition);
 		assertNotNull(
 		        "moduleLoopLoopConditionalStatementThenBlock is null",
-		        moduleLoopLoopConditionalStatementThenBlock);
+		        this.moduleLoopLoopConditionalStatementThenBlock);
 		assertNotNull(
 		        "moduleLoopLoopConditionalStatementElseBlock is null",
-		        moduleLoopLoopConditionalStatementElseBlock);
-		assertNotNull("moduleLoopLoopConditionalStatement is null", moduleLoopLoopConditionalStatement);
+		        this.moduleLoopLoopConditionalStatementElseBlock);
+		assertNotNull("moduleLoopLoopConditionalStatement is null", this.moduleLoopLoopConditionalStatement);
 		assertNotNull(
 		        "moduleLoopLoopThenConditionalStatementCondition is null",
-		        moduleLoopLoopThenConditionalStatementCondition);
+		        this.moduleLoopLoopThenConditionalStatementCondition);
 		assertNotNull(
 		        "moduleLoopLoopThenConditionalStatementThenBlock is null",
-		        moduleLoopLoopThenConditionalStatementThenBlock);
+		        this.moduleLoopLoopThenConditionalStatementThenBlock);
 		assertNotNull(
 		        "moduleLoopLoopThenConditionalStatementElseBlock is null",
-		        moduleLoopLoopThenConditionalStatementElseBlock);
-		assertNotNull("moduleLoopLoopThenConditionalStatement is null", moduleLoopLoopThenConditionalStatement);
+		        this.moduleLoopLoopThenConditionalStatementElseBlock);
+		assertNotNull("moduleLoopLoopThenConditionalStatement is null", this.moduleLoopLoopThenConditionalStatement);
 		assertNotNull(
 		        "moduleLoopLoopElseConditionalStatementCondition is null",
-		        moduleLoopLoopElseConditionalStatementCondition);
+		        this.moduleLoopLoopElseConditionalStatementCondition);
 		assertNotNull(
 		        "moduleLoopLoopElseConditionalStatementThenBlock is null",
-		        moduleLoopLoopElseConditionalStatementThenBlock);
+		        this.moduleLoopLoopElseConditionalStatementThenBlock);
 		assertNotNull(
 		        "moduleLoopLoopElseConditionalStatementElseBlock is null",
-		        moduleLoopLoopElseConditionalStatementElseBlock);
-		assertNotNull("moduleLoopLoopElseConditionalStatement is null", moduleLoopLoopElseConditionalStatement);
+		        this.moduleLoopLoopElseConditionalStatementElseBlock);
+		assertNotNull("moduleLoopLoopElseConditionalStatement is null", this.moduleLoopLoopElseConditionalStatement);
 
 		// MODULE LOOP CONDITIONAL STATEMENT
-		assertNotNull("moduleLoopConditionalStatementCondition is null", moduleLoopConditionalStatementCondition);
-		assertNotNull("moduleLoopConditionalStatementThenBlock is null", moduleLoopConditionalStatementThenBlock);
-		assertNotNull("moduleLoopConditionalStatementElseBlock is null", moduleLoopConditionalStatementElseBlock);
-		assertNotNull("moduleLoopConditionalStatement is null", moduleLoopConditionalStatement);
-		assertNotNull("moduleLoopConditionalContinueStatement is null", moduleLoopConditionalContinueStatement);
-		assertNotNull("moduleLoopConditionalBreakStatement is null", moduleLoopConditionalBreakStatement);
+		assertNotNull("moduleLoopConditionalStatementCondition is null", this.moduleLoopConditionalStatementCondition);
+		assertNotNull("moduleLoopConditionalStatementThenBlock is null", this.moduleLoopConditionalStatementThenBlock);
+		assertNotNull("moduleLoopConditionalStatementElseBlock is null", this.moduleLoopConditionalStatementElseBlock);
+		assertNotNull("moduleLoopConditionalStatement is null", this.moduleLoopConditionalStatement);
+		assertNotNull("moduleLoopConditionalContinueStatement is null", this.moduleLoopConditionalContinueStatement);
+		assertNotNull("moduleLoopConditionalBreakStatement is null", this.moduleLoopConditionalBreakStatement);
 
 		// MODULE CONDITIONAL STATEMENT
-		assertNotNull("moduleConditionalStatementCondition is null", moduleConditionalStatementCondition);
-		assertNotNull("moduleConditionalStatementThenBlock is null", moduleConditionalStatementThenBlock);
-		assertNotNull("moduleConditionalStatementElseBlock is null", moduleConditionalStatementElseBlock);
-		assertNotNull("moduleConditionalStatement is null", moduleConditionalStatement);
+		assertNotNull("moduleConditionalStatementCondition is null", this.moduleConditionalStatementCondition);
+		assertNotNull("moduleConditionalStatementThenBlock is null", this.moduleConditionalStatementThenBlock);
+		assertNotNull("moduleConditionalStatementElseBlock is null", this.moduleConditionalStatementElseBlock);
+		assertNotNull("moduleConditionalStatement is null", this.moduleConditionalStatement);
 
 		// MODULE STATETEMENTS
-		assertNotNull("moduleContinueStatement is null", moduleContinueStatement);
-		assertNotNull("moduleBreakStatement is null", moduleBreakStatement);
-		assertNotNull("moduleReturnStatementParameter is null", moduleReturnStatementParameter);
-		assertNotNull("moduleReturnStatement is null", moduleReturnStatement);
+		assertNotNull("moduleContinueStatement is null", this.moduleContinueStatement);
+		assertNotNull("moduleBreakStatement is null", this.moduleBreakStatement);
+		assertNotNull("moduleReturnStatementParameter is null", this.moduleReturnStatementParameter);
+		assertNotNull("moduleReturnStatement is null", this.moduleReturnStatement);
 
 		// MODULE FUNCTION
-		assertNotNull("moduleFunctionBlock is null", moduleFunctionBlock);
-		assertNotNull("moduleFunctionParameter is null", moduleFunctionParameter);
-		assertNotNull("moduleFunctionDeclaration is null", moduleFunctionDeclaration);
-		assertNotNull("moduleFunctionReturnStatementParameter is null", moduleFunctionReturnStatementParameter);
-		assertNotNull("moduleFunctionReturnStatement is null", moduleFunctionReturnStatement);
+		assertNotNull("moduleFunctionBlock is null", this.moduleFunctionBlock);
+		assertNotNull("moduleFunctionParameter is null", this.moduleFunctionParameter);
+		assertNotNull("moduleFunctionDeclaration is null", this.moduleFunctionDeclaration);
+		assertNotNull("moduleFunctionReturnStatementParameter is null", this.moduleFunctionReturnStatementParameter);
+		assertNotNull("moduleFunctionReturnStatement is null", this.moduleFunctionReturnStatement);
 
 		// MODULE FUNCTION PROCEDURE
-		assertNotNull("moduleFunctionProcedureBlock is null", moduleFunctionProcedureBlock);
-		assertNotNull("moduleFunctionProcedureParameter is null", moduleFunctionProcedureParameter);
-		assertNotNull("moduleFunctionProcedureDeclaration is null", moduleFunctionProcedureDeclaration);
+		assertNotNull("moduleFunctionProcedureBlock is null", this.moduleFunctionProcedureBlock);
+		assertNotNull("moduleFunctionProcedureParameter is null", this.moduleFunctionProcedureParameter);
+		assertNotNull("moduleFunctionProcedureDeclaration is null", this.moduleFunctionProcedureDeclaration);
 		assertNotNull(
 		        "moduleFunctionProcedureReturnStatementParameter is null",
-		        moduleFunctionProcedureReturnStatementParameter);
-		assertNotNull("moduleFunctionProcedureReturnStatement is null", moduleFunctionProcedureReturnStatement);
+		        this.moduleFunctionProcedureReturnStatementParameter);
+		assertNotNull("moduleFunctionProcedureReturnStatement is null", this.moduleFunctionProcedureReturnStatement);
 
 		// MODULE FUNCTION CONDITIONAL STATEMENT
 		assertNotNull(
 		        "moduleFunctionConditionalStatementCondition is null",
-		        moduleFunctionConditionalStatementCondition);
+		        this.moduleFunctionConditionalStatementCondition);
 		assertNotNull(
 		        "moduleFunctionConditionalStatementThenBlock is null",
-		        moduleFunctionConditionalStatementThenBlock);
+		        this.moduleFunctionConditionalStatementThenBlock);
 		assertNotNull(
 		        "moduleFunctionConditionalStatementElseBlock is null",
-		        moduleFunctionConditionalStatementElseBlock);
-		assertNotNull("moduleFunctionConditionalStatement is null", moduleFunctionConditionalStatement);
+		        this.moduleFunctionConditionalStatementElseBlock);
+		assertNotNull("moduleFunctionConditionalStatement is null", this.moduleFunctionConditionalStatement);
 		assertNotNull(
 		        "moduleFunctionConditionalReturnThenStatementParameter is null",
-		        moduleFunctionConditionalReturnThenStatementParameter);
+		        this.moduleFunctionConditionalReturnThenStatementParameter);
 		assertNotNull(
 		        "moduleFunctionConditionalReturnThenStatement is null",
-		        moduleFunctionConditionalReturnThenStatement);
+		        this.moduleFunctionConditionalReturnThenStatement);
 		assertNotNull(
 		        "moduleFunctionConditionalReturnElseStatementParameter is null",
-		        moduleFunctionConditionalReturnElseStatementParameter);
+		        this.moduleFunctionConditionalReturnElseStatementParameter);
 		assertNotNull(
 		        "moduleFunctionConditionalReturnElseStatement is null",
-		        moduleFunctionConditionalReturnElseStatement);
+		        this.moduleFunctionConditionalReturnElseStatement);
 		assertNotNull(
 		        "moduleFunctionConditionalConditionalStatementCondition is null",
-		        moduleFunctionConditionalConditionalStatementCondition);
+		        this.moduleFunctionConditionalConditionalStatementCondition);
 		assertNotNull(
 		        "moduleFunctionConditionalConditionalStatementThenBlock is null",
-		        moduleFunctionConditionalConditionalStatementThenBlock);
+		        this.moduleFunctionConditionalConditionalStatementThenBlock);
 		assertNotNull(
 		        "moduleFunctionConditionalConditionalStatementElseBlock is null",
-		        moduleFunctionConditionalConditionalStatementElseBlock);
+		        this.moduleFunctionConditionalConditionalStatementElseBlock);
 		assertNotNull(
 		        "moduleFunctionConditionalConditionalStatement is null",
-		        moduleFunctionConditionalConditionalStatement);
+		        this.moduleFunctionConditionalConditionalStatement);
 		assertNotNull(
 		        "moduleFunctionConditionalConditionalReturnStatementParameter is null",
-		        moduleFunctionConditionalConditionalReturnStatementParameter);
+		        this.moduleFunctionConditionalConditionalReturnStatementParameter);
 		assertNotNull(
 		        "moduleFunctionConditionalConditionalReturnStatement is null",
-		        moduleFunctionConditionalConditionalReturnStatement);
+		        this.moduleFunctionConditionalConditionalReturnStatement);
 		assertNotNull(
 		        "moduleFunctionConditionalConditionalConditionalStatementCondition is null",
-		        moduleFunctionConditionalConditionalConditionalStatementCondition);
+		        this.moduleFunctionConditionalConditionalConditionalStatementCondition);
 		assertNotNull(
 		        "moduleFunctionConditionalConditionalConditionalStatementThenBlock is null",
-		        moduleFunctionConditionalConditionalConditionalStatementThenBlock);
+		        this.moduleFunctionConditionalConditionalConditionalStatementThenBlock);
 		assertNotNull(
 		        "moduleFunctionConditionalConditionalConditionalStatementElseBlock is null",
-		        moduleFunctionConditionalConditionalConditionalStatementElseBlock);
+		        this.moduleFunctionConditionalConditionalConditionalStatementElseBlock);
 		assertNotNull(
 		        "moduleFunctionConditionalConditionalConditionalStatement is null",
-		        moduleFunctionConditionalConditionalConditionalStatement);
+		        this.moduleFunctionConditionalConditionalConditionalStatement);
 		assertNotNull(
 		        "moduleFunctionConditionalConditionalConditionalThenReturnStatementParameter is null",
-		        moduleFunctionConditionalConditionalConditionalThenReturnStatementParameter);
+		        this.moduleFunctionConditionalConditionalConditionalThenReturnStatementParameter);
 		assertNotNull(
 		        "moduleFunctionConditionalConditionalConditionalThenReturnStatement is null",
-		        moduleFunctionConditionalConditionalConditionalThenReturnStatement);
+		        this.moduleFunctionConditionalConditionalConditionalThenReturnStatement);
 		assertNotNull(
 		        "moduleFunctionConditionalConditionalConditionalElseReturnStatementParameter is null",
-		        moduleFunctionConditionalConditionalConditionalElseReturnStatementParameter);
+		        this.moduleFunctionConditionalConditionalConditionalElseReturnStatementParameter);
 		assertNotNull(
 		        "moduleFunctionConditionalConditionalConditionalElseReturnStatement is null",
-		        moduleFunctionConditionalConditionalConditionalElseReturnStatement);
+		        this.moduleFunctionConditionalConditionalConditionalElseReturnStatement);
 
 		// MODULE FUNCTION LOOP
-		assertNotNull("moduleFunctionLoopCondition is null", moduleFunctionLoopCondition);
-		assertNotNull("moduleFunctionLoopBlock is null", moduleFunctionLoopBlock);
-		assertNotNull("moduleFunctionLoop is null", moduleFunctionLoop);
-		assertNotNull("moduleFunctionLoopReturnStatementParameter is null", moduleFunctionLoopReturnStatementParameter);
-		assertNotNull("moduleFunctionLoopReturnStatement is null", moduleFunctionLoopReturnStatement);
-		assertNotNull("moduleFunctionLoopLoopCondition is null", moduleFunctionLoopLoopCondition);
-		assertNotNull("moduleFunctionLoopLoopBlock is null", moduleFunctionLoopLoopBlock);
-		assertNotNull("moduleFunctionLoopLoop is null", moduleFunctionLoopLoop);
-		assertNotNull("moduleFunctionLoopLoopLoopCondition is null", moduleFunctionLoopLoopLoopCondition);
-		assertNotNull("moduleFunctionLoopLoopLoopBlock is null", moduleFunctionLoopLoopLoopBlock);
-		assertNotNull("moduleFunctionLoopLoopLoop is null", moduleFunctionLoopLoopLoop);
+		assertNotNull("moduleFunctionLoopCondition is null", this.moduleFunctionLoopCondition);
+		assertNotNull("moduleFunctionLoopBlock is null", this.moduleFunctionLoopBlock);
+		assertNotNull("moduleFunctionLoop is null", this.moduleFunctionLoop);
+		assertNotNull("moduleFunctionLoopReturnStatementParameter is null", this.moduleFunctionLoopReturnStatementParameter);
+		assertNotNull("moduleFunctionLoopReturnStatement is null", this.moduleFunctionLoopReturnStatement);
+		assertNotNull("moduleFunctionLoopLoopCondition is null", this.moduleFunctionLoopLoopCondition);
+		assertNotNull("moduleFunctionLoopLoopBlock is null", this.moduleFunctionLoopLoopBlock);
+		assertNotNull("moduleFunctionLoopLoop is null", this.moduleFunctionLoopLoop);
+		assertNotNull("moduleFunctionLoopLoopLoopCondition is null", this.moduleFunctionLoopLoopLoopCondition);
+		assertNotNull("moduleFunctionLoopLoopLoopBlock is null", this.moduleFunctionLoopLoopLoopBlock);
+		assertNotNull("moduleFunctionLoopLoopLoop is null", this.moduleFunctionLoopLoopLoop);
 		assertNotNull(
 		        "moduleFunctionLoopLoopLoopReturnStatementParameter is null",
-		        moduleFunctionLoopLoopLoopReturnStatementParameter);
-		assertNotNull("moduleFunctionLoopLoopLoopReturnStatement is null", moduleFunctionLoopLoopLoopReturnStatement);
+		        this.moduleFunctionLoopLoopLoopReturnStatementParameter);
+		assertNotNull("moduleFunctionLoopLoopLoopReturnStatement is null", this.moduleFunctionLoopLoopLoopReturnStatement);
 	}
 
 	/** Creates a continue statement inside of a while loop. */
 	@Test
 	public void continueStatementTest01() {
 		// add previously defined statement to module loop
-		moduleLoopBlock.addStatement(moduleLoopContinueStatement);
+		this.moduleLoopBlock.addStatement(this.moduleLoopContinueStatement);
 
 		// control flow visitor should not complain about it, since the
 		// structure is
 		// valid
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 	}
 
 	/** Creates a continue statement inside of a nested while loop. */
 	@Test
 	public void continueStatementTest02() {
 		// add previously defined statement to module loop
-		moduleLoopLoopBlock.addStatement(moduleLoopLoopContinueStatement);
+		this.moduleLoopLoopBlock.addStatement(this.moduleLoopLoopContinueStatement);
 
 		// control flow visitor should not complain about it, since the
 		// structure is
 		// valid
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 	}
 
 	/** Creates a continue statement inside of a conditional statement within a while loop */
 	@Test
 	public void continueStatementTest03() {
 		// add statements to module loop conditional statement (then)
-		moduleLoopConditionalStatementThenBlock.addStatement(moduleLoopConditionalContinueStatement);
+		this.moduleLoopConditionalStatementThenBlock.addStatement(this.moduleLoopConditionalContinueStatement);
 
 		// control flow visitor should not complain about it, since the
 		// structure is
 		// valid
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 	}
 
 	/** Create continue statement outside of a while loop */
 	@Test(expected = InvalidControlFlowException.class)
 	public void continueStatementTest04() {
-		moduleBlock.addStatement(moduleContinueStatement);
+		this.moduleBlock.addStatement(this.moduleContinueStatement);
 
 		// control flow visitor should throw an exception now, since the
 		// structure is invalid
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 	}
 
 	/** Create break statement outside of a while loop */
 	@Test(expected = InvalidControlFlowException.class)
 	public void breakStatementTest04() {
-		moduleBlock.addStatement(moduleBreakStatement);
+		this.moduleBlock.addStatement(this.moduleBreakStatement);
 
 		// control flow visitor should throw an exception now, since the
 		// structure is invalid
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 	}
 
 	/** Creates return statement outside of a function block */
 	@Test(expected = InvalidControlFlowException.class)
 	public void returnStatementTest01() {
-		moduleBlock.addStatement(moduleReturnStatement);
+		this.moduleBlock.addStatement(this.moduleReturnStatement);
 
 		// control flow visitor should throw an exception now, since the
 		// structure is invalid
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 	}
 
 	/** Creates a return statement inside of a function block */
 	@Test
 	public void returnStatementTest02() {
 		// add function to module
-		moduleBlock.addDeclaration(moduleFunctionDeclaration);
+		this.moduleBlock.addDeclaration(this.moduleFunctionDeclaration);
 		// ad a return statement to module function block
-		moduleFunctionBlock.addStatement(moduleFunctionReturnStatement);
+		this.moduleFunctionBlock.addStatement(this.moduleFunctionReturnStatement);
 
 		// control flow visitor should not complain about it, since the
 		// structure is
 		// valid
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 	}
 
 	/** Creates a return statement inside of a nested procedure declaration within a function block */
 	@Test
 	public void returnStatementTest03() {
 		// add function to module
-		moduleBlock.addDeclaration(moduleFunctionDeclaration);
+		this.moduleBlock.addDeclaration(this.moduleFunctionDeclaration);
 		// add return statement to procedure
-		moduleFunctionProcedureBlock.addStatement(moduleFunctionProcedureReturnStatement);
+		this.moduleFunctionProcedureBlock.addStatement(this.moduleFunctionProcedureReturnStatement);
 		// add procedure to function
-		moduleFunctionBlock.addDeclaration(moduleFunctionProcedureDeclaration);
+		this.moduleFunctionBlock.addDeclaration(this.moduleFunctionProcedureDeclaration);
 
 		// start visitors and expect InvalidControlFlowException, since there's
 		// no guarantee, that the function always executes a return statement
 		boolean invalidControlFlow = false;
 		try {
-			setParentVisitor.visit(aPackage);
-			controlFlowVisitor.visit(aPackage);
+			this.setParentVisitor.visit(this.aPackage);
+			this.controlFlowVisitor.visit(this.aPackage);
 		} catch (InvalidControlFlowException icfe) {
 			invalidControlFlow = true;
 		}
@@ -660,32 +666,32 @@ public class ControlFlowTest {
 		assertTrue("ReturnStatements needed inside the moduleFunction", invalidControlFlow);
 
 		// now, add another return statement to the surrounding function
-		moduleFunctionBlock.addStatement(moduleFunctionReturnStatement);
+		this.moduleFunctionBlock.addStatement(this.moduleFunctionReturnStatement);
 
 		// control flow visitor should not complain anymore, since the
 		// structure is now valid
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 	}
 
 	/** Creates a return statement inside of a conditional statement within a function block */
 	@Test
 	public void returnStatementTest04() {
 		// add function to module
-		moduleBlock.addDeclaration(moduleFunctionDeclaration);
+		this.moduleBlock.addDeclaration(this.moduleFunctionDeclaration);
 		// add module function conditional return statement to module function
 		// conditional statement
-		moduleFunctionConditionalStatementElseBlock.addStatement(moduleFunctionConditionalReturnElseStatement);
+		this.moduleFunctionConditionalStatementElseBlock.addStatement(this.moduleFunctionConditionalReturnElseStatement);
 		// add module function conditional statement to module function block
-		moduleFunctionBlock.addStatement(moduleFunctionConditionalStatement);
+		this.moduleFunctionBlock.addStatement(this.moduleFunctionConditionalStatement);
 
 		// control flow visitor should definitely complain about it, since there
 		// is only a return statement in the else block, but neither in the then
 		// block, nor in the function itself.
 		boolean invalidControlFlow = false;
 		try {
-			setParentVisitor.visit(aPackage);
-			controlFlowVisitor.visit(aPackage);
+			this.setParentVisitor.visit(this.aPackage);
+			this.controlFlowVisitor.visit(this.aPackage);
 		} catch (InvalidControlFlowException icfe) {
 			invalidControlFlow = true;
 		}
@@ -694,11 +700,11 @@ public class ControlFlowTest {
 		assertTrue("ReturnStatements does not need to be found inside both conditional branches", invalidControlFlow);
 
 		// now, add another return statement to the surrounding function
-		moduleFunctionBlock.addStatement(moduleFunctionReturnStatement);
+		this.moduleFunctionBlock.addStatement(this.moduleFunctionReturnStatement);
 
 		// run visitors again
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 
 		// The controlFlowVisitor should not complain about anything anymore,
 		// since the structure is now valid.
@@ -709,20 +715,20 @@ public class ControlFlowTest {
 	@Test
 	public void returnStatementTest05() {
 		// add function to module
-		moduleBlock.addDeclaration(moduleFunctionDeclaration);
+		this.moduleBlock.addDeclaration(this.moduleFunctionDeclaration);
 		// add module function conditional return statement to module function
 		// conditional statement
-		moduleFunctionConditionalStatementElseBlock.addStatement(moduleFunctionConditionalReturnElseStatement);
+		this.moduleFunctionConditionalStatementElseBlock.addStatement(this.moduleFunctionConditionalReturnElseStatement);
 		// add module function conditional statement to module function block
-		moduleFunctionBlock.addStatement(moduleFunctionConditionalStatement);
+		this.moduleFunctionBlock.addStatement(this.moduleFunctionConditionalStatement);
 
 		// control flow visitor should definitely complain about it, since there
 		// is only a return statement in the else block, but neither in the then
 		// block, nor in the function itself.
 		boolean invalidControlFlow = false;
 		try {
-			setParentVisitor.visit(aPackage);
-			controlFlowVisitor.visit(aPackage);
+			this.setParentVisitor.visit(this.aPackage);
+			this.controlFlowVisitor.visit(this.aPackage);
 		} catch (InvalidControlFlowException icfe) {
 			invalidControlFlow = true;
 		}
@@ -731,11 +737,11 @@ public class ControlFlowTest {
 		assertTrue("ReturnStatements does not need to be found inside both conditional branches", invalidControlFlow);
 
 		// add return statement to conditional statements then block
-		moduleFunctionConditionalStatementThenBlock.addStatement(moduleFunctionConditionalReturnThenStatement);
+		this.moduleFunctionConditionalStatementThenBlock.addStatement(this.moduleFunctionConditionalReturnThenStatement);
 
 		// run visitors again
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 
 		// The controlFlowVisitor should not complain about anything, since the
 		// structure is valid.
@@ -745,18 +751,18 @@ public class ControlFlowTest {
 	@Test
 	public void returnStatementTest06() {
 		// add function to module
-		moduleBlock.addDeclaration(moduleFunctionDeclaration);
+		this.moduleBlock.addDeclaration(this.moduleFunctionDeclaration);
 		// add module function conditional conditional conditional return
 		// statement to module function conditional conditional conditional then
 		// block
-		moduleFunctionConditionalConditionalConditionalStatementElseBlock.addStatement(moduleFunctionConditionalConditionalConditionalElseReturnStatement);
+		this.moduleFunctionConditionalConditionalConditionalStatementElseBlock.addStatement(this.moduleFunctionConditionalConditionalConditionalElseReturnStatement);
 
 		// control flow should be invalid now, since there's no global return
 		// statement
 		boolean invalidControlFlow = false;
 		try {
-			setParentVisitor.visit(aPackage);
-			controlFlowVisitor.visit(aPackage);
+			this.setParentVisitor.visit(this.aPackage);
+			this.controlFlowVisitor.visit(this.aPackage);
 		} catch (InvalidControlFlowException icfe) {
 			invalidControlFlow = true;
 		}
@@ -766,30 +772,30 @@ public class ControlFlowTest {
 
 		// resolve these errors by adding another return statement to each
 		// conditional branch
-		moduleFunctionConditionalConditionalConditionalStatementThenBlock.addStatement(moduleFunctionConditionalConditionalConditionalThenReturnStatement);
-		moduleFunctionConditionalConditionalStatementElseBlock.addStatement(moduleFunctionConditionalConditionalReturnStatement);
-		moduleFunctionConditionalStatementThenBlock.addStatement(moduleFunctionConditionalReturnThenStatement);
+		this.moduleFunctionConditionalConditionalConditionalStatementThenBlock.addStatement(this.moduleFunctionConditionalConditionalConditionalThenReturnStatement);
+		this.moduleFunctionConditionalConditionalStatementElseBlock.addStatement(this.moduleFunctionConditionalConditionalReturnStatement);
+		this.moduleFunctionConditionalStatementThenBlock.addStatement(this.moduleFunctionConditionalReturnThenStatement);
 
 		// everything should be just fine now
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 	}
 
 	/** Creates return statement inside a while loop within a function block */
 	@Test
 	public void returnStatementTest07() {
 		// add function to module
-		moduleBlock.addDeclaration(moduleFunctionDeclaration);
+		this.moduleBlock.addDeclaration(this.moduleFunctionDeclaration);
 		// add module function loop return statement to module function loop
 		// block
-		moduleFunctionLoopBlock.addStatement(moduleFunctionLoopReturnStatement);
+		this.moduleFunctionLoopBlock.addStatement(this.moduleFunctionLoopReturnStatement);
 
 		// control flow should be invalid now, since there's no global return
 		// statement
 		boolean invalidControlFlow = false;
 		try {
-			setParentVisitor.visit(aPackage);
-			controlFlowVisitor.visit(aPackage);
+			this.setParentVisitor.visit(this.aPackage);
+			this.controlFlowVisitor.visit(this.aPackage);
 		} catch (InvalidControlFlowException icfe) {
 			invalidControlFlow = true;
 		}
@@ -798,28 +804,28 @@ public class ControlFlowTest {
 		assertTrue("ReturnStatements does not need to be found inside both conditional branches", invalidControlFlow);
 
 		// resolve errors by adding a return statement to module function
-		moduleFunctionBlock.addStatement(moduleFunctionReturnStatement);
+		this.moduleFunctionBlock.addStatement(this.moduleFunctionReturnStatement);
 
 		// everything should be just fine now
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 	}
 
 	/** Create return statement inside of a 3-times nested while loop within a function block */
 	@Test
 	public void returnStatementTest08() {
 		// add function to module
-		moduleBlock.addDeclaration(moduleFunctionDeclaration);
+		this.moduleBlock.addDeclaration(this.moduleFunctionDeclaration);
 		// add module function loop loop loop return statement to module
 		// function loop loop loop block
-		moduleFunctionLoopLoopLoopBlock.addStatement(moduleFunctionLoopLoopLoopReturnStatement);
+		this.moduleFunctionLoopLoopLoopBlock.addStatement(this.moduleFunctionLoopLoopLoopReturnStatement);
 
 		// control flow should be invalid now, since there's no global return
 		// statement
 		boolean invalidControlFlow = false;
 		try {
-			setParentVisitor.visit(aPackage);
-			controlFlowVisitor.visit(aPackage);
+			this.setParentVisitor.visit(this.aPackage);
+			this.controlFlowVisitor.visit(this.aPackage);
 		} catch (InvalidControlFlowException icfe) {
 			invalidControlFlow = true;
 		}
@@ -828,67 +834,67 @@ public class ControlFlowTest {
 		assertTrue("ReturnStatements does not need to be found inside both conditional branches", invalidControlFlow);
 
 		// resolve errors by adding a return statement to module function
-		moduleFunctionBlock.addStatement(moduleFunctionReturnStatement);
+		this.moduleFunctionBlock.addStatement(this.moduleFunctionReturnStatement);
 
 		// everything should be just fine now
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 	}
 
 	/** Creates a conditional statement inside a while loop */
 	@Test
 	public void conditionalStatementTest01() {
-		moduleLoopBlock.addStatement(moduleLoopConditionalStatement);
+		this.moduleLoopBlock.addStatement(this.moduleLoopConditionalStatement);
 
 		// control flow visitor should not complain about it, since the
 		// structure is valid
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 	}
 
 	/** Creates a conditional statement inside a conditional statements then block */
 	@Test
 	public void conditionalStatementTest02() {
-		moduleConditionalStatementThenBlock.addStatement(moduleLoopConditionalStatement);
+		this.moduleConditionalStatementThenBlock.addStatement(this.moduleLoopConditionalStatement);
 
 		// control flow visitor should not complain about it, since the
 		// structure is valid
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 	}
 
 	/** Creates a conditional statement inside a conditional statements else block */
 	@Test
 	public void conditionalStatementTest03() {
-		moduleConditionalStatementElseBlock.addStatement(moduleLoopConditionalStatement);
+		this.moduleConditionalStatementElseBlock.addStatement(this.moduleLoopConditionalStatement);
 
 		// control flow visitor should not complain about it, since the
 		// structure is valid
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 	}
 
 	/** Creates a conditional statement inside of a nested while loop */
 	@Test
 	public void conditionalStatementTest04() {
-		moduleLoopLoopBlock.addStatement(moduleLoopLoopConditionalStatement);
+		this.moduleLoopLoopBlock.addStatement(this.moduleLoopLoopConditionalStatement);
 
 		// everything should be just fine
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 	}
 
 	/** Creates conditional statement inside of a nested conditional statement within a while loop */
 	@Test
 	public void conditionalStatementTest05() {
 		// add a conditional statement inside a nested while loop
-		moduleLoopLoopBlock.addStatement(moduleLoopLoopConditionalStatement);
+		this.moduleLoopLoopBlock.addStatement(this.moduleLoopLoopConditionalStatement);
 		// add some more conditional statements to the one above
-		moduleLoopLoopConditionalStatementThenBlock.addStatement(moduleLoopLoopThenConditionalStatement);
-		moduleLoopLoopConditionalStatementElseBlock.addStatement(moduleLoopLoopElseConditionalStatement);
+		this.moduleLoopLoopConditionalStatementThenBlock.addStatement(this.moduleLoopLoopThenConditionalStatement);
+		this.moduleLoopLoopConditionalStatementElseBlock.addStatement(this.moduleLoopLoopElseConditionalStatement);
 
 		// everything should be just fine
-		setParentVisitor.visit(aPackage);
-		controlFlowVisitor.visit(aPackage);
+		this.setParentVisitor.visit(this.aPackage);
+		this.controlFlowVisitor.visit(this.aPackage);
 	}
 }
