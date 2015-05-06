@@ -16,7 +16,7 @@ class SearchForParentImpl<C extends ASTNode> extends AbstractSearchImpl<C> {
     public Optional<C> in(ASTNode root) {
         final Stream<C> parentStream = SearchAST.parentStream(root)
                 .filter(this::allPredicatesMatch)
-                .map(this.type::cast);
+                .map(node -> this.type.cast(node));
         return parentStream.findFirst();
     }
 
