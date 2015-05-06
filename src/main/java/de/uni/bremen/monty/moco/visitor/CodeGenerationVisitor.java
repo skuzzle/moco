@@ -153,7 +153,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		}
 
 		for (VariableDeclaration param : node.getParameter()) {
-			LLVMType llvmType = this.codeGenerator.mapToLLVMType(param.getType());
+			LLVMType llvmType = this.codeGenerator.mapToLLVMType(param.getTypeDeclaration());
 			llvmType = llvmType instanceof LLVMStructType ? pointer(llvmType) : llvmType;
 			boolean resolvable = llvmType instanceof LLVMStructType;
 			LLVMIdentifier<LLVMType> e =
@@ -266,12 +266,12 @@ public class CodeGenerationVisitor extends BaseVisitor {
 				this.codeGenerator.declareGlobalVariable(
 				        this.contextUtils.constant(),
 				        node.getMangledIdentifier().getSymbol(),
-				        node.getType());
+				        node.getTypeDeclaration());
 			} else {
 				this.codeGenerator.declareLocalVariable(
 				        this.contextUtils.active(),
 				        node.getMangledIdentifier().getSymbol(),
-				        node.getType());
+				        node.getTypeDeclaration());
 			}
 		}
 	}
@@ -285,7 +285,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		LLVMIdentifier<LLVMType> llvmIdentifier;
 		if (varDeclaration.getIsGlobal()) {
 			llvmIdentifier =
-			        this.codeGenerator.resolveGlobalVarName(node.getMangledIdentifier().getSymbol(), node.getType());
+			        this.codeGenerator.resolveGlobalVarName(node.getMangledIdentifier().getSymbol(), node.getTypeDeclaration());
 		} else if (varDeclaration.isAttribute()) {
 			LLVMIdentifier<?> leftIdentifier = this.stack.pop();
 			llvmIdentifier =
@@ -293,13 +293,13 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			                this.contextUtils.active(),
 			                (LLVMIdentifier<LLVMPointer<LLVMType>>) leftIdentifier,
 			                varDeclaration.getAttributeIndex(),
-			                node.getType(),
+			                node.getTypeDeclaration(),
 			                !node.getLValue());
 		} else {
 			llvmIdentifier =
 			        this.codeGenerator.resolveLocalVarName(
 			                node.getMangledIdentifier().getSymbol(),
-			                node.getType(),
+			                node.getTypeDeclaration(),
 			                !varDeclaration.isParameter());
 		}
 		this.stack.push(llvmIdentifier);
@@ -334,8 +334,8 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		        this.codeGenerator.castClass(
 		                this.contextUtils.active(),
 		                (LLVMIdentifier<LLVMPointer<LLVMType>>) object,
-		                (ClassDeclaration) node.getExpression().getType(),
-		                (ClassDeclaration) node.getType(),
+		                (ClassDeclaration) node.getExpression().getTypeDeclaration(),
+		                (ClassDeclaration) node.getTypeDeclaration(),
 		                this.codeGenerator.createLabelPrefix("cast", node));
 		this.stack.push((LLVMIdentifier<LLVMType>) result);
 	}
@@ -349,7 +349,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		        this.codeGenerator.isClass(
 		                this.contextUtils.active(),
 		                (LLVMIdentifier<LLVMPointer<LLVMType>>) object,
-		                (ClassDeclaration) node.getExpression().getType(),
+		                (ClassDeclaration) node.getExpression().getTypeDeclaration(),
 		                (ClassDeclaration) node.getToType());
 		LLVMIdentifier<LLVMType> boxedResult =
 		        this.codeGenerator.boxType(this.contextUtils.active(), (LLVMIdentifier<LLVMType>) result, CoreClasses.boolType());
@@ -380,7 +380,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		LLVMIdentifier<? extends LLVMType> addr = this.codeGenerator.loadChar(node.getValue());
 		// Boxing
 		CodeContext c = this.contextUtils.active();
-		LLVMIdentifier<LLVMType> box = this.codeGenerator.boxType(c, (LLVMIdentifier<LLVMType>) addr, node.getType());
+		LLVMIdentifier<LLVMType> box = this.codeGenerator.boxType(c, (LLVMIdentifier<LLVMType>) addr, node.getTypeDeclaration());
 		this.stack.push(box);
 	}
 
@@ -392,7 +392,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		LLVMIdentifier<? extends LLVMType> addr = this.codeGenerator.loadInt(node.getValue());
 		// Boxing
 		CodeContext c = this.contextUtils.active();
-		LLVMIdentifier<LLVMType> box = this.codeGenerator.boxType(c, (LLVMIdentifier<LLVMType>) addr, node.getType());
+		LLVMIdentifier<LLVMType> box = this.codeGenerator.boxType(c, (LLVMIdentifier<LLVMType>) addr, node.getTypeDeclaration());
 		this.stack.push(box);
 	}
 
@@ -404,7 +404,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		LLVMIdentifier<? extends LLVMType> addr = this.codeGenerator.loadBool(node.getValue());
 		// Boxing
 		CodeContext c = this.contextUtils.active();
-		LLVMIdentifier<LLVMType> box = this.codeGenerator.boxType(c, (LLVMIdentifier<LLVMType>) addr, node.getType());
+		LLVMIdentifier<LLVMType> box = this.codeGenerator.boxType(c, (LLVMIdentifier<LLVMType>) addr, node.getTypeDeclaration());
 		this.stack.push(box);
 	}
 
@@ -416,7 +416,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		LLVMIdentifier<? extends LLVMType> addr = this.codeGenerator.loadFloat(node.getValue());
 		// Boxing
 		CodeContext c = this.contextUtils.active();
-		LLVMIdentifier<LLVMType> box = this.codeGenerator.boxType(c, (LLVMIdentifier<LLVMType>) addr, node.getType());
+		LLVMIdentifier<LLVMType> box = this.codeGenerator.boxType(c, (LLVMIdentifier<LLVMType>) addr, node.getTypeDeclaration());
 		this.stack.push(box);
 	}
 
@@ -424,7 +424,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	public void visit(ArrayLiteral node) {
 		super.visit(node);
 
-		ClassDeclaration type = (ClassDeclaration) node.getType();
+		ClassDeclaration type = (ClassDeclaration) node.getTypeDeclaration();
 		LLVMIdentifier<LLVMPointer<LLVMStructType>> array =
 		        this.codeGenerator.addArray(this.contextUtils.active(), node.getEntries().size(), type);
 		for (int i = node.getEntries().size() - 1; i >= 0; i--) {
@@ -479,7 +479,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 
 		List<TypeDeclaration> expectedParameters = new ArrayList<>();
 		for (VariableDeclaration varDeclaration : node.getDeclaration().getParameter()) {
-			expectedParameters.add(varDeclaration.getType());
+			expectedParameters.add(varDeclaration.getTypeDeclaration());
 		}
 		List<LLVMIdentifier<?>> arguments = new ArrayList<>(node.getArguments().size());
 		for (int i = 0; i < node.getArguments().size(); i++) {
@@ -535,7 +535,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 				this.stack.push((LLVMIdentifier<LLVMType>) this.codeGenerator.call(
 				        this.contextUtils.active(),
 				        declaration.getMangledIdentifier().getSymbol(),
-				        node.getType(),
+				        node.getTypeDeclaration(),
 				        arguments,
 				        expectedParameters));
 			} else {
@@ -555,9 +555,9 @@ public class CodeGenerationVisitor extends BaseVisitor {
 	public void visit(FunctionDeclaration node) {
 		openNewFunctionScope();
 		if (isNative(node)) {
-			addNativeFunction(node, node.getReturnType());
+			addNativeFunction(node, node.getTypeDeclaration());
 		} else {
-			addFunction(node, node.getReturnType());
+			addFunction(node, node.getTypeDeclaration());
 			visitDoubleDispatched(node.getBody());
 		}
 		closeFunctionContext();
@@ -595,7 +595,7 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			this.codeGenerator.returnValue(
 			        this.contextUtils.active(),
 			        returnValue,
-			        ((FunctionDeclaration) parent).getReturnType());
+			        ((FunctionDeclaration) parent).getTypeDeclaration());
 		} else {
 			this.codeGenerator.returnValue(
 			        this.contextUtils.active(),

@@ -62,44 +62,44 @@ enum Mangled {
 }
 
 /** The NameManglingVisitor uses the following pattern to mangle the names:
- * 
+ *
  * _ : '.';
- * 
+ *
  * $ : '$';
- * 
- * 
+ *
+ *
  * module : 'module'_name;
- * 
+ *
  * class : 'class'_name;
- * 
+ *
  * func : 'func'_name$type($type)*;
- * 
+ *
  * proc : 'proc'_name($type)*;
- * 
+ *
  * var : 'var'_name$type;
- * 
+ *
  * type : 'type'_module(_class)?((_block|_proc|_func)*(_proc|_func))?;
- * 
+ *
  * block : 'block'_(IF|TRY|WHILE|HANDLE|ELSE)_number;
- * 
+ *
  * mangled : packet_module(_class)?((_block|_proc|_func)*(_proc|_func|_var))?; * */
 public class NameManglingVisitor extends BaseVisitor {
 
 	/** Various stacks for interlaced and nested prefixes. */
-	private Stack<AtomicInteger> numbers;
-	private Stack<String> moduleNames;
-	private Stack<String> classNames;
-	private Stack<ArrayList<String>> parentScopes;
+	private final Stack<AtomicInteger> numbers;
+	private final Stack<String> moduleNames;
+	private final Stack<String> classNames;
+	private final Stack<ArrayList<String>> parentScopes;
 
 	/** Used for mapping prefixes in the pattern. */
 	private EnumMap<Mangled, String> nameManglingPrefixes;
 
 	/** Constructor. */
 	public NameManglingVisitor() {
-		numbers = new Stack<>();
-		moduleNames = new Stack<>();
-		classNames = new Stack<>();
-		parentScopes = new Stack<>();
+		this.numbers = new Stack<>();
+		this.moduleNames = new Stack<>();
+		this.classNames = new Stack<>();
+		this.parentScopes = new Stack<>();
 
 		initNameManglingPrefixes();
 		manglePredefinedTypes();
@@ -107,24 +107,24 @@ public class NameManglingVisitor extends BaseVisitor {
 
 	/** Initialize the mapping of prefixes. */
 	private void initNameManglingPrefixes() {
-		nameManglingPrefixes = new EnumMap<>(Mangled.class);
+		this.nameManglingPrefixes = new EnumMap<>(Mangled.class);
 
-		nameManglingPrefixes.put(Mangled.MODULE, "M.");
-		nameManglingPrefixes.put(Mangled.CLASS, ".C.");
-		nameManglingPrefixes.put(Mangled.FUNC, ".F.");
-		nameManglingPrefixes.put(Mangled.PROC, ".P.");
-		nameManglingPrefixes.put(Mangled.BLOCK, ".B.");
-		nameManglingPrefixes.put(Mangled.VAR, ".V.");
-		nameManglingPrefixes.put(Mangled.TYPE, "$");
-		nameManglingPrefixes.put(Mangled.IF, "IF.");
-		nameManglingPrefixes.put(Mangled.ELSE, "ELSE.");
-		nameManglingPrefixes.put(Mangled.WHILE, "WHILE.");
+		this.nameManglingPrefixes.put(Mangled.MODULE, "M.");
+		this.nameManglingPrefixes.put(Mangled.CLASS, ".C.");
+		this.nameManglingPrefixes.put(Mangled.FUNC, ".F.");
+		this.nameManglingPrefixes.put(Mangled.PROC, ".P.");
+		this.nameManglingPrefixes.put(Mangled.BLOCK, ".B.");
+		this.nameManglingPrefixes.put(Mangled.VAR, ".V.");
+		this.nameManglingPrefixes.put(Mangled.TYPE, "$");
+		this.nameManglingPrefixes.put(Mangled.IF, "IF.");
+		this.nameManglingPrefixes.put(Mangled.ELSE, "ELSE.");
+		this.nameManglingPrefixes.put(Mangled.WHILE, "WHILE.");
 	}
 
 	/** This function mangles the base types. Current module for base types is "std". */
 	private void manglePredefinedTypes() {
 		final String prefix =
-		        nameManglingPrefixes.get(Mangled.MODULE) + "std" + nameManglingPrefixes.get(Mangled.CLASS);
+		        this.nameManglingPrefixes.get(Mangled.MODULE) + "std" + this.nameManglingPrefixes.get(Mangled.CLASS);
 
 		CoreClasses.stringType().setMangledIdentifier(new Identifier(prefix + "String"));
 		CoreClasses.arrayType().setMangledIdentifier(new Identifier(prefix + "Array"));
@@ -133,39 +133,39 @@ public class NameManglingVisitor extends BaseVisitor {
 	@Override
 	public void visit(ModuleDeclaration node) {
 		if (node.getMangledIdentifier() == null) {
-			numbers.push(new AtomicInteger(-1));
-			parentScopes.push(new ArrayList<String>());
+			this.numbers.push(new AtomicInteger(-1));
+			this.parentScopes.push(new ArrayList<String>());
 
 			String moduleName = escapeForLLVM(node.getIdentifier());
-			moduleName = nameManglingPrefixes.get(Mangled.MODULE) + moduleName;
+			moduleName = this.nameManglingPrefixes.get(Mangled.MODULE) + moduleName;
 
-			moduleNames.push(moduleName);
+			this.moduleNames.push(moduleName);
 			node.setMangledIdentifier(new Identifier(moduleName));
 			super.visit(node);
 
-			numbers.pop();
-			moduleNames.pop();
-			parentScopes.pop();
+			this.numbers.pop();
+			this.moduleNames.pop();
+			this.parentScopes.pop();
 		}
 	}
 
 	@Override
 	public void visit(ClassDeclaration node) {
 		if (node.getMangledIdentifier() == null) {
-			final String className = nameManglingPrefixes.get(Mangled.CLASS) + escapeForLLVM(node.getIdentifier());
+			final String className = this.nameManglingPrefixes.get(Mangled.CLASS) + escapeForLLVM(node.getIdentifier());
 
-			classNames.push(className);
-			node.setMangledIdentifier(new Identifier(moduleNames.peek() + className));
+			this.classNames.push(className);
+			node.setMangledIdentifier(new Identifier(this.moduleNames.peek() + className));
 			super.visit(node);
-			classNames.pop();
+			this.classNames.pop();
 		}
 	}
 
 	@Override
 	public void visit(FunctionDeclaration node) {
 		if (node.getMangledIdentifier() == null) {
-			String funcName = nameManglingPrefixes.get(Mangled.FUNC) + escapeForLLVM(node.getIdentifier());
-			funcName += nameManglingPrefixes.get(Mangled.TYPE) + mangleTypeDeclaration(node.getReturnType());
+			String funcName = this.nameManglingPrefixes.get(Mangled.FUNC) + escapeForLLVM(node.getIdentifier());
+			funcName += this.nameManglingPrefixes.get(Mangled.TYPE) + mangleTypeDeclaration(node.getTypeDeclaration());
 
 			mangleProcedureDeclaration(node, funcName);
 		}
@@ -174,7 +174,7 @@ public class NameManglingVisitor extends BaseVisitor {
 	@Override
 	public void visit(ProcedureDeclaration node) {
 		if (node.getMangledIdentifier() == null) {
-			final String procName = nameManglingPrefixes.get(Mangled.PROC) + escapeForLLVM(node.getIdentifier());
+			final String procName = this.nameManglingPrefixes.get(Mangled.PROC) + escapeForLLVM(node.getIdentifier());
 
 			mangleProcedureDeclaration(node, procName);
 		}
@@ -184,8 +184,8 @@ public class NameManglingVisitor extends BaseVisitor {
 	public void visit(VariableDeclaration node) {
 		if (node.getMangledIdentifier() == null) {
 			String varName =
-			        nameManglingPrefixes.get(Mangled.VAR) + escapeForLLVM(node.getIdentifier())
-			                + nameManglingPrefixes.get(Mangled.TYPE) + mangleTypeDeclaration(node.getType());
+			        this.nameManglingPrefixes.get(Mangled.VAR) + escapeForLLVM(node.getIdentifier())
+			                + this.nameManglingPrefixes.get(Mangled.TYPE) + mangleTypeDeclaration(node.getTypeDeclaration());
 
 			final String wholeName = buildNameHelper() + varName;
 			node.setMangledIdentifier(new Identifier(wholeName));
@@ -201,35 +201,35 @@ public class NameManglingVisitor extends BaseVisitor {
 
 	@Override
 	public void visit(ConditionalStatement node) {
-		AtomicInteger number = numbers.peek();
+		AtomicInteger number = this.numbers.peek();
 		number.incrementAndGet();
-		String blockName = nameManglingPrefixes.get(Mangled.BLOCK) + nameManglingPrefixes.get(Mangled.IF) + number;
+		String blockName = this.nameManglingPrefixes.get(Mangled.BLOCK) + this.nameManglingPrefixes.get(Mangled.IF) + number;
 		visitDoubleDispatched(node.getCondition());
-		parentScopes.peek().add(blockName);
+		this.parentScopes.peek().add(blockName);
 
 		visitDoubleDispatched(node.getThenBlock());
-		parentScopes.peek().remove(blockName);
+		this.parentScopes.peek().remove(blockName);
 		number.incrementAndGet();
-		blockName = nameManglingPrefixes.get(Mangled.BLOCK) + nameManglingPrefixes.get(Mangled.ELSE) + number;
+		blockName = this.nameManglingPrefixes.get(Mangled.BLOCK) + this.nameManglingPrefixes.get(Mangled.ELSE) + number;
 
 		visitDoubleDispatched(node.getElseBlock());
-		parentScopes.peek().remove(blockName);
+		this.parentScopes.peek().remove(blockName);
 	}
 
 	@Override
 	public void visit(WhileLoop node) {
-		final AtomicInteger number = numbers.peek();
+		final AtomicInteger number = this.numbers.peek();
 		number.incrementAndGet();
 		final String whileName =
-		        nameManglingPrefixes.get(Mangled.BLOCK) + nameManglingPrefixes.get(Mangled.WHILE) + number;
-		parentScopes.peek().add(whileName);
+		        this.nameManglingPrefixes.get(Mangled.BLOCK) + this.nameManglingPrefixes.get(Mangled.WHILE) + number;
+		this.parentScopes.peek().add(whileName);
 		super.visit(node);
-		parentScopes.peek().remove(whileName);
+		this.parentScopes.peek().remove(whileName);
 	}
 
 	/** If a TypeDeclaration is not mangled yet, it has to be in some other ModuleDeclaration. The other
 	 * ModuleDeclaration must be mangled first.
-	 * 
+	 *
 	 * @param node
 	 *            TypeDeclaration to mangle
 	 * @return mangled Identifier */
@@ -246,7 +246,7 @@ public class NameManglingVisitor extends BaseVisitor {
 	}
 
 	/** This function mangles the parameters of FunctionDeclaration and ProcedureDeclaration.
-	 * 
+	 *
 	 * @param node
 	 *            FunctionDeclaration or ProcedureDeclaration to mangle
 	 * @param procName
@@ -257,31 +257,31 @@ public class NameManglingVisitor extends BaseVisitor {
 				variableDeclaration.setMangledIdentifier(new Identifier("self"));
 			} else {
 				procName +=
-				        nameManglingPrefixes.get(Mangled.TYPE) + mangleTypeDeclaration(variableDeclaration.getType());
+				        this.nameManglingPrefixes.get(Mangled.TYPE) + mangleTypeDeclaration(variableDeclaration.getTypeDeclaration());
 				visitDoubleDispatched(variableDeclaration);
 			}
 		}
 
-		parentScopes.peek().add(procName);
+		this.parentScopes.peek().add(procName);
 		final String wholeName = buildNameHelper();
 
 		node.setMangledIdentifier(new Identifier(wholeName));
 		visitDoubleDispatched(node.getBody());
-		parentScopes.peek().remove(procName);
+		this.parentScopes.peek().remove(procName);
 	}
 
 	/** Builds the name with module, class and parentScopes.
-	 * 
+	 *
 	 * @return prefix of mangled name */
 	private String buildNameHelper() {
 		final StringBuilder wholeName = new StringBuilder();
-		wholeName.append(moduleNames.peek());
+		wholeName.append(this.moduleNames.peek());
 
-		if (!classNames.isEmpty()) {
-			wholeName.append(classNames.peek());
+		if (!this.classNames.isEmpty()) {
+			wholeName.append(this.classNames.peek());
 		}
 
-		for (final String prevScope : parentScopes.peek()) {
+		for (final String prevScope : this.parentScopes.peek()) {
 			wholeName.append(prevScope);
 		}
 
