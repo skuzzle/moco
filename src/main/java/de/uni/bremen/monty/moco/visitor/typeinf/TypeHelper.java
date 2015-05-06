@@ -181,7 +181,7 @@ public final class TypeHelper {
 
         final Unification callScope = call.getScope().getSubstitutions();
 
-        int bestRating = -1;
+        int bestRating = Integer.MAX_VALUE;
         Unification bestUnification = Unification.EMPTY;
         final List<ProcedureDeclaration> matches = new ArrayList<>();
 
@@ -218,7 +218,7 @@ public final class TypeHelper {
             int rating = rateSignature(callType.getParameters(),
                     candidateType.getParameters());
 
-            if (rating > bestRating) {
+            if (rating < bestRating) {
                 matches.clear();
                 bestRating = rating;
                 matches.add(candidate);
@@ -252,9 +252,13 @@ public final class TypeHelper {
     private static int rate(Type t1, Type t2) {
         assert !t1.isFunction();
         assert !t2.isFunction();
-        if (t1.isClass() && t2.isClass()) {
+        if (t1 == t2) {
+            return 0;
+        } else if (t1.isClass() && t2.isClass()) {
             return Math.abs(t1.asClass().distanceToObject()
                     - t2.asClass().distanceToObject());
+        } else if (t1.isVariable() || t2.isVariable()) {
+            return Integer.MAX_VALUE;
         }
         return 0;
     }

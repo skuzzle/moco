@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import org.junit.Assert;
 import org.junit.rules.TestRule;
@@ -81,16 +82,15 @@ public class CompileRule implements TestRule {
                         e.getClass().getName(), this.monty.expect().getName()));
             } else if (!this.monty.matching().isEmpty()) {
                 final String pattern = ".*" + this.monty.matching() + ".*";
-                if (e.getMessage() == null || !e.getMessage().matches(pattern)) {
+                final Pattern regex = Pattern.compile(pattern, Pattern.DOTALL);
+                if (e.getMessage() == null || !regex.matcher(e.getMessage()).matches()) {
                     Assert.fail(String.format(
                             "Expected message matching <%s> but was <%s>",
                             this.monty.matching(), e.getMessage()));
                 }
             }
         }
-
     }
-
 
     public <T extends ASTNode> T searchFor(Class<T> nodeType, Predicate<T> p) {
         return SearchAST.forNode(nodeType).where(p).in(this.ast).get();
