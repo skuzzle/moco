@@ -47,6 +47,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -81,6 +82,7 @@ import de.uni.bremen.monty.moco.visitor.DeclarationVisitor;
 import de.uni.bremen.monty.moco.visitor.SetParentVisitor;
 import de.uni.bremen.monty.moco.visitor.typeinf.QuantumTypeResolver3000;
 
+@Ignore
 public class TypeCheckTest {
 
     private SetParentVisitor SPV;

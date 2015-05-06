@@ -39,17 +39,19 @@
 
 package de.uni.bremen.monty.moco;
 
-import org.junit.Test;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isEmptyString;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isEmptyString;
+import org.junit.Ignore;
+import org.junit.Test;
 
+@Ignore
 public class ModuleProgramsTest {
 
 	@Test

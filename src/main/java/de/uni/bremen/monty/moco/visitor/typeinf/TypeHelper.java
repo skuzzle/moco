@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
@@ -52,9 +53,23 @@ public final class TypeHelper {
      */
     public static Optional<Type> findLeastCommonSuperType(Collection<Type> types) {
         if (types.size() == 1) {
-            // hack for now...
             return Optional.of(types.iterator().next());
         }
+
+        boolean hasVoid = false;
+        boolean hasNoneVoid = false;
+        for (final Type type : types) {
+            final boolean isVoid = type.equals(CoreClasses.voidType().getType());
+            hasVoid |= isVoid;
+            hasNoneVoid |= !isVoid;
+        }
+        if (hasVoid && hasNoneVoid) {
+            return Optional.empty();
+        } else if (hasVoid) {
+            return Optional.of(CoreClasses.voidType().getType());
+        }
+
+
         final Map<Type, Set<ClassType>> superTypeMap = new HashMap<>();
         // For each type, collect super types
         final Set<ClassType> commonTypes = new HashSet<>();

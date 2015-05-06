@@ -38,21 +38,30 @@
  */
 package de.uni.bremen.monty.moco;
 
-import static de.uni.bremen.monty.moco.IntegrationTestUtils.*;
+import static de.uni.bremen.monty.moco.IntegrationTestUtils.expectedErrorFromFile;
+import static de.uni.bremen.monty.moco.IntegrationTestUtils.expectedResultFromFile;
+import static de.uni.bremen.monty.moco.IntegrationTestUtils.getOutput;
+import static de.uni.bremen.monty.moco.IntegrationTestUtils.outputFileExists;
+import static de.uni.bremen.monty.moco.IntegrationTestUtils.setStdErr;
+import static de.uni.bremen.monty.moco.IntegrationTestUtils.setStdout;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isEmptyString;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
+
 import org.apache.commons.lang3.StringUtils;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isEmptyString;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+@Ignore
 @RunWith(Parameterized.class)
 public class CompileTestProgramsTest extends CompileFilesBaseTest {
 
@@ -72,16 +81,16 @@ public class CompileTestProgramsTest extends CompileFilesBaseTest {
 		final PrintStream bufferOut = System.out;
 		final PrintStream bufferErr = System.err;
 		final ByteArrayOutputStream outStream = setStdout();
-		final ByteArrayOutputStream errorStream = setStdErr(file);
+		final ByteArrayOutputStream errorStream = setStdErr(this.file);
 
-		Main.main(new String[] { "-k", file.getAbsolutePath(), "-e" });
+		Main.main(new String[] { "-k", this.file.getAbsolutePath(), "-e" });
 
-		if (outputFileExists(file)) {
+		if (outputFileExists(this.file)) {
 			assertThat(getOutput(errorStream), is(isEmptyString()));
-			assertThat(getOutput(outStream), is(expectedResultFromFile(file)));
+			assertThat(getOutput(outStream), is(expectedResultFromFile(this.file)));
 		} else {
 			// chop the last char to not contain /n in the string
-			assertThat(StringUtils.chop(getOutput(errorStream)), is(expectedErrorFromFile(file)));
+			assertThat(StringUtils.chop(getOutput(errorStream)), is(expectedErrorFromFile(this.file)));
 			assertThat(getOutput(outStream), is(isEmptyString()));
 		}
 		System.setOut(bufferOut);

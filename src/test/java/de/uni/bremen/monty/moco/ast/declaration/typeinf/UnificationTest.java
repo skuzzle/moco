@@ -98,7 +98,7 @@ public class UnificationTest {
         final Unification unification = Unification.testIf(this.intIntToB)
                 .isA(this.aAToString);
         assertTrue(unification.isSuccessful());
-        assertSame(this.Int, unification.getSubstitute(this.A));
+        assertEquals(this.Int, unification.getSubstitute(this.A));
 
         final Type expected = Function.named("expected")
                 .returning(this.String)
