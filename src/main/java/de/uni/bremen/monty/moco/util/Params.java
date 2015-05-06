@@ -45,7 +45,7 @@ public class Params {
 	private String mainModule;
 
 	private boolean debugParseTree;
-    private String inputCode;
+	private String inputCode;
 	private String inputFile;
 	private String outputFile;
 	private boolean usePrintVisitor;
@@ -89,15 +89,16 @@ public class Params {
 		}
 	}
 
-    public Params() {}
+	public Params() {
+	}
 
-    public void setInputFile(String inputFile) {
-        this.inputFile = inputFile;
-    }
+	public void setInputFile(String inputFile) {
+		this.inputFile = inputFile;
+	}
 
-    public void setInputFolder(String inputFolder) {
-        this.inputFolder = inputFolder;
-    }
+	public void setInputFolder(String inputFolder) {
+		this.inputFolder = inputFolder;
+	}
 
 	public String getInputFile() {
 		return this.inputFile;
@@ -107,13 +108,13 @@ public class Params {
 		return this.outputFile;
 	}
 
-    public void setInputCode(String inputCode) {
-        this.inputCode = inputCode;
-    }
+	public void setInputCode(String inputCode) {
+		this.inputCode = inputCode;
+	}
 
-    public String getInputCode() {
-        return this.inputCode;
-    }
+	public String getInputCode() {
+		return this.inputCode;
+	}
 
 	public boolean usePrintVisitor() {
 		return this.usePrintVisitor;

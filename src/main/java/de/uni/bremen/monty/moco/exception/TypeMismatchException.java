@@ -41,9 +41,9 @@ package de.uni.bremen.monty.moco.exception;
 import de.uni.bremen.monty.moco.ast.Location;
 
 public class TypeMismatchException extends MontyBaseException {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    public TypeMismatchException(Location node, String message) {
+	public TypeMismatchException(Location node, String message) {
 		super(node, message);
 	}
 }

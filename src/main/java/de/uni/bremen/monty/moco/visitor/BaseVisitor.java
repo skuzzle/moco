@@ -76,10 +76,10 @@ import de.uni.bremen.monty.moco.ast.statement.WhileLoop;
 import de.uni.bremen.monty.moco.exception.MontyBaseException;
 
 /** This is the base-visitor to be subclassed by all visitors.
- *
+ * 
  * It implements methods for all node-types that call node.visitChildren() (so the node must implement this method).
  * Override if necessary.
- *
+ * 
  * If you want to visit a node in the implementation of a visit()-method just use visit(node). */
 public class BaseVisitor {
 
@@ -90,7 +90,7 @@ public class BaseVisitor {
 	private boolean stopOnFirstError;
 
 	/** Comfort method to visit a node via double-dispatch.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public final void visitDoubleDispatched(ASTNode node) {
@@ -110,16 +110,16 @@ public class BaseVisitor {
 
 	/** Returns information used in the exceptions that includes the ASTNodes name (optional additional information) and
 	 * (if available) the position.
-	 *
+	 * 
 	 * @return the node information */
-    public String getNodeInformation(Location location) {
-        if (location == null) {
+	public String getNodeInformation(Location location) {
+		if (location == null) {
 			return "null";
-        } else if (location.getPosition() != null) {
-            final Position pos = location.getPosition();
-            return String.format("%s at %s", location.toString(), pos.toString());
+		} else if (location.getPosition() != null) {
+			final Position pos = location.getPosition();
+			return String.format("%s at %s", location.toString(), pos.toString());
 		}
-        return location.toString();
+		return location.toString();
 	}
 
 	/** Log an exception.
@@ -131,7 +131,7 @@ public class BaseVisitor {
 			System.err.println(String.format(
 			        "%s caught error in %s: %s",
 			        getClass().getSimpleName(),
-                    getNodeInformation(exc.getLocation()),
+			        getNodeInformation(exc.getLocation()),
 			        exc.getMessage()));
 			exception.printStackTrace();
 		} else {
@@ -140,7 +140,7 @@ public class BaseVisitor {
 	}
 
 	/** Was there an error during the execution of this visitor?
-	 *
+	 * 
 	 * @return true if no error was caught, false otherwise */
 	public boolean foundError() {
 		return this.errorCounter != 0;
@@ -148,30 +148,28 @@ public class BaseVisitor {
 
 	// Declaration
 
-    /**
-     * Visitor method to visit a TypeInstantiation.
-     *
-     * @param node the node to visit
-     */
-    public void visit(TypeInstantiation node) {
-        onEnterChildrenEachNode(node);
-        node.visitChildren(this);
-        onExitChildrenEachNode(node);
-    }
+	/** Visitor method to visit a TypeInstantiation.
+	 * 
+	 * @param node
+	 *            the node to visit */
+	public void visit(TypeInstantiation node) {
+		onEnterChildrenEachNode(node);
+		node.visitChildren(this);
+		onExitChildrenEachNode(node);
+	}
 
-    /**
-     * Visitor method to visit a TypeVariableDeclaration.
-     *
-     * @param node the node to visit
-     */
-    public void visit(TypeVariableDeclaration node) {
-        onEnterChildrenEachNode(node);
-        node.visitChildren(this);
-        onExitChildrenEachNode(node);
-    }
+	/** Visitor method to visit a TypeVariableDeclaration.
+	 * 
+	 * @param node
+	 *            the node to visit */
+	public void visit(TypeVariableDeclaration node) {
+		onEnterChildrenEachNode(node);
+		node.visitChildren(this);
+		onExitChildrenEachNode(node);
+	}
 
 	/** Visitor method to visit a ModuleDeclaration.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(ModuleDeclaration node) {
@@ -181,7 +179,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a ClassDeclaration.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(ClassDeclaration node) {
@@ -191,7 +189,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a FunctionDeclaration.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(FunctionDeclaration node) {
@@ -201,7 +199,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a ProcedureDeclaration.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(ProcedureDeclaration node) {
@@ -211,7 +209,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a VariableDeclaration.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(VariableDeclaration node) {
@@ -223,7 +221,7 @@ public class BaseVisitor {
 	// Expression
 
 	/** Visitor method to visit a ConditionalExpression.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(ConditionalExpression node) {
@@ -233,7 +231,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a SelfExpression.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(SelfExpression node) {
@@ -243,7 +241,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a ParentExpression.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(ParentExpression node) {
@@ -253,7 +251,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a CastExpression.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(CastExpression node) {
@@ -263,7 +261,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a IsExpression.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(IsExpression node) {
@@ -273,7 +271,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a FunctionCall.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(FunctionCall node) {
@@ -283,7 +281,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a MemberAccess.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(MemberAccess node) {
@@ -293,7 +291,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a VariableAccess.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(VariableAccess node) {
@@ -305,7 +303,7 @@ public class BaseVisitor {
 	// Literal
 
 	/** Visitor method to visit a BooleanLiteral.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(BooleanLiteral node) {
@@ -315,7 +313,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a FloatLiteral.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(FloatLiteral node) {
@@ -325,7 +323,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a IntegerLiteral.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(IntegerLiteral node) {
@@ -335,7 +333,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a StringLiteral.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(StringLiteral node) {
@@ -345,7 +343,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a ArrayLiteral.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(ArrayLiteral node) {
@@ -355,7 +353,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a CharacterLiteral.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(CharacterLiteral node) {
@@ -367,7 +365,7 @@ public class BaseVisitor {
 	// Statements
 
 	/** Visitor method to visit a Assignment.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(Assignment node) {
@@ -377,7 +375,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a BreakStatement.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(BreakStatement node) {
@@ -387,7 +385,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a SkipStatement.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(SkipStatement node) {
@@ -397,7 +395,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a ConditionalStatement.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(ConditionalStatement node) {
@@ -407,7 +405,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a ContinueStatement.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(ContinueStatement node) {
@@ -417,7 +415,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a ReturnStatement.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(ReturnStatement node) {
@@ -427,7 +425,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a WhileLoop.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(WhileLoop node) {
@@ -437,7 +435,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a TryStatement.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(TryStatement node) {
@@ -449,7 +447,7 @@ public class BaseVisitor {
 	// Other
 
 	/** Visitor method to visit a Block.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(Block node) {
@@ -459,7 +457,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a Package.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(Package node) {
@@ -469,7 +467,7 @@ public class BaseVisitor {
 	}
 
 	/** Visitor method to visit a Import.
-	 *
+	 * 
 	 * @param node
 	 *            the node to visit */
 	public void visit(Import node) {

@@ -5,11 +5,11 @@ import de.uni.bremen.monty.moco.exception.MontyBaseException;
 
 public class TypeInferenceException extends MontyBaseException {
 
-    /** */
-    private static final long serialVersionUID = 1L;
+	/** */
+	private static final long serialVersionUID = 1L;
 
-    TypeInferenceException(Location location, String message) {
-        super(location, message);
-    }
+	TypeInferenceException(Location location, String message) {
+		super(location, message);
+	}
 
 }

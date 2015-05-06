@@ -47,7 +47,7 @@ public class UnknownTypeException extends MontyBaseException {
 		super("Type is not defined: " + identifier);
 	}
 
-    public UnknownTypeException(Location positionHint, ResolvableIdentifier identifier) {
-        super(positionHint, "Type is not defined: " + identifier);
-    }
+	public UnknownTypeException(Location positionHint, ResolvableIdentifier identifier) {
+		super(positionHint, "Type is not defined: " + identifier);
+	}
 }

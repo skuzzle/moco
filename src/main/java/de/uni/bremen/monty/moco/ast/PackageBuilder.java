@@ -64,12 +64,12 @@ public class PackageBuilder {
 
 	public Package buildPackage() throws IOException {
 		Package basePackage = new Package(new Identifier(""));
-        String inputCode = this.params.getInputCode();
+		String inputCode = this.params.getInputCode();
 		String inputFile = this.params.getInputFile();
 
-        if (inputCode != null) {
-            basePackage.addSubPackage(createPackageFromString(inputCode));
-        } else if (inputFile != null) {
+		if (inputCode != null) {
+			basePackage.addSubPackage(createPackageFromString(inputCode));
+		} else if (inputFile != null) {
 			basePackage.addSubPackage(createPackageFromSingleModule(inputFile));
 		} else {
 			basePackage.addSubPackage(createPackageFromSourceFolder(this.params));
@@ -128,12 +128,12 @@ public class PackageBuilder {
 		return createPackage(inputFolder);
 	}
 
-    private Package createPackageFromString(String code) throws IOException {
-        final MontyResource codeResource = new MontyCodeString("", code);
-        final Package mainPackage = new Package(Identifier.of(""));
-        addModules(new MontyResource[] { codeResource }, mainPackage);
-        return mainPackage;
-    }
+	private Package createPackageFromString(String code) throws IOException {
+		final MontyResource codeResource = new MontyCodeString("", code);
+		final Package mainPackage = new Package(Identifier.of(""));
+		addModules(new MontyResource[] { codeResource }, mainPackage);
+		return mainPackage;
+	}
 
 	private Package createPackageFromSingleModule(String inputFile) throws IOException {
 		MontyResource file = new MontyFile(inputFile);

@@ -43,7 +43,7 @@ import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 
 public class UnknownIdentifierException extends MontyBaseException {
 
-    public UnknownIdentifierException(Location node, ResolvableIdentifier identifier) {
-        super(node, "Identifier is not defined: " + identifier);
+	public UnknownIdentifierException(Location node, ResolvableIdentifier identifier) {
+		super(node, "Identifier is not defined: " + identifier);
 	}
 }

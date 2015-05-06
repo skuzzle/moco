@@ -42,18 +42,18 @@ package de.uni.bremen.monty.moco.exception;
 import de.uni.bremen.monty.moco.ast.Location;
 
 public class MontyBaseException extends RuntimeException {
-    protected Location location;
+	protected Location location;
 
 	public MontyBaseException(String message) {
 		super(message);
 	}
 
-    public MontyBaseException(Location location, String message) {
-        super(message + ". " + location.getPosition());
-        this.location = location;
+	public MontyBaseException(Location location, String message) {
+		super(message + ". " + location.getPosition());
+		this.location = location;
 	}
 
-    public Location getLocation() {
-        return this.location;
+	public Location getLocation() {
+		return this.location;
 	}
 }

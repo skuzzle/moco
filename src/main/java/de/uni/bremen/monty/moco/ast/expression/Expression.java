@@ -47,7 +47,7 @@ import de.uni.bremen.monty.moco.ast.Position;
 public abstract class Expression extends AbstractTypedASTNode {
 
 	/** Constructor.
-	 *
+	 * 
 	 * @param position
 	 *            Position of this node */
 	public Expression(Position position) {

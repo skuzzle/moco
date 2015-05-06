@@ -7,9 +7,10 @@ import java.io.Writer;
 
 public final class DebugUtil {
 
-    private DebugUtil() {}
+	private DebugUtil() {
+	}
 
-    public static String getCurrentLocation() {
+	public static String getCurrentLocation() {
         final Exception e = new Exception();
         final Writer target = new StringWriter();
         try (Writer w = target;
