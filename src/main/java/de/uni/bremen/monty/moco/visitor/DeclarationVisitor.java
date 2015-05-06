@@ -41,6 +41,7 @@ package de.uni.bremen.monty.moco.visitor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.Block;
@@ -66,6 +67,7 @@ import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.exception.InvalidPlaceToDeclareException;
 import de.uni.bremen.monty.moco.exception.MontyBaseException;
 import de.uni.bremen.monty.moco.util.ASTUtil;
+import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 
 /** This visitor must traverse the entire AST, set up scopes and define declarations.
  * <p>
@@ -203,12 +205,14 @@ public class DeclarationVisitor extends BaseVisitor {
     @Override
     public void visit(ReturnStatement node) {
         super.visit(node);
-        final ProcedureDeclaration parent = ASTUtil.findAncestor(node,
-                ProcedureDeclaration.class);
-        if (parent == null) {
+        final Optional<ProcedureDeclaration> parent = SearchAST
+                .forParent(ProcedureDeclaration.class)
+                .in(node);
+
+        if (!parent.isPresent()) {
             throw new MontyBaseException(node, "Return statements must be enclosed by a procedure declaration");
         }
-        parent.addReturnStatement(node);
+        parent.get().addReturnStatement(node);
     }
 
 	@Override
