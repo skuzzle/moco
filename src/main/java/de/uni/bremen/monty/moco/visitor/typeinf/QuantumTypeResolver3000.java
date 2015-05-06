@@ -175,6 +175,51 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         node.setType(builder.createType());
         node.setTypeDeclaration(node);
         node.getBlock().visit(this);
+
+        fillVTable(node);
+    }
+
+    private void fillVTable(ClassDeclaration node) {
+        int attributeIndex = 1;
+        final List<ProcedureDeclaration> virtualMethodTable = node.getVirtualMethodTable();
+        final List<TypeDeclaration> superClasses = node.getSuperClassDeclarations();
+        // This can only deal with single inheritance!
+        if (!superClasses.isEmpty()) {
+            TypeDeclaration type = superClasses.get(0);
+            if (type instanceof ClassDeclaration) {
+                ClassDeclaration clazz = (ClassDeclaration) type;
+                attributeIndex = clazz.getLastAttributeIndex();
+                virtualMethodTable.addAll(clazz.getVirtualMethodTable());
+            }
+        }
+
+        // Make room for the ctable pointer
+        int vmtIndex = virtualMethodTable.size() + 1;
+
+        for (Declaration decl : node.getBlock().getDeclarations()) {
+            if (decl instanceof VariableDeclaration) {
+                VariableDeclaration varDecl = (VariableDeclaration) decl;
+                varDecl.setAttributeIndex(attributeIndex++);
+            } else if (decl instanceof ProcedureDeclaration) {
+                ProcedureDeclaration procDecl = (ProcedureDeclaration) decl;
+                if (!procDecl.isInitializer()) {
+                    boolean foundEntry = false;
+                    for (int i = 0; !foundEntry && i < virtualMethodTable.size(); i++) {
+                        ProcedureDeclaration vmtEntry = virtualMethodTable.get(i);
+                        if (procDecl.matchesType(vmtEntry)) {
+                            virtualMethodTable.set(i, procDecl);
+                            procDecl.setVMTIndex(vmtEntry.getVMTIndex());
+                            foundEntry = true;
+                        }
+                    }
+                    if (!foundEntry) {
+                        virtualMethodTable.add(procDecl);
+                        procDecl.setVMTIndex(vmtIndex++);
+                    }
+                }
+            }
+        }
+        node.setLastAttributeIndex(attributeIndex);
     }
 
     @Override
