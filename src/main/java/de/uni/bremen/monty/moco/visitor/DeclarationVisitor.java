@@ -209,10 +209,9 @@ public class DeclarationVisitor extends BaseVisitor {
                 .forParent(ProcedureDeclaration.class)
                 .in(node);
 
-        if (!parent.isPresent()) {
-            throw new MontyBaseException(node, "Return statements must be enclosed by a procedure declaration");
+        if (parent.isPresent()) {
+            parent.get().addReturnStatement(node);
         }
-        parent.get().addReturnStatement(node);
     }
 
 	@Override

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
@@ -283,6 +284,7 @@ public class ImplicitGenericsTest extends AbstractTypeInferenceTest {
     }
 
     @Test
+    @Ignore
     public void testAssignMultipleInheritance() throws Exception {
         final ASTNode root = getASTFromString("testAssignMultipleInheritance_implicit.monty",
                 code -> code
