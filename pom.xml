@@ -22,8 +22,7 @@
                 </os>
             </activation>
             <build>
-                <plugins>
-                    <!-- On all Platforms except windows, run the given shell script to remove trailing whitespace. -->
+                <!--<plugins>
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
@@ -44,7 +43,7 @@
                             </execution>
                         </executions>
                     </plugin>
-                </plugins>
+                </plugins>-->
             </build>
         </profile>
     </profiles>
@@ -78,16 +77,16 @@
                 </executions>
             </plugin>
 
-            <plugin>
+            <!--<plugin>
                 <groupId>com.googlecode.maven-java-formatter-plugin</groupId>
                 <artifactId>maven-java-formatter-plugin</artifactId>
                 <version>0.4</version>
                 <configuration>
                     <configFile>${project.basedir}/src/main/resources/moco-code-conv.xml</configFile>
                     <overrideConfigCompilerVersion>true</overrideConfigCompilerVersion>
-                    <compilerSource>1.7</compilerSource>
-                    <compilerCompliance>1.7</compilerCompliance>
-                    <compilerTargetPlatform>1.7</compilerTargetPlatform>
+                    <compilerSource>1.8</compilerSource>
+                    <compilerCompliance>1.8</compilerCompliance>
+                    <compilerTargetPlatform>1.8</compilerTargetPlatform>
                     <lineEnding>LF</lineEnding>
                     <encoding>UTF-8</encoding>
                 </configuration>
@@ -98,12 +97,12 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin>-->
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
+                <version>3.3</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -228,13 +227,6 @@
                     </formats>
                 </configuration>
             </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.12.1</version>
-            </plugin>
-
         </plugins>
     </reporting>
 
