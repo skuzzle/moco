@@ -3,37 +3,37 @@ package de.uni.bremen.monty.typeinf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Rule;
 import org.junit.Test;
 
-import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
+import de.uni.bremen.monty.moco.test.util.CompileRule;
+import de.uni.bremen.monty.moco.test.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.visitor.typeinf.TypeInferenceException;
 
 public class ConstructorCallTest extends AbstractTypeInferenceTest {
 
+    @Rule
+    public CompileRule compiler = new CompileRule();
+
     @Test
+    @Monty("class Circle:\n" +
+        "    pass\n" +
+        "test():\n" +
+        "    ? var := Circle()"
+    )
     public void testAssignCtorCallToDeclaration() throws Exception {
-        final ASTNode root = getASTFromString("testAssignCtorCallToDeclaration.monty",
-                code -> code
-                        .append("class Circle:").indent()
-                        .append("pass")
-                        .dedent()
-                        .append("test():").indent()
-                        .append("? var := Circle()"));
+        final VariableDeclaration decl = this.compiler.searchFor(
+                VariableDeclaration.class, Predicates.hasName("var"));
 
-        final VariableDeclaration decl = searchFor(VariableDeclaration.class)
-                .where(Predicates.hasName("var"))
-                .in(root).get();
-
-        final FunctionCall call = searchFor(FunctionCall.class)
-                .where(Predicates.hasName("Circle"))
-                .in(root).get();
+        final FunctionCall call = this.compiler.searchFor(FunctionCall.class,
+                Predicates.hasName("Circle"));
 
         final ClassType object = CoreClasses.objectType().getType().asClass();
         final Type circle = ClassType.classNamed("Circle").withSuperClass(object).createType();
@@ -47,14 +47,23 @@ public class ConstructorCallTest extends AbstractTypeInferenceTest {
         assertEquals(circle, decl.getType());
     }
 
-    @Test(expected = TypeInferenceException.class)
-    public void testConstructorWithExplicitTypeArg() throws Exception {
-        // c'tor can not specify a type arg named the same as in surrounding
-        // class
-        getASTFromString("testConstructorWithExplicitTypeArg.monty",
-                code -> code
-                        .append("class Foo<X>:").indent()
-                        .append("+<X> initializer(X x):").indent()
-                        .append("pass"));
-    }
+    @Test
+    @Monty(value =
+        "class Foo<X>:\n" +
+        "    +initializer():\n" +
+        "        return 5",
+        expect = TypeInferenceException.class,
+        matching = "must not return a value"
+    )
+    public void testConstructorReturnsValue() throws Exception {}
+
+    @Test
+    @Monty(value =
+        "class Foo<X>:\n" +
+        "    +<X> initializer(X x):\n" +
+        "        pass",
+        expect = TypeInferenceException.class,
+        matching = "can not redeclare generic"
+    )
+    public void testConstructorWithExplicitTypeArg() throws Exception {}
 }

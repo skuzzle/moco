@@ -16,7 +16,6 @@ import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
@@ -65,7 +64,7 @@ class ProcedureTypeResolver extends TypeResolverFragment {
 
         final Type returnType = classDecl.getType();
 
-        final List<Type> signature = getParameterTypes(node.getParameter());
+        final List<Type> signature = resolveTypesOf(node.getParameter());
         final Optional<Type> bodyType = getBodyType(node, returnType);
 
         if (!bodyType.isPresent()) {
@@ -87,7 +86,7 @@ class ProcedureTypeResolver extends TypeResolverFragment {
         final List<Type> typeArgs = getTypeParameters(node.getTypeParameters());
 
         final Type returnType = CoreClasses.voidType().getType();
-        final List<Type> signature = getParameterTypes(node.getParameter());
+        final List<Type> signature = resolveTypesOf(node.getParameter());
         final Optional<Type> bodyType = getBodyType(node, returnType);
         if (!bodyType.isPresent()) {
             reportError(node, "Could not uniquely determine type of function's body");
@@ -108,7 +107,7 @@ class ProcedureTypeResolver extends TypeResolverFragment {
 
         resolveTypeOf(node.getReturnTypeIdentifier());
         final Type declaredReturnType = node.getReturnTypeIdentifier().getType();
-        final List<Type> signature = getParameterTypes(node.getParameter());
+        final List<Type> signature = resolveTypesOf(node.getParameter());
 
         final Type declared = Function.named(node.getIdentifier())
                 .atLocation(node)
@@ -163,22 +162,13 @@ class ProcedureTypeResolver extends TypeResolverFragment {
         for (final TypeVariableDeclaration typeParam : typeParams) {
             if (names.contains(typeParam.getIdentifier().getSymbol())) {
                 reportError(typeParam,
-                        "Constructor can not redeclared generic parameter <%s>",
+                        "Constructor can not redeclare generic parameter <%s>",
                         typeParam.getIdentifier());
             }
             resolveTypeOf(typeParam);
             types.add(typeParam.getType());
         }
         return types;
-    }
-
-    private List<Type> getParameterTypes(Collection<VariableDeclaration> parameters) {
-        final List<Type> signature = new ArrayList<>(parameters.size());
-        for (final VariableDeclaration decl : parameters) {
-            resolveTypeOf(decl);
-            signature.add(decl.getType());
-        }
-        return signature;
     }
 
     private Optional<Type> getBodyType(ProcedureDeclaration node, Type declaredType) {
