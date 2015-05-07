@@ -1,11 +1,13 @@
 package de.uni.bremen.monty.moco.visitor.typeinf;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.Declaration;
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
@@ -50,12 +52,22 @@ class CallTypeResolver extends TypeResolverFragment {
 
     private List<ProcedureDeclaration> getConstructorOverloads(FunctionCall call) {
         final ClassDeclaration decl = call.getConstructorType();
-        try {
-            return decl.getScope().resolveProcedure(call,
-                    ResolvableIdentifier.of("initializer"));
-        } catch (UnknownIdentifierException e) {
+        final List<ProcedureDeclaration> result = new ArrayList<>();
+        for (final Declaration declaration : decl.getBlock().getDeclarations()) {
+            if ("initializer".equals(declaration.getIdentifier().getSymbol())) {
+                if (declaration instanceof ProcedureDeclaration) {
+                    // and not a function
+                    if (!(declaration instanceof FunctionDeclaration)) {
+                        result.add((ProcedureDeclaration) declaration);
+                    }
+                }
+            }
+        }
+
+        if (result.isEmpty()) {
             return Collections.singletonList(decl.getDefaultInitializer());
         }
+        return result;
     }
 
     private List<ProcedureDeclaration> getOverloads(FunctionCall node) {
