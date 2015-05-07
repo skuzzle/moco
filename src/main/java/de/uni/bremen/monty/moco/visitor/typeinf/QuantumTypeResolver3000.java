@@ -204,6 +204,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
             } else if (decl instanceof ProcedureDeclaration) {
                 ProcedureDeclaration procDecl = (ProcedureDeclaration) decl;
                 if (!procDecl.isInitializer()) {
+                    // TODO: overload handling in VMT generation
                     boolean foundEntry = false;
                     for (int i = 0; !foundEntry && i < virtualMethodTable.size(); i++) {
                         ProcedureDeclaration vmtEntry = virtualMethodTable.get(i);

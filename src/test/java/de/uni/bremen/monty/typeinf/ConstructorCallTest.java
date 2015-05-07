@@ -12,8 +12,8 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
-import de.uni.bremen.monty.moco.test.util.CompileRule;
-import de.uni.bremen.monty.moco.test.util.Monty;
+import de.uni.bremen.monty.moco.util.CompileRule;
+import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.visitor.typeinf.TypeInferenceException;
 

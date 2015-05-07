@@ -3,8 +3,8 @@ package de.uni.bremen.monty.typeinf;
 import org.junit.Rule;
 import org.junit.Test;
 
-import de.uni.bremen.monty.moco.test.util.CompileRule;
-import de.uni.bremen.monty.moco.test.util.Monty;
+import de.uni.bremen.monty.moco.util.CompileRule;
+import de.uni.bremen.monty.moco.util.Monty;
 
 public class TestConditional extends AbstractTypeInferenceTest {
 

@@ -1,4 +1,4 @@
-package de.uni.bremen.monty.moco.test.util;
+package de.uni.bremen.monty.moco.util;
 
 import java.io.File;
 import java.io.IOException;

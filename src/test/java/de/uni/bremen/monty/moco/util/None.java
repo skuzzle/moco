@@ -1,4 +1,4 @@
-package de.uni.bremen.monty.moco.test.util;
+package de.uni.bremen.monty.moco.util;
 
 class None extends Exception {
 
