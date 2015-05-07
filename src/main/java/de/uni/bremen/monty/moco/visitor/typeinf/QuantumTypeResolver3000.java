@@ -44,13 +44,17 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
 
     private final Set<ASTNode> visited = new HashSet<>();
 
+    public QuantumTypeResolver3000() {
+        setStopOnFirstError(true);
+    }
+
     private boolean shouldVisit(ASTNode node) {
         return this.visited.add(node);
     }
 
     @Override
     public void resolveTypeOf(ASTNode node) {
-        node.visit(this);
+        visitDoubleDispatched(node);
     }
 
     @Override
@@ -99,8 +103,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         // Ensure that the referenced class's type has been resolved
         final TypeDeclaration decl = node.getScope()
                 .resolveType(node, typeBinding.asClass());
-        decl.visit(this);
-        node.setTypeDeclaration(decl);
+        resolveTypeOf(decl);
         decl.addUsage(node);
 
         // resolve nested quantifications
@@ -125,6 +128,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         final Type instance = unification.apply(typeBinding);
         node.setType(instance);
         node.setUnification(unification);
+        node.setTypeDeclaration(decl);
     }
 
     @Override
@@ -154,12 +158,14 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         final ClassScope scope = node.getScope();
 
         // Define type arguments
-        final List<Type> types = resolveTypesOf(node.getTypeParameters());
-        builder.addTypeParameters(types);
+        for (final TypeVariableDeclaration typeParam : node.getTypeParameters()) {
+            resolveTypeOf(typeParam);
+            builder.addTypeParameter(typeParam.getType());
+        }
 
         // resolve super classes
         for (final TypeInstantiation superClass : node.getSuperClassIdentifiers()) {
-            superClass.visit(this);
+            resolveTypeOf(superClass);
             assert superClass.isTypeResolved();
 
             if (superClass.getType().isVariable()) {
@@ -242,13 +248,12 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
             return;
         }
 
-        final ProcedureTypeResolver ptr = new ProcedureTypeResolver(this);
-        ptr.resolveType(node);
+        new ProcedureTypeResolver(this).resolveProcedureDeclaration(node);
     }
 
     @Override
     public void visit(FunctionCall node) {
-        new CallTypeResolver(this).resolveType(node);
+        new CallTypeResolver(this).resolveCallType(node);
     }
 
     @Override
@@ -256,7 +261,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         if (!shouldVisit(node)) {
             return;
         }
-        node.getTypeIdentifier().visit(this);
+        resolveTypeOf(node.getTypeIdentifier());
         node.setType(node.getTypeIdentifier().getType());
         node.setTypeDeclaration(node.getTypeIdentifier().getTypeDeclaration());
     }
@@ -271,7 +276,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
                     node.getIdentifier());
         }
         final VariableDeclaration varDecl = (VariableDeclaration) decl;
-        varDecl.visit(this);
+        resolveTypeOf(varDecl);
         varDecl.addUsage(node);
 
         assert varDecl.isTypeResolved();
@@ -283,7 +288,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
 
     @Override
     public void visit(MemberAccess node) {
-        node.getLeft().visit(this);
+        resolveTypeOf(node.getLeft());
         assert node.getLeft().isTypeResolved();
 
         if (node.getLeft().getType().isVariable()) {
@@ -304,7 +309,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
                 raw.getScope());
         memberScope.defineSubstitutions(subst);
         node.getRight().setScope(memberScope);
-        node.getRight().visit(this);
+        resolveTypeOf(node.getRight());
 
         assert node.getRight().isTypeResolved();
 
@@ -325,8 +330,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
 
     @Override
     public void visit(Assignment node) {
-        node.getLeft().visit(this);
-        node.getRight().visit(this);
+        super.visit(node);
 
         final Unification unification = Unification
                 .given(node.getScope())
@@ -423,7 +427,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
     @Override
     public void visit(StringLiteral node) {
         final ClassDeclaration core = CoreClasses.stringType();
-        core.visit(this);
+        resolveTypeOf(core);
         node.setType(core.getType());
         node.setTypeDeclaration(core);
     }
@@ -431,7 +435,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
     @Override
     public void visit(BooleanLiteral node) {
         final ClassDeclaration core = CoreClasses.boolType();
-        core.visit(this);
+        resolveTypeOf(core);
         node.setType(core.getType());
         node.setTypeDeclaration(core);
     }
@@ -439,7 +443,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
     @Override
     public void visit(FloatLiteral node) {
         final ClassDeclaration core = CoreClasses.floatType();
-        core.visit(this);
+        resolveTypeOf(core);
         node.setType(core.getType());
         node.setTypeDeclaration(core);
     }
@@ -447,7 +451,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
     @Override
     public void visit(IntegerLiteral node) {
         final ClassDeclaration core = CoreClasses.intType();
-        core.visit(this);
+        resolveTypeOf(core);
         node.setType(core.getType());
         node.setTypeDeclaration(core);
     }
@@ -455,7 +459,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
     @Override
     public void visit(CharacterLiteral node) {
         final ClassDeclaration core = CoreClasses.charType();
-        core.visit(this);
+        resolveTypeOf(core);
         node.setType(core.getType());
         node.setTypeDeclaration(core);
     }

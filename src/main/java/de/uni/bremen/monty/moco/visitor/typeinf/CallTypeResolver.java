@@ -21,7 +21,7 @@ class CallTypeResolver extends TypeResolverFragment {
         super(resolver);
     }
 
-    public void resolveType(FunctionCall node) {
+    public void resolveCallType(FunctionCall node) {
         if (checkIsConstructorCall(node)) {
             resolveCall(node, this::getConstructorOverloads);
         } else {
@@ -44,6 +44,7 @@ class CallTypeResolver extends TypeResolverFragment {
         final Function unified = unification.apply(callType);
         node.setType(unified.getReturnType());
         node.setDeclaration(match);
+        match.addUsage(node);
         node.setTypeDeclarationIfResolved(match);
     }
 

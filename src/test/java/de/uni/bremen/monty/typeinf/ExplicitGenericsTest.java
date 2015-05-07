@@ -238,47 +238,39 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
         typeCheckAndExpectFailure("Found no matching overload");
     }
 
-    @Test(expected = TypeInferenceException.class)
+    @Test
+    @Monty(
+    "Foo<Int> a := Foo<String>(5)\n" +
+    "class Foo<X>:\n" +
+    "    +X x\n" +
+    "    +initializer(X x):\n" +
+    "        pass")
     public void testCallWithExplicitWrongParameter2() throws Exception {
-        getASTFromString("testCallWithExplicitWrongParameter2.monty",
-                code -> code
-                        .append("Foo<Int> a := Foo<String>(5)") // type
-                                                                   // mismatch
-                        .append("class Foo<X>:").indent()
-                        .append("+X x")
-                        .append("+initializer(X x):").indent()
-                        .append("pass"));
+        typeCheckAndExpectFailure("no matching overload of <Foo>");
     }
 
     @Test
+    @Monty(
+    "class Pair<A, B>:\n" +
+    "    -A t1\n" +
+    "    -B t2\n" +
+    "    +initializer(A f, B s):\n" +
+    "        t1 := f\n" +
+    "        t2 := s\n" +
+    "    +A get1():\n" +
+    "        return t1\n" +
+    "    +B get2():\n" +
+    "        return t2\n" +
+    "foo():\n" +
+    "    Pair<Int, String> pair := Pair<Int, String>(2, \"5\")"
+    )
     public void testGenericDeclarationWithAssignment() throws Exception {
-        final ASTNode root = getASTFromString("testGenericDeclarationWithAssignment.monty",
-                code -> code
-                        .append("class Pair<A, B>:").indent()
-                        .append("-A t1")
-                        .append("-B t2")
-                        .blankLine()
-                        .append("+initializer(A f, B s):").indent()
-                        .append("t1 := f")
-                        .append("t2 := s")
-                        .dedent()
-                        .append("+A get1():").indent()
-                        .append("return t1")
-                        .dedent()
-                        .append("+B get2():").indent()
-                        .append("return t2")
-                        .dedent()
-                        .dedent()
-                        .append("foo():").indent()
-                        .append("Pair<Int, String> pair := Pair<Int, String>(2, \"5\")"));
+        this.compiler.compile();
+        final VariableDeclaration decl = this.compiler.searchFor(
+                VariableDeclaration.class, Predicates.hasName("pair"));
 
-        final VariableDeclaration decl = SearchAST.forNode(VariableDeclaration.class)
-                .where(Predicates.hasName("pair"))
-                .in(root).get();
-
-        final FunctionCall ctor = SearchAST.forNode(FunctionCall.class)
-                .where(FunctionCall::isConstructorCall)
-                .in(root).get();
+        final FunctionCall ctor = this.compiler.searchFor(
+                FunctionCall.class, FunctionCall::isConstructorCall);
 
         final Type expected = ClassType.classNamed("Pair")
                 .withSuperClass(CoreClasses.objectType().getType().asClass())
@@ -288,7 +280,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
         assertEquals(expected, ctor.getType());
         assertEquals(expected, decl.getType());
-        assertAllTypesResolved(root);
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -416,33 +408,33 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     }
 
     @Test
+    @Monty(
+    "class Foo<X>:\n" +
+    "    +X x\n" +
+    "    +initializer(X x):\n" +
+    "        self.x := identity<X>(x)\n" +
+    "    +<X> X identity(X x):\n" +
+    "        return x"
+    )
     public void testShadowing() throws Exception {
-        final ASTNode root = getASTFromString("testShadowing.monty",
-                code -> code
-                        .append("class Foo<X>:").indent()
-                        .append("+X x")
-                        .append("+initializer(X x):").indent()
-                        .append("self.x := identity<X>(x)").dedent()
-                        .append("+<X> X identity(X x):").indent()
-                        .append("return x"));
-
-        final VariableDeclaration xmember = searchFor(VariableDeclaration.class)
+        this.compiler.compile();
+        final VariableDeclaration xmember = SearchAST.forNode(VariableDeclaration.class)
                 .where(Predicates.hasName("x"))
                 .and(Predicates.declarationTypeIs(DeclarationType.ATTRIBUTE))
-                .in(root).get();
+                .in(this.compiler.getAst()).get();
 
-        final VariableDeclaration xparam = searchFor(VariableDeclaration.class)
+        final VariableDeclaration xparam = SearchAST.forNode(VariableDeclaration.class)
                 .where(Predicates.hasName("x"))
                 .and(Predicates.declarationTypeIs(DeclarationType.PARAMETER))
-                .in(root).get();
+                .in(this.compiler.getAst()).get();
 
-        final FunctionDeclaration identity = searchFor(FunctionDeclaration.class)
+        final FunctionDeclaration identity = SearchAST.forNode(FunctionDeclaration.class)
                 .where(Predicates.hasName("identity"))
-                .in(root).get();
+                .in(this.compiler.getAst()).get();
 
         assertNotSame(xmember.getType(), xparam.getType());
         assertSame(xparam.getType(), identity.getType().asFunction().getReturnType());
-        assertAllTypesResolved(root);
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test

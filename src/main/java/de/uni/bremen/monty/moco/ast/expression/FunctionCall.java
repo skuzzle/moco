@@ -135,10 +135,10 @@ public class FunctionCall extends Expression implements Statement, NamedNode {
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
         for (final TypeInstantiation inst : this.typeArguments) {
-            inst.visit(visitor);
+            visitor.visitDoubleDispatched(inst);
         }
 		for (Expression expression : this.arguments) {
-            expression.visit(visitor);
+		    visitor.visitDoubleDispatched(expression);
 		}
 	}
 

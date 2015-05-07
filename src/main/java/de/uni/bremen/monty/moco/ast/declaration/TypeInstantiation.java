@@ -111,7 +111,7 @@ public class TypeInstantiation extends AbstractTypedASTNode implements NamedNode
     @Override
     public void visitChildren(BaseVisitor visitor) {
         for (final TypeInstantiation child : this.typeArguments) {
-            child.visit(visitor);
+            visitor.visitDoubleDispatched(child);
         }
     }
 }

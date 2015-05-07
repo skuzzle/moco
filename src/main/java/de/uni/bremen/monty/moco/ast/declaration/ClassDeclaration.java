@@ -219,12 +219,12 @@ public class ClassDeclaration extends TypeDeclaration implements QuantifiedDecla
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
         for (final TypeVariableDeclaration decl : this.typeParameters) {
-            decl.visit(visitor);
+            visitor.visitDoubleDispatched(decl);
         }
         for (final TypeInstantiation superClass : this.superClassIdentifiers) {
-            superClass.visit(visitor);
+            visitor.visitDoubleDispatched(superClass);
         }
-        this.block.visit(visitor);
+        visitor.visitDoubleDispatched(this.block);
 	}
 
 	/** {@inheritDoc} */

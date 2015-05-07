@@ -27,7 +27,7 @@ class ProcedureTypeResolver extends TypeResolverFragment {
         super(resolver);
     }
 
-    public void resolveType(ProcedureDeclaration node) {
+    public void resolveProcedureDeclaration(ProcedureDeclaration node) {
         if (node instanceof FunctionDeclaration) {
             resolveFunctionType((FunctionDeclaration) node);
         } else if (node.isInitializer()) {
@@ -54,9 +54,14 @@ class ProcedureTypeResolver extends TypeResolverFragment {
         final List<Type> fresh = new ArrayList<>(typeArgs);
 
         for (final TypeVariableDeclaration typeVar : classDecl.getTypeParameters()) {
+            resolveTypeOf(typeVar);
+
             final TypeVariableDeclaration copy = new TypeVariableDeclaration(
                     typeVar.getPosition(), typeVar.getIdentifier());
+            copy.setParentNode(node);
+            copy.setScope(node.getScope());
             copy.setType(typeVar.getType());
+            copy.setTypeDeclaration(typeVar.getTypeDeclaration());
             fresh.add(typeVar.getType());
             typeVarDecls.add(copy);
         }
@@ -84,7 +89,7 @@ class ProcedureTypeResolver extends TypeResolverFragment {
     }
 
     private void resolveProcedureType(ProcedureDeclaration node) {
-        final List<Type> typeArgs = getTypeParameters(node.getTypeParameters());
+        final List<Type> typeArgs = resolveTypesOf(node.getTypeParameters());
 
         final Type returnType = CoreClasses.voidType().getType();
         final List<Type> signature = resolveTypesOf(node.getParameter());
@@ -108,7 +113,7 @@ class ProcedureTypeResolver extends TypeResolverFragment {
     }
 
     private void resolveFunctionType(FunctionDeclaration node) {
-        final List<Type> typeArgs = getTypeParameters(node.getTypeParameters());
+        final List<Type> typeArgs = resolveTypesOf(node.getTypeParameters());
 
         resolveTypeOf(node.getReturnTypeIdentifier());
         final Type declaredReturnType = node.getReturnTypeIdentifier().getType();
@@ -148,15 +153,6 @@ class ProcedureTypeResolver extends TypeResolverFragment {
                 .createType();
         node.setType(nodeType);
         node.setTypeDeclaration(node.getReturnTypeIdentifier().getTypeDeclaration());
-    }
-
-    private List<Type> getTypeParameters(Collection<TypeVariableDeclaration> typeParams) {
-        final List<Type> types = new ArrayList<>(typeParams.size());
-        for (final TypeVariableDeclaration typeParam : typeParams) {
-            resolveTypeOf(typeParam);
-            types.add(typeParam.getType());
-        }
-        return types;
     }
 
     private List<Type> getTypeParametersForConstructor(

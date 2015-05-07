@@ -18,6 +18,7 @@ import de.uni.bremen.monty.moco.ast.AbstractTypedASTNode;
 import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.PackageBuilder;
 import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.exception.MontyBaseException;
@@ -79,9 +80,13 @@ public class CompileRule implements TestRule {
             {
                 setStopOnFirstError(true);
             }
+
             @Override
-            protected void onEnterEachNode(ASTNode node) {
-                if (node instanceof Typed) {
+            protected void onEnterChildrenEachNode(ASTNode node) {
+                if (node instanceof ModuleDeclaration) {
+                    // TODO: handle moduledeclaration correctly
+                    return;
+                } else if (node instanceof Typed) {
                     final Typed typed = (Typed) node;
                     if (!typed.isTypeResolved()) {
                         fail(String.format("Type not resolved on node: <%s>", node));
@@ -91,6 +96,11 @@ public class CompileRule implements TestRule {
                                 node));
                     }
                 }
+            }
+
+            @Override
+            protected void onEnterEachNode(ASTNode node) {
+
             }
         });
     }

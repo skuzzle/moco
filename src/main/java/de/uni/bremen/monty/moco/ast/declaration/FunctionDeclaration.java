@@ -95,12 +95,12 @@ public class FunctionDeclaration extends ProcedureDeclaration {
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
         for (final TypeVariableDeclaration typeVar : this.typeParameters) {
-            typeVar.visit(visitor);
+            visitor.visitDoubleDispatched(typeVar);
         }
-        this.returnTypeIdentifier.visit(visitor);
+        visitor.visitDoubleDispatched(this.returnTypeIdentifier);
         for (VariableDeclaration variableDeclaration : this.parameter) {
-            variableDeclaration.visit(visitor);
+            visitor.visitDoubleDispatched(variableDeclaration);
         }
-        this.body.visit(visitor);
+        visitor.visitDoubleDispatched(this.body);
 	}
 }

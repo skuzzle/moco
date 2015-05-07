@@ -95,7 +95,9 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
         this.dotBuilder.printNode(node, description, node.getPosition().toString());
 
         super.visit(node);
-
+        for (final TypeVariableDeclaration typeVars : node.getTypeParameters()) {
+            this.dotBuilder.printEdge(node, typeVars, "typeParam");
+        }
         for (final VariableDeclaration param : node.getParameter()) {
             this.dotBuilder.printEdge(node, param, "param");
         }
@@ -104,6 +106,8 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
 
     @Override
     public void visit(VariableDeclaration node) {
+        node.getTypeIdentifier().visit(this);
+
         final String description = String.format("Decl (%s) '%s'%s",
                 node.getDeclarationType(), node.getIdentifier(),
                 node.getIsGlobal()
@@ -112,6 +116,7 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
         this.dotBuilder.printNode(node,
                 description,
                 node.getPosition().toString());
+        this.dotBuilder.printEdge(node, node.getTypeIdentifier(), "type");
     }
 
     @Override
@@ -133,17 +138,25 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
 
         super.visit(node);
 
+        for (final TypeVariableDeclaration typeParam : node.getTypeParameters()) {
+            this.dotBuilder.printEdge(node, typeParam, "typeParam");
+        }
         for (final TypeInstantiation ti : node.getSuperClassIdentifiers()) {
-            this.dotBuilder.printEdge(node, ti, "inst");
+            this.dotBuilder.printEdge(node, ti, "super");
         }
         this.dotBuilder.printEdge(node, node.getBlock(), "body");
     }
 
     @Override
     public void visit(TypeInstantiation node) {
+        super.visit(node);
         this.dotBuilder.printNode(node,
                 String.format("TypeInstantiation '%s'", node.getIdentifier()),
                 node.getPosition().toString());
+
+        for (final TypeInstantiation quantification : node.getTypeArguments()) {
+            this.dotBuilder.printEdge(node, quantification, "quant.");
+        }
     }
 
     @Override

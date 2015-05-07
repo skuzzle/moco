@@ -135,7 +135,7 @@ public class VariableDeclaration extends Declaration implements Typed {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
-        this.typeIdentifier.visit(visitor);
+	    visitor.visitDoubleDispatched(this.typeIdentifier);
 	}
 
 }
