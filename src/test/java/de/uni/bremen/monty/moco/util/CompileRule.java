@@ -1,12 +1,14 @@
 package de.uni.bremen.monty.moco.util;
 
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
-import org.junit.Assert;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -16,13 +18,17 @@ import de.uni.bremen.monty.moco.ast.AbstractTypedASTNode;
 import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.PackageBuilder;
 import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.exception.MontyBaseException;
-import de.uni.bremen.monty.moco.util.Params;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
+import de.uni.bremen.monty.moco.visitor.CodeGenerationVisitor;
 import de.uni.bremen.monty.moco.visitor.DeclarationVisitor;
 import de.uni.bremen.monty.moco.visitor.DotVisitor;
+import de.uni.bremen.monty.moco.visitor.NameManglingVisitor;
 import de.uni.bremen.monty.moco.visitor.SetParentVisitor;
+import de.uni.bremen.monty.moco.visitor.typeinf.QuantumTypeErasor9k;
 import de.uni.bremen.monty.moco.visitor.typeinf.QuantumTypeResolver3000;
 
 
@@ -33,63 +39,17 @@ public class CompileRule implements TestRule {
 
     private static final String DOT_OUTPUT = "target/dot/type-inf/";
 
+    private static final String LLVM_OUTPUT = "target/test-output/llvm/";
+
     private ASTNode ast;
+    private Monty monty;
+    private String testName;
 
     @Override
     public Statement apply(Statement base, Description description) {
-        final Monty monty = description.getAnnotation(Monty.class);
-        if (monty == null) {
-            return base;
-        }
-        return new CompileStatement(monty, base, description.getMethodName());
-    }
-
-    private class CompileStatement extends Statement {
-
-        private final Monty monty;
-        private final Statement base;
-        private final String testMethod;
-
-        public CompileStatement(Monty monty, Statement base, String testMethod) {
-            this.monty = monty;
-            this.base = base;
-            this.testMethod = testMethod;
-        }
-
-        @Override
-        public void evaluate() throws Throwable {
-            try {
-                CompileRule.this.ast = getASTFromString(this.testMethod,
-                        this.monty.value());
-                assertIfNoException();
-            } catch (Exception e) {
-                assertIfException(e);
-            }
-            this.base.evaluate();
-        }
-
-        private void assertIfNoException() {
-            if (this.monty.expect() != None.class) {
-                Assert.fail(String.format("Expected <%s>", this.monty.expect().getName()));
-            }
-        }
-
-        private void assertIfException(Exception e) throws Exception {
-            if (this.monty.expect() == None.class) {
-                throw e;
-            } else if (!this.monty.expect().isInstance(e)) {
-                Assert.fail(String.format("Unexpected exception <%s>. Expected: <%s>",
-                        e.getClass().getName(), this.monty.expect().getName()));
-            } else if (!this.monty.matching().isEmpty()) {
-                final String pattern = ".*" + this.monty.matching() + ".*";
-                final Pattern regex = Pattern.compile(pattern, Pattern.DOTALL);
-                if (e.getMessage() == null || !regex.matcher(e.getMessage()).matches()) {
-                    Assert.fail(String.format(
-                            "Expected message matching <%s> but was <%s>",
-                            this.monty.matching(), e.getMessage()));
-                }
-            }
-        }
+        this.monty = description.getAnnotation(Monty.class);
+        this.testName = description.getMethodName();
+        return base;
     }
 
     public <T extends ASTNode> T searchFor(Class<T> nodeType, Predicate<T> p) {
@@ -97,8 +57,59 @@ public class CompileRule implements TestRule {
 
     }
 
-    public ASTNode getAst() {
+    public ASTNode typeCheck() throws Exception {
+        this.ast = getASTFromString(this.testName, this.monty.value(), false);
         return this.ast;
+    }
+
+    public ASTNode compile() throws Exception {
+        this.ast = getASTFromString(this.testName, this.monty.value(), true);
+        return this.ast;
+    }
+
+    public ASTNode getAst() {
+        if (this.ast == null) {
+            throw new IllegalStateException("code not compiled");
+        }
+        return this.ast;
+    }
+
+    public void assertAllTypesResolved() {
+        getAst().visit(new BaseVisitor() {
+            {
+                setStopOnFirstError(true);
+            }
+            @Override
+            protected void onEnterEachNode(ASTNode node) {
+                if (node instanceof Typed) {
+                    final Typed typed = (Typed) node;
+                    if (!typed.isTypeResolved()) {
+                        fail(String.format("Type not resolved on node: <%s>", node));
+                    }
+                    if (!typed.isTypeDeclarationResolved()) {
+                        fail(String.format("TypeDeclaration not resolved on node: <%s>",
+                                node));
+                    }
+                }
+            }
+        });
+    }
+
+    public void assertAllTypesErased() {
+        getAst().visit(new BaseVisitor() {
+            {
+                setStopOnFirstError(true);
+            }
+            @Override
+            protected void onEnterEachNode(ASTNode node) {
+                if (node instanceof Typed) {
+                    final Typed typed = (Typed) node;
+                    if (typed.getTypeDeclaration() instanceof TypeVariableDeclaration) {
+                        fail(String.format("Type variable not erased: <%s>", node));
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -109,26 +120,40 @@ public class CompileRule implements TestRule {
      * @return Root of the AST.
      * @throws Exception
      */
-    private ASTNode getASTFromString(String testFileName, String code) throws Exception {
+    private ASTNode getASTFromString(String testFileName, String code, boolean full) throws Exception {
         final Params params = new Params();
         params.setInputCode(code);
-        return createAST(testFileName, params);
+        return createAST(testFileName, params, full);
     }
 
-    private ASTNode createAST(String testFilename, Params params) throws Exception {
+    private ASTNode createAST(String testFilename, Params params, boolean full) throws Exception {
         final PackageBuilder builder = new PackageBuilder(params);
         final Package mainPackage = builder.buildPackage();
-        executeVisitorChain(testFilename, params.getInputCode(), mainPackage);
+        executeVisitorChain(testFilename, params, full, mainPackage);
         return mainPackage;
     }
 
-    private void executeVisitorChain(String testFileName, String code, ASTNode root)
-            throws Exception {
-        final BaseVisitor[] visitors = new BaseVisitor[] {
-                new SetParentVisitor(),
-                new DeclarationVisitor(),
-                new QuantumTypeResolver3000()
-        };
+    private void executeVisitorChain(String testFileName, Params params,
+            boolean full, ASTNode root) throws Exception {
+
+        final String llvmOutput = LLVM_OUTPUT + getFileName(testFileName) + ".ll";
+        final File llvmDir = new File(LLVM_OUTPUT);
+        if (!llvmDir.exists()) {
+            llvmDir.mkdirs();
+        }
+        params.setGenerateOnlyLLVM(true);
+        params.setOutputFile(llvmOutput);
+
+        final List<BaseVisitor> visitors = new ArrayList<>();
+        visitors.add(new SetParentVisitor());
+        visitors.add(new DeclarationVisitor());
+        visitors.add(new QuantumTypeResolver3000());
+        visitors.add(new QuantumTypeErasor9k());
+
+        if (full) {
+            visitors.add(new NameManglingVisitor());
+            visitors.add(new CodeGenerationVisitor(params));
+        }
         Exception error = null;
         for (final BaseVisitor bv : visitors) {
             try {
@@ -147,8 +172,8 @@ public class CompileRule implements TestRule {
         writeDotFile(testFileName, root);
         if (error != null) {
             throw error;
-        } else if (code != null) {
-            writeTestMontyFile(testFileName, code);
+        } else if (params.getInputCode() != null) {
+            writeTestMontyFile(testFileName, params.getInputCode());
         }
     }
 

@@ -31,6 +31,11 @@ import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
 import de.uni.bremen.monty.moco.ast.expression.ParentExpression;
 import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
+import de.uni.bremen.monty.moco.ast.expression.literal.BooleanLiteral;
+import de.uni.bremen.monty.moco.ast.expression.literal.CharacterLiteral;
+import de.uni.bremen.monty.moco.ast.expression.literal.FloatLiteral;
+import de.uni.bremen.monty.moco.ast.expression.literal.IntegerLiteral;
+import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
@@ -61,7 +66,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         final Type typeBinding = scope.resolveTypeBinding(node, node.getIdentifier());
 
         if (typeName.isTypeVariableIdentifier() &&
-                node.getParentNode() instanceof TypeInstantiation) {
+            node.getParentNode() instanceof TypeInstantiation) {
             // forbidden case: typename < ? >
             reportError(node,
                     "Type can not be quantified with anonymous type variable");
@@ -82,6 +87,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
                 final TypeDeclaration typeDecl = scope.resolveType(node, typeName);
                 node.setTypeDeclaration(typeDecl);
             }
+            node.getTypeDeclaration().addUsage(node);
             node.setType(typeBinding);
             node.setUnification(Unification.EMPTY);
             return;
@@ -95,6 +101,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
                 .resolveType(node, typeBinding.asClass());
         decl.visit(this);
         node.setTypeDeclaration(decl);
+        decl.addUsage(node);
 
         // resolve nested quantifications
         super.visit(node);
@@ -239,7 +246,6 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         ptr.resolveType(node);
     }
 
-
     @Override
     public void visit(FunctionCall node) {
         new CallTypeResolver(this).resolveType(node);
@@ -266,6 +272,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         }
         final VariableDeclaration varDecl = (VariableDeclaration) decl;
         varDecl.visit(this);
+        varDecl.addUsage(node);
 
         assert varDecl.isTypeResolved();
         final Type nodeType = node.getScope().getSubstitutions().apply(varDecl.getType());
@@ -394,7 +401,6 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
                 node.getThenExpression(),
                 node.getElseExpression());
 
-
         if (!common.isPresent()) {
             reportError(node, "%s is not a %s", node.getThenExpression().getType(),
                     node.getElseExpression().getType());
@@ -402,6 +408,46 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         node.setType(common.get());
         // TODO: use proper type declaration
         node.setTypeDeclaration(node.getThenExpression().getTypeDeclaration());
+    }
+
+    @Override
+    public void visit(StringLiteral node) {
+        final ClassDeclaration core = CoreClasses.stringType();
+        core.visit(this);
+        node.setType(core.getType());
+        node.setTypeDeclaration(core);
+    }
+
+    @Override
+    public void visit(BooleanLiteral node) {
+        final ClassDeclaration core = CoreClasses.boolType();
+        core.visit(this);
+        node.setType(core.getType());
+        node.setTypeDeclaration(core);
+    }
+
+    @Override
+    public void visit(FloatLiteral node) {
+        final ClassDeclaration core = CoreClasses.floatType();
+        core.visit(this);
+        node.setType(core.getType());
+        node.setTypeDeclaration(core);
+    }
+
+    @Override
+    public void visit(IntegerLiteral node) {
+        final ClassDeclaration core = CoreClasses.intType();
+        core.visit(this);
+        node.setType(core.getType());
+        node.setTypeDeclaration(core);
+    }
+
+    @Override
+    public void visit(CharacterLiteral node) {
+        final ClassDeclaration core = CoreClasses.charType();
+        core.visit(this);
+        node.setType(core.getType());
+        node.setTypeDeclaration(core);
     }
 
     @Override

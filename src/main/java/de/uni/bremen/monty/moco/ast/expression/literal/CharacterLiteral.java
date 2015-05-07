@@ -39,15 +39,12 @@
 
 package de.uni.bremen.monty.moco.ast.expression.literal;
 
-import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class CharacterLiteral extends LiteralExpression<Character> {
 	public CharacterLiteral(Position position, Character value) {
 		super(position, value);
-        setType(CoreClasses.charType().getType());
-        setTypeDeclaration(CoreClasses.charType());
 	}
 
 	@Override

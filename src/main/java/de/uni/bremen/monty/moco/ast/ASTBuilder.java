@@ -312,7 +312,7 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
         if (returnTypeContext == null) {
             // procedure
             returnType = TypeInstantiation
-                    .forTypeName(CoreClasses.voidType().getIdentifier())
+                    .forTypeName("$void")
                     .create();
         } else {
             final String returnTypeName = getTypeName(returnTypeContext);

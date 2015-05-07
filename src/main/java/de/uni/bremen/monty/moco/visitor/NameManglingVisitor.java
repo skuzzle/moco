@@ -52,6 +52,7 @@ import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ModuleDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
 import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
@@ -128,6 +129,13 @@ public class NameManglingVisitor extends BaseVisitor {
 
 		CoreClasses.stringType().setMangledIdentifier(new Identifier(prefix + "String"));
 		CoreClasses.arrayType().setMangledIdentifier(new Identifier(prefix + "Array"));
+	}
+
+	@Override
+    public void visit(TypeVariableDeclaration node) {
+	    if (node.getMangledIdentifier() == null) {
+	        node.setMangledIdentifier(node.getTypeDeclaration().getMangledIdentifier());
+	    }
 	}
 
 	@Override

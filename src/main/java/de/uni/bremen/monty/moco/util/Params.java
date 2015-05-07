@@ -108,6 +108,10 @@ public class Params {
 		return this.outputFile;
 	}
 
+	public void setOutputFile(String outputFile) {
+        this.outputFile = outputFile;
+    }
+
 	public void setInputCode(String inputCode) {
 		this.inputCode = inputCode;
 	}
@@ -123,6 +127,10 @@ public class Params {
 	public boolean isGenerateOnlyLLVM() {
 		return this.generateOnlyLLVM;
 	}
+
+	public void setGenerateOnlyLLVM(boolean generateOnlyLLVM) {
+        this.generateOnlyLLVM = generateOnlyLLVM;
+    }
 
 	public boolean isKeepLLVMCode() {
 		return this.keepLLVMCode;

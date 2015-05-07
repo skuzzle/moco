@@ -39,8 +39,9 @@ public abstract class AbstractTypedASTNode extends BasicASTNode implements Typed
     @Override
     public TypeDeclaration getTypeDeclaration() {
         if (this.typeDecl == null) {
-            throw new IllegalStateException(String.format("declaration not resolved (at %s)",
-                    getPosition()));
+            throw new IllegalStateException(String.format(
+                    "declaration not resolved for node <%s> (at %s)",
+                    this, getPosition()));
         }
         return this.typeDecl;
     }

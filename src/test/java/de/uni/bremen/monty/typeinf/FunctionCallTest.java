@@ -1,16 +1,10 @@
 package de.uni.bremen.monty.typeinf;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-import de.uni.bremen.monty.moco.util.CompileRule;
 import de.uni.bremen.monty.moco.util.Monty;
-import de.uni.bremen.monty.moco.visitor.typeinf.TypeInferenceException;
 
 public class FunctionCallTest extends AbstractTypeInferenceTest {
-
-    @Rule
-    public final CompileRule compiler = new CompileRule();
 
     @Test
     @Monty(
@@ -21,22 +15,20 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "method(Int a):\n" +
     "    pass"
     )
-    public void testOverloadWithPrimitives() {
-        assertAllTypesResolved(this.compiler.getAst());
+    public void testOverloadWithPrimitives() throws Exception {
+        this.compiler.compile();
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
-    @Monty(value =
+    @Monty(
     "Int a := method(\"foo\", 5)\n"+
     "Int method(String a, Int b):\n" +
     "    return 5\n" +
     "method(String a, Int b):\n" +
-    "    pass",
-    expect = TypeInferenceException.class,
-    matching = "Ambiguous"
-    )
+    "    pass")
     public void testDuplicateSignature() throws Exception {
-        // XXX: this error should already be recognized when duplicate method is declared
+        typeCheckAndExpectFailure("Ambiguous");
     }
 
     @Test
@@ -53,7 +45,8 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    return b"
     )
     public void testBestFit() throws Exception {
-        assertAllTypesResolved(this.compiler.getAst());
+        this.compiler.compile();
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -69,7 +62,8 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    return 5"
     )
     public void testBestFitGenerics() throws Exception {
-        assertAllTypesResolved(this.compiler.getAst());
+        this.compiler.compile();
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -85,11 +79,12 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    return 5"
     )
     public void testBestFitExplicitGenerics() throws Exception {
-        assertAllTypesResolved(this.compiler.getAst());
+        this.compiler.compile();
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
-    @Monty(value =
+    @Monty(
     "Int a := method<B>(B())\n"+
     "class A:\n"+
     "    pass\n" +
@@ -98,8 +93,18 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "<Y> String method(Y y):\n" +
     "    return \"\"\n" +
     "<X> Int method(X x):\n" +
-    "    return 5",
-    expect = TypeInferenceException.class,
-    matching = "Ambiguous")
-    public void testBestFit2GenericMethods() throws Exception {}
+    "    return 5")
+    public void testBestFit2GenericMethods() throws Exception {
+        typeCheckAndExpectFailure("Ambiguous");
+    }
+
+    @Test
+    @Monty(
+    "method():\n" +
+    "    method()"
+    )
+    public void testRecursiveProcedure() throws Exception {
+        this.compiler.compile();
+        this.compiler.assertAllTypesResolved();
+    }
 }

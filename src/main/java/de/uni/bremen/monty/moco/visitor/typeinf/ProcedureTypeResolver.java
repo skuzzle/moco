@@ -88,20 +88,23 @@ class ProcedureTypeResolver extends TypeResolverFragment {
 
         final Type returnType = CoreClasses.voidType().getType();
         final List<Type> signature = resolveTypesOf(node.getParameter());
+
+        // set type before checking body
+        final Function intermediate = Function.named(node.getIdentifier())
+                .atLocation(node)
+                .returningVoid()
+                .andParameters(signature)
+                .quantifiedBy(typeArgs)
+                .createType();
+        node.setType(intermediate);
+        node.setTypeDeclaration(CoreClasses.voidType());
+
         final Optional<Type> bodyType = getBodyType(node, returnType);
         if (!bodyType.isPresent()) {
             reportError(node, "Could not uniquely determine type of function's body");
         } else if (bodyType.get() != returnType) {
             reportError(node, "Procedures must not return a value");
         }
-        final Function nodeType = Function.named(node.getIdentifier())
-                .atLocation(node)
-                .returning(returnType)
-                .andParameters(signature)
-                .quantifiedBy(typeArgs)
-                .createType();
-        node.setType(nodeType);
-        node.setTypeDeclaration(CoreClasses.voidType());
     }
 
     private void resolveFunctionType(FunctionDeclaration node) {
@@ -118,8 +121,9 @@ class ProcedureTypeResolver extends TypeResolverFragment {
                 .quantifiedBy(typeArgs)
                 .createType();
 
-        // set intermediate type
+        // set intermediate type in case there is a recursive call
         node.setType(declared);
+        node.setTypeDeclaration(node.getReturnTypeIdentifier().getTypeDeclaration());
 
         final Optional<Type> bodyType = getBodyType(node, declaredReturnType);
         if (!bodyType.isPresent()) {

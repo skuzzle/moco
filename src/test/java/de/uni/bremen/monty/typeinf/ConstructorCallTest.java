@@ -3,7 +3,6 @@ package de.uni.bremen.monty.typeinf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.CoreClasses;
@@ -12,15 +11,10 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
-import de.uni.bremen.monty.moco.util.CompileRule;
 import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
-import de.uni.bremen.monty.moco.visitor.typeinf.TypeInferenceException;
 
 public class ConstructorCallTest extends AbstractTypeInferenceTest {
-
-    @Rule
-    public CompileRule compiler = new CompileRule();
 
     @Test
     @Monty("class Circle:\n" +
@@ -29,6 +23,8 @@ public class ConstructorCallTest extends AbstractTypeInferenceTest {
         "    ? var := Circle()"
     )
     public void testAssignCtorCallToDeclaration() throws Exception {
+        this.compiler.compile();
+
         final VariableDeclaration decl = this.compiler.searchFor(
                 VariableDeclaration.class, Predicates.hasName("var"));
 
@@ -48,22 +44,22 @@ public class ConstructorCallTest extends AbstractTypeInferenceTest {
     }
 
     @Test
-    @Monty(value =
+    @Monty(
         "class Foo<X>:\n" +
         "    +initializer():\n" +
-        "        return 5",
-        expect = TypeInferenceException.class,
-        matching = "must not return a value"
+        "        return 5"
     )
-    public void testConstructorReturnsValue() throws Exception {}
+    public void testConstructorReturnsValue() throws Exception {
+        typeCheckAndExpectFailure("must not return a value");
+    }
 
     @Test
-    @Monty(value =
+    @Monty(
         "class Foo<X>:\n" +
         "    +<X> initializer(X x):\n" +
-        "        pass",
-        expect = TypeInferenceException.class,
-        matching = "can not redeclare generic"
+        "        pass"
     )
-    public void testConstructorWithExplicitTypeArg() throws Exception {}
+    public void testConstructorWithExplicitTypeArg() throws Exception {
+        typeCheckAndExpectFailure("can not redeclare generic");
+    }
 }

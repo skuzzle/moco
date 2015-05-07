@@ -9,6 +9,10 @@ import java.io.PrintWriter;
 import java.net.URL;
 import java.util.function.Consumer;
 
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
+import org.junit.rules.RuleChain;
+
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.AbstractTypedASTNode;
 import de.uni.bremen.monty.moco.ast.Package;
@@ -18,6 +22,7 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.exception.MontyBaseException;
 import de.uni.bremen.monty.moco.util.CodeStringBuilder;
+import de.uni.bremen.monty.moco.util.CompileRule;
 import de.uni.bremen.monty.moco.util.Params;
 import de.uni.bremen.monty.moco.util.astsearch.InClause;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
@@ -28,6 +33,7 @@ import de.uni.bremen.monty.moco.visitor.DotVisitor;
 import de.uni.bremen.monty.moco.visitor.SetParentVisitor;
 import de.uni.bremen.monty.moco.visitor.typeinf.QuantumTypeErasor9k;
 import de.uni.bremen.monty.moco.visitor.typeinf.QuantumTypeResolver3000;
+import de.uni.bremen.monty.moco.visitor.typeinf.TypeInferenceException;
 
 public class AbstractTypeInferenceTest {
 
@@ -78,6 +84,19 @@ public class AbstractTypeInferenceTest {
                 }
             }
         });
+    }
+    protected final CompileRule compiler = new CompileRule();
+    protected final ExpectedException exception = ExpectedException.none();
+
+    @Rule
+    public RuleChain rules = RuleChain.emptyRuleChain()
+            .around(this.compiler)
+            .around(this.exception);
+
+    protected void typeCheckAndExpectFailure(String subString) throws Exception {
+        this.exception.expect(TypeInferenceException.class);
+        this.exception.expectMessage(subString);
+        this.compiler.typeCheck();
     }
 
     /**

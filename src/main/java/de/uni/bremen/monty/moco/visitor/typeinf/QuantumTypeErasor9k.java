@@ -13,8 +13,12 @@ import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class QuantumTypeErasor9k extends BaseVisitor {
 
+    public QuantumTypeErasor9k() {
+        setStopOnFirstError(true);
+    }
+
     @Override
-    protected void onEnterEachNode(ASTNode node) {
+    protected void onEnterChildrenEachNode(ASTNode node) {
         if (node instanceof Typed) {
             enterTypedNode(node, node.getScope(), (Typed) node);
         }
@@ -29,9 +33,6 @@ public class QuantumTypeErasor9k extends BaseVisitor {
             node.setTypeDeclaration((TypeDeclaration) decl);
         } else if (decl instanceof TypeVariableDeclaration) {
             node.setTypeDeclaration(CoreClasses.objectType());
-        } else {
-            //throw new MontyBaseException(location, String.format(
-            //        "Encountered un-erasable type %s", node.getType()));
         }
     }
 }

@@ -1,15 +1,10 @@
 package de.uni.bremen.monty.typeinf;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-import de.uni.bremen.monty.moco.util.CompileRule;
 import de.uni.bremen.monty.moco.util.Monty;
 
 public class TestConditional extends AbstractTypeInferenceTest {
-
-    @Rule
-    public final CompileRule compiler = new CompileRule();
 
     @Test
     @Monty(
@@ -17,6 +12,7 @@ public class TestConditional extends AbstractTypeInferenceTest {
     "String c := \"a\" if a else \"b\""
     )
     public void testConditionalExpressionSuccess() throws Exception {
-        assertAllTypesResolved(this.compiler.getAst());
+        this.compiler.compile();
+        this.compiler.assertAllTypesResolved();
     }
 }
