@@ -4,34 +4,35 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
+import de.uni.bremen.monty.moco.util.Monty;
+import de.uni.bremen.monty.moco.util.TestResource;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
-import de.uni.bremen.monty.moco.visitor.typeinf.TypeInferenceException;
 
 public class TestExplicitTyping extends AbstractTypeInferenceTest {
 
     @Test
+    @TestResource("explicit.monty")
     public void testExplicitAttribute() throws Exception {
-        final ASTNode root = getASTFromResource("explicit.monty");
-        final VariableDeclaration decl = searchFor(VariableDeclaration.class)
-                .where(Predicates.hasName("bar"))
-                .in(root).get();
+        this.compiler.compile();
+        final VariableDeclaration decl = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("bar"));
         assertUniqueTypeIs(CoreClasses.stringType().getType(), decl);
-        assertAllTypesResolved(root);
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
+    @TestResource("explicit.monty")
     public void testExplicitFunction() throws Exception {
-        final ASTNode root = getASTFromResource("explicit.monty");
-        final FunctionDeclaration decl = searchFor(FunctionDeclaration.class)
-                .where(Predicates.hasName("add"))
-                .in(root).get();
+        this.compiler.compile();
+        final FunctionDeclaration decl = this.compiler.searchFor(FunctionDeclaration.class,
+                Predicates.hasName("add"));
+
         final Function expected = Function.named("add")
                 .returning(CoreClasses.intType().getType())
                 .andParameters(CoreClasses.intType().getType())
@@ -39,27 +40,28 @@ public class TestExplicitTyping extends AbstractTypeInferenceTest {
                 .createType();
         assertUniqueTypeIs(expected, decl);
         assertEquals(expected.getReturnType(), decl.getType().asFunction().getReturnType());
-        assertAllTypesResolved(root);
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
+    @TestResource("explicit.monty")
     public void testExplicitFunctionParameter() throws Exception {
-        final ASTNode root = getASTFromResource("explicit.monty");
-        final VariableDeclaration decl = searchFor(VariableDeclaration.class)
+        this.compiler.compile();
+        final VariableDeclaration decl = SearchAST.forNode(VariableDeclaration.class)
                 .where(Predicates.hasName("a"))
                 .and(SearchAST.forParent(ProcedureDeclaration.class)
-                        .where(Predicates.hasName("add")))
-                .in(root).get();
+                .where(Predicates.hasName("add")))
+                .in(this.compiler.getAst()).get();
         assertUniqueTypeIs(CoreClasses.intType().getType(), decl);
-        assertAllTypesResolved(root);
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
+    @TestResource("explicit.monty")
     public void testVoidMethod() throws Exception {
-        final ASTNode root = getASTFromResource("explicit.monty");
-        final ProcedureDeclaration decl = searchFor(ProcedureDeclaration.class)
-                .where(Predicates.hasName("noop"))
-                .in(root).get();
+        this.compiler.compile();
+        final ProcedureDeclaration decl = this.compiler.searchFor(ProcedureDeclaration.class,
+                Predicates.hasName("noop"));
 
         final Function expected = Function.named("noop")
                 .returningVoid()
@@ -67,42 +69,44 @@ public class TestExplicitTyping extends AbstractTypeInferenceTest {
                 .createType();
         assertUniqueTypeIs(expected, decl);
         assertEquals(expected.getReturnType(), CoreClasses.voidType().getType());
-        assertAllTypesResolved(root);
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
+    @TestResource("explicit.monty")
     public void testExplicitProcedureParameter() throws Exception {
-        final ASTNode root = getASTFromResource("explicit.monty");
-        final VariableDeclaration decl = searchFor(VariableDeclaration.class)
-                .where(Predicates.hasName("a"))
-                .and(SearchAST.forExactParent(ProcedureDeclaration.class))
-                .in(root).get();
+        this.compiler.compile();
+        final VariableDeclaration decl = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("a"));
         assertUniqueTypeIs(CoreClasses.stringType().getType(), decl);
-        assertAllTypesResolved(root);
+        this.compiler.assertAllTypesResolved();
     }
 
-    @Test(expected = TypeInferenceException.class)
+    @Test
+    @Monty(
+    "Int foo():\n" +
+    "    return \"abc\""
+    )
     public void testReturnTypeMismatchFunction() throws Exception {
-        getASTFromString("returnTypeMismatchFunction.monty",
-                code -> code
-                .append("Int foo():").indent()
-                .append("return \"abc\""));
+        typeCheckAndExpectFailure("type <String> not compatible with return type <Int>");
     }
 
-    @Test(expected = TypeInferenceException.class)
+    @Test
+    @Monty(
+    "foo():\n" +
+    "    return \"abc\""
+    )
     public void testReturnTypeMismatchProcedure() throws Exception {
-        getASTFromString("returnTypeMismatchProcedure.monty",
-                code -> code
-                        .append("foo():").indent()
-                        .append("return \"abc\""));
+        typeCheckAndExpectFailure("must not return a value");
     }
 
-    @Test(expected = TypeInferenceException.class)
+    @Test
+    @Monty(
+    "class Foo:\n" +
+    "    +initializer():\n" +
+    "        return \"abc\""
+    )
     public void testReturnTypeMismatchConstructor() throws Exception {
-        getASTFromString("returnTypeMismatchConstructor.monty",
-                code -> code
-                        .append("class Foo:").indent()
-                        .append("+initializer():").indent()
-                        .append("return \"abc\""));
+        typeCheckAndExpectFailure("must not return a value");
     }
 }

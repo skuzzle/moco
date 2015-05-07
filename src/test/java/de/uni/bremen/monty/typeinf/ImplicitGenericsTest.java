@@ -11,107 +11,155 @@ import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration.DeclarationType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
+import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
-import de.uni.bremen.monty.moco.visitor.typeinf.TypeInferenceException;
 
 public class ImplicitGenericsTest extends AbstractTypeInferenceTest {
 
     @Test
+    @Monty(
+    "? x := identity<>(\"5\")\n" +
+    "<A> ? identity(A a):\n" +
+    "    return a"
+    )
     public void testStaticGenericFunction() throws Exception {
-        final ASTNode root = getASTFromString("testStaticGenericFunction_implicit.monty",
-                code -> code
-                        .append("? x := identity(\"5\")")
-                        .append("<A> A identity(A a):").indent()
-                        .append("return a"));
-
-        final VariableDeclaration x = SearchAST.forNode(VariableDeclaration.class)
-                .where(Predicates.hasName("x"))
-                .in(root)
-                .get();
+        this.compiler.compile();
+        final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("x"));
 
         assertUniqueTypeIs(CoreClasses.stringType().getType(), x);
-        assertAllTypesResolved(root);
+        this.compiler.assertAllTypesErased();
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
+    @Monty(
+    "? x := factorial<>(5, \"5\")\n" +
+    "<A> ? factorial(Int n, A a):\n" +
+    "    if (n<=1):\n" +
+    "        return 1\n" +
+    "    else:\n" +
+    "        return n * factorial<A>(n - 1, a)"
+    )
     public void testStaticGenericRecursiveFunction() throws Exception {
-        final ASTNode root = getASTFromString("testStaticGenericRecursiveFunction_implicit.monty",
-                code -> code
-                        .append("? x := factorial(5, \"5\")")
-                        .append("<A> Int factorial(Int n, A a):").indent()
-                        .append("if (n<=1):").indent()
-                        .append("return 1").dedent()
-                        .append("else:").indent()
-                        .append("return n * factorial<A>(n - 1, a)"));
-
-        final VariableDeclaration x = SearchAST.forNode(VariableDeclaration.class)
-                .where(Predicates.hasName("x"))
-                .in(root)
-                .get();
+        this.compiler.compile();
+        final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("x"));
 
         assertUniqueTypeIs(CoreClasses.intType().getType(), x);
-        assertAllTypesResolved(root);
-    }
-
-    @Test(expected = TypeInferenceException.class)
-    public void testCallWithExplicitWrongParameter1() throws Exception {
-        getASTFromString("testCallWithExplicitWrongParameter1_implicit.monty",
-                code -> code
-                        .append("Foo<String> a := Foo(5)") // type mismatch
-                        .append("class Foo<X>:").indent()
-                        .append("+X x")
-                        .append("+initializer(X x):").indent()
-                        .append("pass"));
-    }
-
-    @Test(expected = TypeInferenceException.class)
-    public void testCallWithExplicitWrongParameter2() throws Exception {
-        getASTFromString("testCallWithExplicitWrongParameter2_implicit.monty",
-                code -> code
-                        .append("? a := Foo<String>(5)") // type mismatch
-                        .append("class Foo<X>:").indent()
-                        .append("+X x")
-                        .append("+initializer(X x):").indent()
-                        .append("pass"));
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
+    @Monty(
+    "Foo<String> a := Foo(5)\n" +
+    "class Foo<X>:\n" +
+    "    +X x\n" +
+    "    +initializer(X x):\n" +
+    "        pass"
+    )
+    public void testCallWithExplicitWrongParameter1() throws Exception {
+        typeCheckAndExpectFailure("not assign <Foo<Int>> to <Foo<String>>");
+    }
+
+    @Test
+    @Monty(
+    "? a := Foo<String>(5)\n" +
+    "class Foo<X>:\n" +
+    "    +X x\n" +
+    "    +initializer(X x):\n" +
+    "        pass"
+    )
+    public void testCallWithExplicitWrongParameter2() throws Exception {
+        typeCheckAndExpectFailure("no matching overload of <Foo>");
+    }
+
+    @Test
+    @Monty(
+    "? test := Recursive<Int>()\n" +
+    "class Pair<A, B>:\n" +
+    "    pass\n" +
+    "class Recursive<A> inherits Pair<A, String>:\n" +
+    "    pass"
+    )
+    public void testAssignmentWithInheritedRecursiveInstantiation() throws Exception {
+        this.compiler.compile();
+        this.compiler.assertAllTypesResolved();
+    }
+
+    @Test
+    @Monty(
+    "? root := Node(\"a\")\n"+
+    "? child := Node(\"b\")\n"+
+    "root.next := child\n"+
+    "class Node<A>:\n"+
+    "    -A data\n"+
+    "    +Node<A> next\n"+
+    "    +initializer(A data):\n"+
+    "        self.data := data"
+    )
+    public void testRecursiveType() throws Exception {
+        this.compiler.compile();
+
+        final VariableDeclaration child = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("child"));
+        final VariableAccess var = this.compiler.searchFor(VariableAccess.class,
+                Predicates.hasName("next"));
+        final Type expected = ClassType.classNamed("Node")
+                .withSuperClass(CoreClasses.objectType().getType().asClass())
+                .addTypeParameter(CoreClasses.stringType().getType())
+                .createType();
+
+        assertUniqueTypeIs(expected, var);
+        assertUniqueTypeIs(expected, child);
+        this.compiler.assertAllTypesResolved();
+        this.compiler.assertAllTypesErased();
+    }
+
+    @Test
+    @Monty(
+    "? root := Node<>(\"a\")\n" +
+    "? child := Node<>(4)\n" +
+    "root.next := child\n" +
+    "class Node<A>:\n" +
+    "    -A data\n" +
+    "    +Node<A> next\n" +
+    "    +initializer(A data):\n" +
+    "        self.data := data"
+    )
+    public void testRecursiveTypeFail() throws Exception {
+        typeCheckAndExpectFailure("Can not assign <Node<Int>> to <Node<String>>");
+    }
+
+    @Test
+    @Monty(
+    "class Pair<A, B>:\n" +
+    "    -A t1\n" +
+    "    -B t2\n" +
+    "    +initializer(A f, B s):\n" +
+    "        self.t1 := f\n" +
+    "        self.t2 := s\n" +
+    "    +A get1():\n" +
+    "        return self.t1\n" +
+    "    +B get2():\n" +
+    "        return self.t2\n" +
+    "foo():\n" +
+    "    ? pair := Pair<>(2, \"5\")"
+    )
     public void testGenericDeclarationWithAssignment() throws Exception {
-        final ASTNode root = getASTFromString("testGenericDeclarationWithAssignment_implicit.monty",
-                code -> code
-                        .append("class Pair<A, B>:").indent()
-                        .append("-A t1")
-                        .append("-B t2")
-                        .blankLine()
-                        .append("+initializer(A f, B s):").indent()
-                        .append("t1 := f")
-                        .append("t2 := s")
-                        .dedent()
-                        .append("+? get1():").indent()
-                        .append("return t1")
-                        .dedent()
-                        .append("+? get2():").indent()
-                        .append("return t2")
-                        .dedent()
-                        .dedent()
-                        .append("foo():").indent()
-                        .append("? pair := Pair(2, \"5\")"));
+        this.compiler.compile();
+        final VariableDeclaration decl = this.compiler.searchFor(
+                VariableDeclaration.class, Predicates.hasName("pair"));
 
-        final VariableDeclaration decl = SearchAST.forNode(VariableDeclaration.class)
-                .where(Predicates.hasName("pair"))
-                .in(root).get();
-
-        final FunctionCall ctor = SearchAST.forNode(FunctionCall.class)
-                .where(FunctionCall::isConstructorCall)
-                .in(root).get();
+        final FunctionCall ctor = this.compiler.searchFor(
+                FunctionCall.class, FunctionCall::isConstructorCall);
 
         final Type expected = ClassType.classNamed("Pair")
                 .withSuperClass(CoreClasses.objectType().getType().asClass())
@@ -121,25 +169,25 @@ public class ImplicitGenericsTest extends AbstractTypeInferenceTest {
 
         assertEquals(expected, ctor.getType());
         assertEquals(expected, decl.getType());
-        assertAllTypesResolved(root);
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
+    @Monty(
+    "? a := Foo<String>()\n" +
+    "? temp := Foo<String>()\n" +
+    "a.x := \"b\"\n" +
+    "temp.x := a.x\n" +
+    "class Foo<X>:\n" +
+    "    +X x"
+    )
     public void testAssignAttribute() throws Exception {
-        final ASTNode root = getASTFromString("testAssignAttribute_implicit.monty",
-                code -> code
-                        .append("? a := Foo<String>()")
-                        .append("? temp := Foo<String>()")
-                        .append("a.x := \"b\"")
-                        .append("temp.x := a.x")
-                        .append("class Foo<X>:").indent()
-                        .append("+X x"));
+        this.compiler.compile();
 
-        final VariableDeclaration a = SearchAST.forNode(VariableDeclaration.class)
-                .where(Predicates.hasName("a")).in(root).get();
-        final VariableDeclaration temp = SearchAST.forNode(VariableDeclaration.class)
-                .where(Predicates.hasName("temp"))
-                .in(root).get();
+        final VariableDeclaration a = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("a"));
+        final VariableDeclaration temp = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("temp"));
 
         final Type expected = ClassType.classNamed("Foo")
                 .addTypeParameter(CoreClasses.stringType().getType())
@@ -148,36 +196,29 @@ public class ImplicitGenericsTest extends AbstractTypeInferenceTest {
 
         assertUniqueTypeIs(expected, a);
         assertUniqueTypeIs(expected, temp);
-        assertAllTypesResolved(root);
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
+    @Monty(
+    "class Pair<A, B>:\n" +
+    "    -A t1\n" +
+    "    -B t2\n" +
+    "    +initializer(A f, B s):\n" +
+    "        self.t1 := f\n" +
+    "        self.t2 := s\n" +
+    "? foo(Int a, Int b):\n" +
+    "    return Pair(a, b)\n" +
+    "test():\n" +
+    "    ? p := foo(1, 2)"
+    )
     public void testReturnGeneric() throws Exception {
-        final ASTNode root = getASTFromString("testReturnGeneric_implicit.monty",
-                code -> code
-                        .append("class Pair<A, B>:").indent()
-                        .append("-A t1")
-                        .append("-B t2")
-                        .blankLine()
-                        .append("+initializer(A f, B s):").indent()
-                        .append("t1 := f")
-                        .append("t2 := s")
-                        .dedent()
-                        .dedent()
-                        .append("? foo(Int a, Int b):").indent()
-                        .append("return Pair(a, b)")
-                        .dedent()
-                        .append("test():").indent()
-                        .append("? p := foo(1, 2)")
-                        .dedent());
+        this.compiler.compile();
+        final FunctionCall call = this.compiler.searchFor(FunctionCall.class,
+                Predicates.hasName("foo"));
 
-        final FunctionCall call = searchFor(FunctionCall.class)
-                .where(Predicates.hasName("foo"))
-                .in(root).get();
-
-        final VariableDeclaration p = searchFor(VariableDeclaration.class)
-                .where(Predicates.hasName("p"))
-                .in(root).get();
+        final VariableDeclaration p = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("p"));
 
         final Type expected = ClassType.classNamed("Pair")
                 .addTypeParameter(CoreClasses.intType().getType())
@@ -187,183 +228,61 @@ public class ImplicitGenericsTest extends AbstractTypeInferenceTest {
 
         assertUniqueTypeIs(expected, call);
         assertUniqueTypeIs(expected, p);
-        assertAllTypesResolved(root);
-    }
-
-    @Test(expected = TypeInferenceException.class)
-    public void testWrongGenericParameter() throws Exception {
-        getASTFromString("testWrongGenericParameter_implicit.monty",
-                code -> code
-                        .append("main():").indent()
-                        .append("Foo<Int> myfoo := Foo(5)")
-                        .append("? a := myfoo.bar(\"a\")")
-                        .dedent()
-                        .append("class Foo<X>:").indent()
-                        .append("+initializer(X x):").indent()
-                        .append("pass")
-                        .dedent()
-                        .blankLine()
-                        .append("+Int bar(X x):").indent()
-                        .append("return 2"));
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
-    public void testRecursiveType() throws Exception {
-        final ASTNode root = getASTFromString("testRecursiveType_implicit.monty",
-                code -> code
-                        .append("? root := Node(\"a\")")
-                        .append("? child := Node(\"b\")")
-                        .append("root.next := child")
-                        .append("class Node<A>:").indent()
-                        .append("-A data")
-                        .append("+Node<A> next")
-                        .append("+initializer(A data):").indent()
-                        .append("self.data := data"));
-
-        final VariableDeclaration child = searchFor(VariableDeclaration.class)
-                .where(Predicates.hasName("child"))
-                .in(root).get();
-
-        final VariableAccess var = searchFor(VariableAccess.class)
-                .where(Predicates.hasName("next"))
-                .and(Predicates.onLine(3))
-                .in(root).get();
-        final Type expected = ClassType.classNamed("Node")
-                .withSuperClass(CoreClasses.objectType().getType().asClass())
-                .addTypeParameter(CoreClasses.stringType().getType())
-                .createType();
-
-        assertUniqueTypeIs(expected, var);
-        assertUniqueTypeIs(expected, child);
-        assertAllTypesResolved(root);
-    }
-
-    @Test(expected = TypeInferenceException.class)
-    public void testRecursiveTypeFail() throws Exception {
-        final ASTNode root = getASTFromString("testRecursiveTypeFail_implicit.monty",
-                code -> code
-                        .append("? root := Node(\"a\")")
-                        .append("? child := Node(4)")
-                        .append("root.next := child")
-                        .append("class Node<A>:").indent()
-                        .append("-A data")
-                        .append("+Node<A> next")
-                        .append("+initializer(A data):").indent()
-                        .append("self.data := data"));
-        assertAllTypesResolved(root);
-    }
-
-    @Test
+    @Monty(
+    "class Foo<X>:\n" +
+    "    +X y\n" +
+    "    +initializer(X x):\n" +
+    "        self.y := self.identity<X>(x)\n" +
+    "    +<X> ? identity(X x):\n" +
+    "        return x"
+    )
     public void testShadowing() throws Exception {
-        final ASTNode root = getASTFromString("testShadowing_implicit.monty",
-                code -> code
-                        .append("class Foo<X>:").indent()
-                        .append("+X x")
-                        .append("+initializer(X x):").indent()
-                        .append("self.x := identity(x)").dedent()
-                        .append("+<X> X identity(X x):").indent()
-                        .append("return x"));
+        this.compiler.compile();
+        final VariableDeclaration y = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("y"));
 
-        final VariableDeclaration xmember = searchFor(VariableDeclaration.class)
-                .where(Predicates.hasName("x"))
-                .and(Predicates.declarationTypeIs(DeclarationType.ATTRIBUTE))
-                .in(root).get();
+        final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("x"));
 
-        final VariableDeclaration xparam = searchFor(VariableDeclaration.class)
-                .where(Predicates.hasName("x"))
-                .and(Predicates.declarationTypeIs(DeclarationType.PARAMETER))
-                .in(root).get();
-
-        final FunctionDeclaration identity = searchFor(FunctionDeclaration.class)
+        final FunctionDeclaration identity = SearchAST.forNode(FunctionDeclaration.class)
                 .where(Predicates.hasName("identity"))
-                .in(root).get();
+                .in(this.compiler.getAst()).get();
 
-        assertNotSame(xmember.getType(), xparam.getType());
-        assertSame(xparam.getType(), identity.getType().asFunction().getReturnType());
-        assertAllTypesResolved(root);
+        assertNotSame(y.getType(), x.getType());
+        assertSame(x.getType(), identity.getType().asFunction().getReturnType());
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
-    @Ignore
-    public void testAssignMultipleInheritance() throws Exception {
-        final ASTNode root = getASTFromString("testAssignMultipleInheritance_implicit.monty",
-                code -> code
-                        .append("? x := Pair<String, String>()")
-                        .append("? y := Pair<String, String>()")
-                        .append("Pair<String, String> p := Pair()")
-                        .append("x.barX()")
-                        .append("p.barX()")
-                        .append("p.barY()")
-                        .append("p.foo()")
-                        .blankLine()
-                        .append("class X:").indent()
-                        .append("+barX():").indent()
-                        .append("pass").dedent().dedent()
-                        .append("class Y:").indent()
-                        .append("+barY():").indent()
-                        .append("pass").dedent().dedent()
-                        .append("class Pair<A, B> inherits X, Y:").indent()
-                        .append("+foo():").indent()
-                        .append("pass"));
-
-        final VariableDeclaration x = searchFor(VariableDeclaration.class)
-                .where(Predicates.hasName("x"))
-                .in(root).get();
-        final VariableDeclaration y = searchFor(VariableDeclaration.class)
-                .where(Predicates.hasName("y"))
-                .in(root).get();
-        final VariableDeclaration p = searchFor(VariableDeclaration.class)
-                .where(Predicates.hasName("p"))
-                .in(root).get();
-
-        final ClassType classX = ClassType.classNamed("X")
-                .withSuperClass(CoreClasses.objectType().getType().asClass())
-                .createType();
-        final ClassType classY = ClassType.classNamed("Y")
-                .withSuperClass(CoreClasses.objectType().getType().asClass())
-                .createType();
-
-        final Type pair = ClassType.classNamed("Pair")
-                .withSuperClasses(classX, classY)
-                .addTypeParameter(CoreClasses.stringType().getType())
-                .addTypeParameter(CoreClasses.stringType().getType())
-                .createType();
-
-        assertUniqueTypeIs(classX, x);
-        assertUniqueTypeIs(classY, y);
-        assertUniqueTypeIs(pair, p);
-        assertAllTypesResolved(root);
-    }
-
-    @Test
+    @Monty(
+    "class Foo<X>:\n" +
+    "    +X x\n" +
+    "    +initializer(X x):\n" +
+    "        pass\n" +
+    "    +? get():\n" +
+    "        return self.x\n" +
+    "<Y> ? callFoo(Foo<Y> foo):\n" +
+    "    return foo.get()\n" +
+    "? a := callFoo(Foo<Int>(1337))"
+    )
     public void testCallGenericArgument() throws Exception {
-        final ASTNode root = getASTFromString("testCallGenericArgument_implicit.monty",
-                code -> code
-                        .append("class Foo<X>:").indent()
-                        .append("+X x")
-                        .append("+initializer(X x):").indent()
-                        .append("pass")
-                        .dedent()
-                        .append("+? get():").indent()
-                        .append("return x")
-                        .dedent()
-                        .dedent()
-                        .append("<Y> Y callFoo(Foo<Y> foo):").indent()
-                        .append("return foo.get()")
-                        .dedent()
-                        .append("Int a := callFoo(Foo(1337))"));
+        this.compiler.compile();
 
-        final MemberAccess fooAcces = searchFor(VariableAccess.class)
+        final MemberAccess fooAcces = SearchAST.forNode(VariableAccess.class)
                 .where(Predicates.hasName("foo"))
-                .and(Predicates.onLine(11)).in(root)
+                .and(Predicates.onLine(8)).in(this.compiler.getAst())
                 .map(ASTNode::getParentNode)
                 .map(node -> (MemberAccess) node)
                 .get();
 
-        final FunctionCall fooCall = searchFor(FunctionCall.class)
+        final FunctionCall fooCall = SearchAST.forNode(FunctionCall.class)
                 .where(Predicates.hasName("Foo"))
-                .and(Predicates.onLine(13))
-                .in(root)
+                .and(Predicates.onLine(9))
+                .in(this.compiler.getAst())
                 .get();
 
         final TypeVariable y = fooAcces.getRight().getType().asVariable();
@@ -382,6 +301,67 @@ public class ImplicitGenericsTest extends AbstractTypeInferenceTest {
         assertUniqueTypeIs(y, fooAcces);
         assertUniqueTypeIs(fooY, fooAcces.getLeft());
         assertUniqueTypeIs(fooInt, fooCall);
-        assertAllTypesResolved(root);
+        this.compiler.assertAllTypesResolved();
     }
+
+    @Test
+    @Monty(
+    "foo<Int>(5, 4)\n" +
+    "<X,Y> foo(X x, Y y):\n" +
+    "    pass"
+    )
+    public void testCallWithPartialArguments() throws Exception {
+        // TODO: we might expect a more helpful exception here
+        typeCheckAndExpectFailure("Found no matching overload of <foo>");
+    }
+
+    @Test
+    @Ignore
+    @Monty(
+    "? x := Pair<String, String>()\n" +
+    "? y := Pair<String, String>()\n" +
+    "Pair<String, String> p := Pair<>()\n" +
+    "x.barX()\n" +
+    "p.barX()\n" +
+    "p.barY()\n" +
+    "p.foo()\n" +
+    "class X:\n" +
+    "    +barX():\n" +
+    "        pass\n" +
+    "class Y:\n" +
+    "    +barY():\n" +
+    "        pass\n" +
+    "class Pair<A, B> inherits X, Y:\n" +
+    "    +foo():\n" +
+    "        pass"
+    )
+    public void testAssignMultipleInheritance() throws Exception {
+        this.compiler.compile();
+
+        final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("x"));
+        final VariableDeclaration y = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("y"));
+        final VariableDeclaration p = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("p"));
+
+        final ClassType classX = ClassType.classNamed("X")
+                .withSuperClass(CoreClasses.objectType().getType().asClass())
+                .createType();
+        final ClassType classY = ClassType.classNamed("Y")
+                .withSuperClass(CoreClasses.objectType().getType().asClass())
+                .createType();
+
+        final Type pair = ClassType.classNamed("Pair")
+                .withSuperClasses(classX, classY)
+                .addTypeParameter(CoreClasses.stringType().getType())
+                .addTypeParameter(CoreClasses.stringType().getType())
+                .createType();
+
+        assertUniqueTypeIs(classX, x);
+        assertUniqueTypeIs(classY, y);
+        assertUniqueTypeIs(pair, p);
+        this.compiler.assertAllTypesResolved();
+    }
+
 }

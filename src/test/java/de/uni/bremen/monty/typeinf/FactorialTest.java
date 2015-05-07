@@ -4,43 +4,41 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
+import de.uni.bremen.monty.moco.util.TestResource;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 
 public class FactorialTest extends AbstractTypeInferenceTest {
     @Test
+    @TestResource("factorial.monty")
     public void testInferCallType() throws Exception {
-        final ASTNode root = getASTFromResource("factorial.monty");
-        final VariableDeclaration decl = searchFor(VariableDeclaration.class)
-                .where(Predicates.hasName("x"))
-                .in(root)
-                .get();
+        this.compiler.compile();
 
+        final VariableDeclaration decl = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("x"));
         assertUniqueTypeIs(CoreClasses.intType().getType(), decl);
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
+    @TestResource("factorial.monty")
     public void testExplicitTargetType() throws Exception {
-        final ASTNode root = getASTFromResource("factorial.monty");
-        final VariableDeclaration decl = searchFor(VariableDeclaration.class)
-                .where(Predicates.hasName("y"))
-                .in(root)
-                .get();
-
+        this.compiler.compile();
+        final VariableDeclaration decl = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("y"));
         assertUniqueTypeIs(CoreClasses.intType().getType(), decl);
+        this.compiler.assertAllTypesResolved();
     }
 
     @Test
+    @TestResource("factorial.monty")
     public void testInferReturnType() throws Exception {
-        final ASTNode root = getASTFromResource("factorial.monty");
-        final FunctionDeclaration decl = searchFor(FunctionDeclaration.class)
-                .where(Predicates.hasName("fak"))
-                .in(root)
-                .get();
+        this.compiler.compile();
+        final FunctionDeclaration decl = this.compiler.searchFor(FunctionDeclaration.class,
+                Predicates.hasName("fak"));
 
         final Function expected = Function.named("fak")
                 .returning(CoreClasses.intType().getType())

@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -25,6 +26,7 @@ import de.uni.bremen.monty.moco.exception.MontyBaseException;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 import de.uni.bremen.monty.moco.visitor.CodeGenerationVisitor;
+import de.uni.bremen.monty.moco.visitor.ControlFlowVisitor;
 import de.uni.bremen.monty.moco.visitor.DeclarationVisitor;
 import de.uni.bremen.monty.moco.visitor.DotVisitor;
 import de.uni.bremen.monty.moco.visitor.NameManglingVisitor;
@@ -37,18 +39,26 @@ public class CompileRule implements TestRule {
 
     /** Path to folder where generated .monty files will be stored -´ */
     private static final String TEST_OUTPUT = "target/test-output/type-inf/";
-
     private static final String DOT_OUTPUT = "target/dot/type-inf/";
-
     private static final String LLVM_OUTPUT = "target/test-output/llvm/";
+    /** Path to resource folder from which test monty files are read */
+    private static final String TEST_DIR = "testTypeInference/";
 
     private ASTNode ast;
     private Monty monty;
+    private TestResource montyResource;
     private String testName;
 
     @Override
     public Statement apply(Statement base, Description description) {
         this.monty = description.getAnnotation(Monty.class);
+        this.montyResource = description.getAnnotation(TestResource.class);
+
+        if (this.monty != null && this.montyResource != null) {
+            fail("Can not specify @Monty and @TestResource on same test");
+        } else if (this.monty == null && this.montyResource == null) {
+            fail("No Monty input given. Specify either @Monty or @TestResource");
+        }
         this.testName = description.getMethodName();
         return base;
     }
@@ -59,12 +69,12 @@ public class CompileRule implements TestRule {
     }
 
     public ASTNode typeCheck() throws Exception {
-        this.ast = getASTFromString(this.testName, this.monty.value(), false);
+        this.ast = createAST(false);
         return this.ast;
     }
 
     public ASTNode compile() throws Exception {
-        this.ast = getASTFromString(this.testName, this.monty.value(), true);
+        this.ast = createAST(true);
         return this.ast;
     }
 
@@ -97,11 +107,6 @@ public class CompileRule implements TestRule {
                     }
                 }
             }
-
-            @Override
-            protected void onEnterEachNode(ASTNode node) {
-
-            }
         });
     }
 
@@ -122,26 +127,32 @@ public class CompileRule implements TestRule {
         });
     }
 
-    /**
-     * Creates an AST by parsing the given {@code code}.
-     *
-     * @param testFileName Name for the generated dot file.
-     * @param code The code to parse.
-     * @return Root of the AST.
-     * @throws Exception
-     */
-    private ASTNode getASTFromString(String testFileName, String code, boolean full) throws Exception {
-        final Params params = new Params();
-        params.setInputCode(code);
-        return createAST(testFileName, params, full);
+    private File asFile(String fileName) {
+        final ClassLoader cl = getClass().getClassLoader();
+        final URL url = cl.getResource(TEST_DIR + fileName);
+        if (url == null) {
+            throw new IllegalArgumentException(
+                    String.format("%s not found in %s", fileName, TEST_DIR));
+        }
+        return new File(url.getPath());
     }
 
-    private ASTNode createAST(String testFilename, Params params, boolean full) throws Exception {
+    private ASTNode createAST(boolean full) throws Exception {
+        final Params params = new Params();
+        if (this.montyResource != null) {
+            final File file = asFile(this.montyResource.value());
+            final File inputFolder = file.getParentFile();
+            params.setInputFile(file.getAbsolutePath());
+            params.setInputFolder(inputFolder.getAbsolutePath());
+        } else {
+            params.setInputCode(this.monty.value());
+        }
         final PackageBuilder builder = new PackageBuilder(params);
         final Package mainPackage = builder.buildPackage();
-        executeVisitorChain(testFilename, params, full, mainPackage);
+        executeVisitorChain(this.testName, params, full, mainPackage);
         return mainPackage;
     }
+
 
     private void executeVisitorChain(String testFileName, Params params,
             boolean full, ASTNode root) throws Exception {
@@ -161,6 +172,7 @@ public class CompileRule implements TestRule {
         visitors.add(new QuantumTypeErasor9k());
 
         if (full) {
+            visitors.add(new ControlFlowVisitor());
             visitors.add(new NameManglingVisitor());
             visitors.add(new CodeGenerationVisitor(params));
         }

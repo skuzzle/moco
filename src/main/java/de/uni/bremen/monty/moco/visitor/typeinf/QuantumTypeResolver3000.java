@@ -416,7 +416,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
                 node.getElseExpression());
 
         if (!common.isPresent()) {
-            reportError(node, "%s is not a %s", node.getThenExpression().getType(),
+            reportError(node, "Conditional branches type mismatch: %s != %s", node.getThenExpression().getType(),
                     node.getElseExpression().getType());
         }
         node.setType(common.get());
