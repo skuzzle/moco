@@ -254,6 +254,7 @@ public class Scope implements TypeContext {
      */
     public TypeDeclaration resolveType(Location positionHint,
             ResolvableIdentifier identifier) {
+
 		try {
             final Declaration declaration = resolve(positionHint, identifier);
 			if (declaration instanceof TypeDeclaration) {

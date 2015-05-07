@@ -25,8 +25,10 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType.ClassNamed;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
+import de.uni.bremen.monty.moco.ast.expression.CastExpression;
 import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
+import de.uni.bremen.monty.moco.ast.expression.IsExpression;
 import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
 import de.uni.bremen.monty.moco.ast.expression.ParentExpression;
 import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
@@ -67,48 +69,48 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
 
         final Scope scope = node.getScope();
         final ResolvableIdentifier typeName = node.getIdentifier();
-        final Type typeBinding = scope.resolveTypeBinding(node, node.getIdentifier());
 
+        final TypeDeclaration nodeDecl;
         if (typeName.isTypeVariableIdentifier() &&
-            node.getParentNode() instanceof TypeInstantiation) {
+                node.getParentNode() instanceof TypeInstantiation) {
             // forbidden case: typename < ? >
             reportError(node,
-                    "Type can not be quantified with anonymous type variable");
-        } else if (typeBinding.isVariable() && !node.getTypeArguments().isEmpty()) {
+                "Type can not be quantified with anonymous type variable");
+            return;
+        } else if (typeName.isTypeVariableIdentifier()) {
+            final Type nodeType = TypeVariable.anonymous().atLocation(node).createType();
+            final TypeVariableDeclaration typeVarDecl = new TypeVariableDeclaration(
+                    node.getPosition(), nodeType.getName());
+            typeVarDecl.setArtificial(true);
+            typeVarDecl.setType(nodeType);
+            nodeDecl = typeVarDecl;
+            scope.define(typeVarDecl);
+        } else {
+            nodeDecl = scope.resolveType(node, node.getIdentifier());
+        }
+
+        resolveTypeOf(nodeDecl);
+        final boolean isTypeVariable = nodeDecl.getType().isVariable();
+
+        if (isTypeVariable && !node.getTypeArguments().isEmpty()) {
             // forbidden case typevar < typename >
             reportError(node, "Typevariables can not be quantified");
-        } else if (typeBinding.isVariable()) {
-            // case: '?' or single variable
+        } else if (isTypeVariable) {
+            // case: single variable
 
-            if (typeName.isTypeVariableIdentifier()) {
-                final TypeVariableDeclaration typeVar = new TypeVariableDeclaration(
-                        node.getPosition(), typeBinding.getName());
-                typeVar.setType(typeBinding);
-                typeVar.setArtificial(true);
-                node.setTypeDeclaration(typeVar);
-                scope.define(typeVar);
-            } else {
-                final TypeDeclaration typeDecl = scope.resolveType(node, typeName);
-                node.setTypeDeclaration(typeDecl);
-            }
+            node.setTypeDeclaration(nodeDecl);
             node.getTypeDeclaration().addUsage(node);
-            node.setType(typeBinding);
+            node.setType(nodeDecl.getType());
             node.setUnification(Unification.EMPTY);
             return;
         }
 
-        assert typeBinding.isClass();
-        final ClassType classBinding = typeBinding.asClass();
-
-        // Ensure that the referenced class's type has been resolved
-        final TypeDeclaration decl = node.getScope()
-                .resolveType(node, typeBinding.asClass());
-        resolveTypeOf(decl);
-        decl.addUsage(node);
+        nodeDecl.addUsage(node);
 
         // resolve nested quantifications
         super.visit(node);
 
+        final ClassType classBinding = nodeDecl.getType().asClass();
         if (node.getTypeArguments().size() != classBinding.getTypeParameters().size()) {
             reportError(node, "Type parameter count mismatch");
         }
@@ -125,10 +127,10 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
                 .simultaneousFor(typeArgs)
                 .merge(merged);
 
-        final Type instance = unification.apply(typeBinding);
+        final Type instance = unification.apply(nodeDecl.getType());
         node.setType(instance);
         node.setUnification(unification);
-        node.setTypeDeclaration(decl);
+        node.setTypeDeclaration(nodeDecl);
     }
 
     @Override
@@ -221,7 +223,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
                     boolean foundEntry = false;
                     for (int i = 0; !foundEntry && i < virtualMethodTable.size(); i++) {
                         ProcedureDeclaration vmtEntry = virtualMethodTable.get(i);
-                        if (procDecl.matchesType(vmtEntry)) {
+                        if (procDecl.overrides(vmtEntry)) {
                             virtualMethodTable.set(i, procDecl);
                             procDecl.setVMTIndex(vmtEntry.getVMTIndex());
                             foundEntry = true;
@@ -422,6 +424,27 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         node.setType(common.get());
         // TODO: use proper type declaration
         node.setTypeDeclaration(node.getThenExpression().getTypeDeclaration());
+    }
+
+    @Override
+    public void visit(CastExpression node) {
+        resolveTypeOf(node.getExpression());
+
+        final TypeDeclaration decl = node.getScope().resolveType(node,
+                node.getCastIdentifier());
+
+        resolveTypeOf(decl);
+        node.setType(decl.getType());
+        node.setTypeDeclaration(decl);
+    }
+
+    @Override
+    public void visit(IsExpression node) {
+        final TypeDeclaration decl = node.getScope().resolveType(
+                node, node.getIsIdentifier());
+        resolveTypeOf(decl);
+        node.setType(CoreClasses.boolType().getType());
+        node.setTypeDeclaration(CoreClasses.boolType());
     }
 
     @Override

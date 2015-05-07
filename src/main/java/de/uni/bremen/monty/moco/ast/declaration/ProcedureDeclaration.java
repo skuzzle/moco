@@ -44,6 +44,7 @@ import java.util.List;
 import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
@@ -97,6 +98,14 @@ public class ProcedureDeclaration extends TypeDeclaration implements
 	public ProcedureDeclaration(Position position, Identifier identifier, Block body,
 	        List<VariableDeclaration> parameter) {
 		this(position, identifier, body, parameter, DeclarationType.UNBOUND);
+	}
+
+	public boolean overrides(ProcedureDeclaration other) {
+	    return getIdentifier().equals(other.getIdentifier()) &&
+	            Unification.given(getScope())
+	                    .testIf(getType().asFunction().getParameters())
+	                    .isA(other.getType().asFunction().getParameters())
+	                    .isSuccessful();
 	}
 
     /**

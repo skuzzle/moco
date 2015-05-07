@@ -55,6 +55,7 @@ import de.uni.bremen.monty.moco.util.Params;
 import de.uni.bremen.monty.moco.util.ParseTreePrinter;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 import de.uni.bremen.monty.moco.visitor.CodeGenerationVisitor;
+import de.uni.bremen.monty.moco.visitor.ControlFlowVisitor;
 import de.uni.bremen.monty.moco.visitor.DeclarationVisitor;
 import de.uni.bremen.monty.moco.visitor.DotVisitor;
 import de.uni.bremen.monty.moco.visitor.NameManglingVisitor;
@@ -98,6 +99,7 @@ public class Main {
                 new DeclarationVisitor(),
                 new QuantumTypeResolver3000(),
                 new QuantumTypeErasor9k(),
+                new ControlFlowVisitor(),
                 new NameManglingVisitor(),
                 new CodeGenerationVisitor(params)
         };

@@ -17,10 +17,11 @@ import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 public class ConstructorCallTest extends AbstractTypeInferenceTest {
 
     @Test
-    @Monty("class Circle:\n" +
-        "    pass\n" +
-        "test():\n" +
-        "    ? var := Circle()"
+    @Monty(
+    "class Circle:\n" +
+    "    pass\n" +
+    "test():\n" +
+    "    ? var := Circle()"
     )
     public void testAssignCtorCallToDeclaration() throws Exception {
         this.compiler.compile();
@@ -45,9 +46,24 @@ public class ConstructorCallTest extends AbstractTypeInferenceTest {
 
     @Test
     @Monty(
-        "class Foo<X>:\n" +
-        "    +initializer():\n" +
-        "        return 5"
+    "class A:\n" +
+    "    +initializer():\n" +
+    "        pass\n" +
+    "class B inherits A:\n" +
+    "    +initializer():\n" +
+    "        pass\n" +
+    "A a := A()\n" +
+    "A b := B()"
+    )
+    public void testAssignSubTypeConstructor() throws Exception {
+        this.compiler.typeCheck();
+    }
+
+    @Test
+    @Monty(
+    "class Foo<X>:\n" +
+    "    +initializer():\n" +
+    "        return 5"
     )
     public void testConstructorReturnsValue() throws Exception {
         typeCheckAndExpectFailure("must not return a value");
@@ -55,9 +71,9 @@ public class ConstructorCallTest extends AbstractTypeInferenceTest {
 
     @Test
     @Monty(
-        "class Foo<X>:\n" +
-        "    +<X> initializer(X x):\n" +
-        "        pass"
+    "class Foo<X>:\n" +
+    "    +<X> initializer(X x):\n" +
+    "        pass"
     )
     public void testConstructorWithExplicitTypeArg() throws Exception {
         typeCheckAndExpectFailure("can not redeclare generic");
