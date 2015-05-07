@@ -57,8 +57,10 @@ import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 import de.uni.bremen.monty.moco.visitor.CodeGenerationVisitor;
 import de.uni.bremen.monty.moco.visitor.DeclarationVisitor;
 import de.uni.bremen.monty.moco.visitor.DotVisitor;
+import de.uni.bremen.monty.moco.visitor.NameManglingVisitor;
 import de.uni.bremen.monty.moco.visitor.PrintVisitor;
 import de.uni.bremen.monty.moco.visitor.SetParentVisitor;
+import de.uni.bremen.monty.moco.visitor.typeinf.QuantumTypeErasor9k;
 import de.uni.bremen.monty.moco.visitor.typeinf.QuantumTypeResolver3000;
 
 public class Main {
@@ -94,7 +96,10 @@ public class Main {
         final BaseVisitor[] visitors = new BaseVisitor[] {
                 new SetParentVisitor(),
                 new DeclarationVisitor(),
-                new QuantumTypeResolver3000()
+                new QuantumTypeResolver3000(),
+                new QuantumTypeErasor9k(),
+                new NameManglingVisitor(),
+                new CodeGenerationVisitor(params)
         };
 
 		boolean everyThingIsAwesome = true;
