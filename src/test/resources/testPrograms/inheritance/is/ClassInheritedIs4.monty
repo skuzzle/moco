@@ -1,14 +1,14 @@
 // Testing: ClassDeclaration with single inheritance and inheritance check.
 //
-// Types Ab and Ba are statically incompatible, thus the 'is' operator should not be 
-// allowed.
+// The type-check of an instance of B bound to a variable of type A must be
+// false.
 //
-// Expected output: Impossible cast
+// Expected output: Ok
 
 class Ab:
     pass
 
-class Ba:
+class Ba inherits Ab:
     pass
 
 Ab a := Ab()
