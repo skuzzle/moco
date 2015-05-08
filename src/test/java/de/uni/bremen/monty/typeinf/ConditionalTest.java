@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import de.uni.bremen.monty.moco.util.Monty;
 
-public class TestConditional extends AbstractTypeInferenceTest {
+public class ConditionalTest extends AbstractTypeInferenceTest {
 
     @Test
     @Monty(

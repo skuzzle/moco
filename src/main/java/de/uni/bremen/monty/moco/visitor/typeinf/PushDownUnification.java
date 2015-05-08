@@ -1,6 +1,7 @@
 package de.uni.bremen.monty.moco.visitor.typeinf;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
+import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
@@ -45,6 +46,9 @@ final class PushDown {
                 final Typed typedNode = (Typed) node;
                 final Type unified = this.unification.apply(typedNode);
                 typedNode.setType(unified);
+
+                final TypeDeclaration raw = node.getScope().resolveRawType(node, unified);
+                typedNode.setTypeDeclaration(raw);
             }
         }
 

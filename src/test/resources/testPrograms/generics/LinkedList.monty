@@ -1,11 +1,10 @@
 class LinkedList<T>:
-    -BaseNode<T> tail
     -BaseNode<T> head
+    -BaseNode<T> tail := EmptyNode<T>()
     -Int size
     
     +initializer():
         self.head := EmptyNode<T>()
-        self.tail := EmptyNode<T>()
         self.size := 0
 
     +? isEmpty():
@@ -15,8 +14,8 @@ class LinkedList<T>:
         return self.size
         
     +? get(Int index):
-        Int i := 0
-        BaseNode<T> current := self.head
+        ? i := 0
+        ? current := self.head
         while (i < index) and (current is Node):
             current := (current as Node<T>).next
             i += 1
@@ -32,9 +31,9 @@ class LinkedList<T>:
         self.size += 1
 
     +? contains(T element):
-        BaseNode<T> current := self.head
+        ? current := self.head
         while (current is Node):
-            Node<T> c := current as Node<T>
+            ? c := current as Node<T>
 
             if self.dataEquals(c.data, element):
                 return true

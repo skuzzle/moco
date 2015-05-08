@@ -357,7 +357,6 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
                     node.getLeft().getType());
         }
 
-        PushDown.unification(unification).into(node);
         if (node.getLeft() instanceof VariableAccess) {
             ((VariableAccess) node.getLeft()).setLValue();
         } else if (node.getLeft() instanceof MemberAccess) {
@@ -368,6 +367,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         } else {
             reportError(node, "Left side is no variable");
         }
+        PushDown.unification(unification).into(node);
     }
 
     @Override

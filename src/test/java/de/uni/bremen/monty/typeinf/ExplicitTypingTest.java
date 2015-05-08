@@ -14,7 +14,7 @@ import de.uni.bremen.monty.moco.util.TestResource;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 
-public class TestExplicitTyping extends AbstractTypeInferenceTest {
+public class ExplicitTypingTest extends AbstractTypeInferenceTest {
 
     @Test
     @TestResource("explicit.monty")
