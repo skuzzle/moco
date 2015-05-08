@@ -81,6 +81,7 @@ class CallTypeResolver extends TypeResolverFragment {
             if (!(typeDecl instanceof ClassDeclaration)) {
                 reportError(call, "<%s> is not callable", call.getIdentifier());
             }
+            resolveTypeOf(typeDecl);
             call.setConstructorCall(typeDecl);
             return true;
         } catch (UnknownTypeException | UnknownIdentifierException e) {

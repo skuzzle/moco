@@ -10,7 +10,6 @@ import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.Scope;
 
 public class Function extends Type {
 
@@ -154,6 +153,11 @@ public class Function extends Type {
         this.quantification = Collections.unmodifiableList(quantification);
     }
 
+    @Override
+    public int distanceToObject() {
+        throw new UnsupportedOperationException("distanceToObject on Function type");
+    }
+
     public Type getReturnType() {
         return this.returnType;
     }
@@ -168,11 +172,6 @@ public class Function extends Type {
 
     public List<Type> getQuantification() {
         return this.quantification;
-    }
-
-    @Override
-    public Function fresh(Scope scope) {
-        return Unification.fresh(this, scope);
     }
 
     @Override
@@ -219,7 +218,6 @@ public class Function extends Type {
     @Override
     public String toString() {
         final StringBuilder b = new StringBuilder();
-        b.append(getName().getSymbol());
         final Iterator<Type> qunatIt = getQuantification().iterator();
         if (qunatIt.hasNext()) {
             b.append("<");
@@ -231,17 +229,16 @@ public class Function extends Type {
             }
             b.append(">");
         }
+        b.append(getName().getSymbol());
         final Iterator<Type> it = getParameterTypes().iterator();
-        if (!it.hasNext()) {
-            b.append("()");
-        }
+        b.append("(");
         while (it.hasNext()) {
             b.append(it.next());
             if (it.hasNext()) {
                 b.append(" x ");
             }
         }
-        b.append(" -> ");
+        b.append(") -> ");
         b.append(this.returnType);
         return b.toString();
     }

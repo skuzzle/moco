@@ -10,6 +10,11 @@ public class MonoType extends Type {
     }
 
     @Override
+    public int distanceToObject() {
+        throw new UnsupportedOperationException("distanceToObject on mono type");
+    }
+
+    @Override
     MonoType apply(Unification unification) {
         return this;
     }

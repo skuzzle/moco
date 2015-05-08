@@ -6,7 +6,6 @@ import java.util.List;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.util.DebugUtil;
 
 public abstract class Type implements Location {
@@ -44,20 +43,16 @@ public abstract class Type implements Location {
         return this.name;
     }
 
+    /**
+     * Gets the length of the shortest path to the root of the inheritance graph
+     *
+     * @return The distance to the Object class.
+     */
+    public abstract int distanceToObject();
+
     @Override
     public Position getPosition() {
         return this.positionHint;
-    }
-
-    /**
-     * Creates a structural identical type from this one, replacing all bound
-     * type variables with fresh mono types.
-     *
-     * @param scope The current scope.
-     * @return A fresh copy of this type.
-     */
-    public Type fresh(Scope scope) {
-        return Unification.fresh(this, scope);
     }
 
     /**

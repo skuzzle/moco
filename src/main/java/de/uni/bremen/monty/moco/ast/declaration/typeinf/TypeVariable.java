@@ -66,6 +66,13 @@ public class TypeVariable extends Type {
     }
 
     @Override
+    public int distanceToObject() {
+        // Type variables count as object itself (as long as we have no bounded
+        // quantification)
+        return 0;
+    }
+
+    @Override
     Type apply(Unification unification) {
         return unification.getSubstitute(this);
     }

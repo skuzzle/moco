@@ -767,8 +767,11 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	}
 
 	private CastExpression visitCastExpression(ExpressionContext ctx) {
+	    final TypeInstantiation.Builder builder = TypeInstantiation.forTypeName(
+	            ctx.type().ClassIdentifier().getText());
+	    collectTypeArgs(builder, ctx.type().typeList());
         return new CastExpression(position(ctx.getStart()), (Expression) visit(ctx.expr),
-                ResolvableIdentifier.of(getText(ctx.ClassIdentifier())));
+                builder.create());
 	}
 
 	private IsExpression visitIsExpression(ExpressionContext ctx) {

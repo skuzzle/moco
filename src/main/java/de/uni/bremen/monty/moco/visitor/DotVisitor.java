@@ -226,6 +226,7 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
         printExpression(node);
         super.visit(node);
         this.dotBuilder.printEdge(node, node.getExpression(), "");
+        this.dotBuilder.printEdge(node, node.getCastIdentifier(), "target");
     }
 
     @Override

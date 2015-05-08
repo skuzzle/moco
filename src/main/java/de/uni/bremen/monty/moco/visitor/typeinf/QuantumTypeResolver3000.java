@@ -306,13 +306,13 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         resolveTypeOf(node.getLeft());
         assert node.getLeft().isTypeResolved();
 
+        final ClassType instanceType;
         if (node.getLeft().getType().isVariable()) {
-            reportError(node.getLeft(), "Could not infer left hand type of member access");
+            instanceType = CoreClasses.objectType().getType().asClass();
+        } else {
+            instanceType = node.getLeft().getType().asClass();
         }
-        assert node.getLeft().getType().isClass();
-        final ClassType instanceType = node.getLeft().getType().asClass();
         final TypeDeclaration raw = node.getScope().resolveType(node, instanceType);
-
         final Unification subst = Unification.testIf(raw.getType()).isA(instanceType);
         // Resolve type of the right hand node in the scope of the left hand
         // node. This will yield the raw (declared type) of the right hand node.
@@ -440,7 +440,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         resolveTypeOf(node.getThenExpression());
         resolveTypeOf(node.getElseExpression());
 
-        final Optional<Type> common = TypeHelper.findLeastCommonSuperTyped(
+        final Optional<Type> common = TypeHelper.findCommonTyped(node.getScope(),
                 node.getThenExpression(),
                 node.getElseExpression());
 
@@ -468,13 +468,10 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
     @Override
     public void visit(CastExpression node) {
         resolveTypeOf(node.getExpression());
+        resolveTypeOf(node.getCastIdentifier());
 
-        final TypeDeclaration decl = node.getScope().resolveType(node,
-                node.getCastIdentifier());
-
-        resolveTypeOf(decl);
-        node.setType(decl.getType());
-        node.setTypeDeclaration(decl);
+        node.setType(node.getCastIdentifier().getType());
+        node.setTypeDeclaration(node.getCastIdentifier().getTypeDeclaration());
     }
 
     @Override

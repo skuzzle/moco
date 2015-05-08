@@ -9,6 +9,11 @@ public class IdentityType extends Type {
     }
 
     @Override
+    public int distanceToObject() {
+        throw new UnsupportedOperationException("distanceToObject on identity type");
+    }
+
+    @Override
     public boolean equals(Object obj) {
         return obj == this;
     }

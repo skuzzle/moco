@@ -9,7 +9,6 @@ import java.util.Map.Entry;
 import java.util.stream.Stream;
 
 import de.uni.bremen.monty.moco.ast.CoreClasses;
-import de.uni.bremen.monty.moco.ast.Scope;
 
 /**
  * Unification is the process of determining structural equality of two
@@ -225,37 +224,6 @@ public class Unification {
             throw new IllegalArgumentException("subst is null");
         }
         return new Unification(true, subst);
-    }
-
-    /**
-     * Creates a unification for substituting all bound variables with fresh
-     * mono types.
-     *
-     * @param scope The scope in which to determine whether a variable is free
-     *            or bound.
-     * @return A new unification which substitutes bound variables.
-     */
-    private static Unification substituteFresh(Scope scope) {
-        if (scope == null) {
-            throw new IllegalArgumentException("scope is null");
-        }
-        return new Unification(true, new HashMap<>()) {
-            @Override
-            Type getSubstitute(TypeVariable other) {
-                Type subst = this.subst.get(other);
-                if (subst == null && !scope.isFree(other)) {
-                    subst = new MonoType(other.getName(), other.getPosition());
-                    this.subst.put(other, subst);
-                } else if (subst == null) {
-                    subst = other;
-                }
-                return subst;
-            }
-        };
-    }
-
-    static <T extends Type> T fresh(T type, Scope scope) {
-        return substituteFresh(scope).apply(type);
     }
 
     private final boolean success;

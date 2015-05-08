@@ -73,7 +73,12 @@ public class Product extends Type {
         this.components = Collections.unmodifiableList(components);
     }
 
-    public List<Type> getComponents() {
+    @Override
+    public int distanceToObject() {
+        throw new UnsupportedOperationException("distanceToObject on Product type");
+    }
+
+    public final List<Type> getComponents() {
         return this.components;
     }
 

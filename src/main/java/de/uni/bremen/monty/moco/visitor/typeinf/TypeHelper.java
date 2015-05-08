@@ -3,6 +3,7 @@ package de.uni.bremen.monty.moco.visitor.typeinf;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,10 +16,10 @@ import java.util.stream.Collectors;
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Product;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeContext;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
@@ -36,22 +37,8 @@ public final class TypeHelper {
         // hidden
     }
 
-    public static Optional<Type> findLeastCommonSuperTyped(Typed... typedNodes) {
-        return findLeastCommonSuperType(Arrays.stream(typedNodes)
-                .map(Typed::getType)
-                .collect(Collectors.toList()));
-    }
-
-    /**
-     * Finds the most specialized, common super type of all types in the given
-     * list. The computation should always yield a result as all types inherit
-     * from Object. If this is not the case for the input, an exception will be
-     * thrown.
-     *
-     * @param types A list of types.
-     * @return The common super type.
-     */
-    public static Optional<Type> findLeastCommonSuperType(Collection<Type> types) {
+    public static Optional<Type> findCommonType(Set<Type> types,
+            TypeContext scope) {
         if (types.size() == 1) {
             return Optional.of(types.iterator().next());
         }
@@ -66,45 +53,48 @@ public final class TypeHelper {
         if (hasVoid && hasNoneVoid) {
             return Optional.empty();
         } else if (hasVoid) {
-            return Optional.of(CoreClasses.voidType().getType());
+            // this should not happen as input is a set
+            throw new IllegalStateException("two different void types around");
         }
 
+        final Map<Type, Set<Type>> typeMap = new HashMap<>(types.size());
+        for (final Type outer : types) {
+            for (final Type inner : types) {
+                if (inner == outer) {
+                    continue;
+                }
 
-        final Map<Type, Set<ClassType>> superTypeMap = new HashMap<>();
-        // For each type, collect super types
-        final Set<ClassType> commonTypes = new HashSet<>();
-        for (final Type type : types) {
-            final Set<ClassType> superTypes = new HashSet<>();
-            traverseSuperTypes(type.asClass(), superTypes);
-            superTypeMap.put(type, superTypes);
-            commonTypes.addAll(superTypes);
-        }
+                final Unification u1 = Unification.given(scope).testIf(outer).isA(inner);
 
-        // build intersection of all encountered super types
-        for (final Set<ClassType> superTypes : superTypeMap.values()) {
-            commonTypes.retainAll(superTypes);
-        }
-        if (commonTypes.isEmpty()) {
-            return Optional.empty();
-        }
-
-        // Chose the most concrete type
-        ClassType minDistanceType = null;
-        for (final ClassType type : commonTypes) {
-            int dist = type.distanceToObject();
-            if (minDistanceType == null || dist > minDistanceType.distanceToObject()) {
-                minDistanceType = type;
+                Type commonInner = outer;
+                if (u1.isSuccessful()) {
+                    commonInner = inner;
+                } else {
+                    final Unification u2 = Unification.given(scope).testIf(inner).isA(outer);
+                    if (u2.isSuccessful()) {
+                        commonInner = outer;
+                    }
+                }
+                typeMap.computeIfAbsent(outer, type -> new HashSet<>()).add(commonInner);
             }
         }
-        return Optional.of(minDistanceType);
+
+        final Iterator<Set<Type>> it = typeMap.values().iterator();
+        Set<Type> current = it.next();
+        while (it.hasNext()) {
+            current.retainAll(it.next());
+        }
+        final Comparator<Type> byDistance = Comparator
+                .comparing(Type::distanceToObject)
+                .reversed();
+
+        return current.stream().sorted(byDistance).findFirst();
     }
 
-    private static void traverseSuperTypes(ClassType current, Set<ClassType> types) {
-        if (types.add(current)) {
-            for (final ClassType parent : current.getSuperClasses()) {
-                traverseSuperTypes(parent, types);
-            }
-        }
+    public static Optional<Type> findCommonTyped(TypeContext scope, Typed... typedNodes) {
+        return findCommonType(Arrays.stream(typedNodes)
+                .map(Typed::getType)
+                .collect(Collectors.toSet()), scope);
     }
 
     /**
@@ -239,13 +229,13 @@ public final class TypeHelper {
             int rating = rateSignature(unification, callType.getParameters(),
                     candidateType.getParameters());
 
-            if (rating < bestRating) {
-                matches.clear();
+            if (rating <= bestRating) {
+                if (rating < bestRating) {
+                    matches.clear();
+                }
                 bestRating = rating;
                 matches.add(candidate);
                 bestUnification = unification;
-            } else if (bestRating == rating) {
-                matches.add(candidate);
             }
         }
 
@@ -281,7 +271,7 @@ public final class TypeHelper {
             return 0;
         } else if (t1.isClass() && t2.isClass()) {
             return Math.abs(t1.asClass().distanceToObject()
-                    - t2.asClass().distanceToObject());
+                - t2.asClass().distanceToObject());
         } else if (t1.isVariable() || t2.isVariable()) {
             // TODO: XOR instead of OR?
             return Integer.MAX_VALUE - 1;

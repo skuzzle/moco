@@ -13,7 +13,6 @@ import java.util.Set;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
-import de.uni.bremen.monty.moco.ast.Scope;
 
 public class ClassType extends Type {
 
@@ -136,13 +135,9 @@ public class ClassType extends Type {
         }
     }
 
+    @Override
     public int distanceToObject() {
         return this.distanceToObject;
-    }
-
-    @Override
-    public ClassType fresh(Scope scope) {
-        return Unification.fresh(this, scope);
     }
 
     @Override

@@ -179,7 +179,7 @@ class ProcedureTypeResolver extends TypeResolverFragment {
         resolveTypeOf(node.getBody());
 
         final Collection<ReturnStatement> stmts = node.getReturnStatements();
-        final Collection<Type> returnTypes = stmts.stream()
+        final Set<Type> returnTypes = stmts.stream()
                 .map(stmt -> stmt.getParameter() == null
                         ? CoreClasses.voidType().getType()
                         : stmt.getParameter().getType())
@@ -196,6 +196,6 @@ class ProcedureTypeResolver extends TypeResolverFragment {
             }
             return Optional.of(CoreClasses.voidType().getType());
         }
-        return TypeHelper.findLeastCommonSuperType(returnTypes);
+        return TypeHelper.findCommonType(returnTypes, node.getScope());
     }
 }
