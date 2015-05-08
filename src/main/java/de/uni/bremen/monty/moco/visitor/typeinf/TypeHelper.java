@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
@@ -35,6 +36,26 @@ public final class TypeHelper {
 
     private TypeHelper() {
         // hidden
+    }
+
+
+    public static void testIsPossibleCast(TypeResolver resolver, Location location,
+            Typed from, Typed to) {
+        final Unification u1 = Unification
+                .testIf(from)
+                .isA(to);
+
+        if (!u1.isSuccessful()) {
+            final Unification u2 = Unification
+                    .testIf(to)
+                    .isA(from);
+
+            if (!u2.isSuccessful()) {
+                resolver.reportError(location, "Impossible cast: <%s> to <%s>",
+                        from.getType(),
+                        to.getType());
+            }
+        }
     }
 
     public static Optional<Type> findCommonType(Set<Type> types,

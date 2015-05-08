@@ -1,4 +1,4 @@
-///*
+// *
 // * moco, the Monty Compiler
 // * Copyright (c) 2013-2014, Monty's Coconut, All rights reserved.
 // *
@@ -35,35 +35,6 @@
 // *
 // * You should have received a copy of the GNU General Public
 // * Licensimport java.util.ArrayList;
-import java.util.List;
-
-import de.uni.bremen.monty.moco.ast.ASTNode;
-import de.uni.bremen.monty.moco.ast.ClassScope;
-import de.uni.bremen.monty.moco.ast.CoreClasses;
-import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
-import de.uni.bremen.monty.moco.ast.Scope;
-import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.Declaration;
-import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
-import de.uni.bremen.monty.moco.ast.expression.CastExpression;
-import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
-import de.uni.bremen.monty.moco.ast.expression.Expression;
-import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
-import de.uni.bremen.monty.moco.ast.expression.IsExpression;
-import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
-import de.uni.bremen.monty.moco.ast.expression.ParentExpression;
-import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
-import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
-import de.uni.bremen.monty.moco.ast.expression.literal.ArrayLiteral;
-import de.uni.bremen.monty.moco.ast.expression.literal.BooleanLiteral;
-import de.uni.bremen.monty.moco.ast.expression.literal.CharacterLiteral;
-import de.uni.bremen.monty.moco.ast.expression.literal.FloatLiteral;
-import de.uni.bremen.monty.moco.ast.expression.literal.IntegerLiteral;
-import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
-import de.uni.bremen.monty.moco.exception.UnknownTypeException;
 ;
 //import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 //import de.uni.bremen.monty.moco.exception.UnknownTypeException;

@@ -473,6 +473,9 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         resolveTypeOf(node.getExpression());
         resolveTypeOf(node.getCastIdentifier());
 
+        TypeHelper.testIsPossibleCast(this, node, node.getExpression(),
+                node.getCastIdentifier());
+
         node.setType(node.getCastIdentifier().getType());
         node.setTypeDeclaration(node.getCastIdentifier().getTypeDeclaration());
     }
@@ -484,6 +487,8 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         final TypeDeclaration decl = node.getScope().resolveType(
                 node, node.getIsIdentifier());
         resolveTypeOf(decl);
+
+        TypeHelper.testIsPossibleCast(this, node, node.getExpression(), decl);
 
         node.setToType(decl);
         node.setType(CoreClasses.boolType().getType());

@@ -28,6 +28,22 @@ public class CastingTest extends AbstractTypeInferenceTest {
 
     @Test
     @Monty(
+    "Int a := \"foo\" as Int"
+    )
+    public void testImpossibleCast() throws Exception {
+        typeCheckAndExpectFailure("Impossible cast");
+    }
+
+    @Test
+    @Monty(
+    "Bool x := (5 is Bool)"
+    )
+    public void testImpossibleInstance() throws Exception {
+        typeCheckAndExpectFailure("Impossible cast");
+    }
+
+    @Test
+    @Monty(
     "class Foo<X>:\n" +
     "     pass\n" +
     "Object a := Foo<String>()\n" +
