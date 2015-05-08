@@ -25,6 +25,19 @@ public class ImplicitGenericsTest extends AbstractTypeInferenceTest {
 
     @Test
     @Monty(
+    "? isEmpty():\n" +
+    "    return true"
+    )
+    public void testInferReturnType() throws Exception {
+        this.compiler.compile();
+        final FunctionDeclaration decl = this.compiler.searchFor(
+                FunctionDeclaration.class, Predicates.hasName("isEmpty"));
+
+        assertEquals(CoreClasses.boolType(), decl.getTypeDeclaration());
+    }
+
+    @Test
+    @Monty(
     "? x := identity<>(\"5\")\n" +
     "<A> ? identity(A a):\n" +
     "    return a"

@@ -501,7 +501,7 @@ public class CodeGenerator {
 		LLVMIdentifier<LLVMPointer<LLVMFunctionType>> functionPointer =
 		        getFunctionPointer(c, (LLVMIdentifier<LLVMPointer<LLVMType>>) resolvedArguments.get(0), declaration);
 
-		final TypeDeclaration returnType = declaration.getReturnTypeIdentifier().getTypeDeclaration();
+		final TypeDeclaration returnType = declaration.getTypeDeclaration();
 		return c.call(
 		        (LLVMIdentifier<LLVMType>) (LLVMIdentifier<?>) resolveIfNeeded(c, functionPointer),
 		        this.llvmIdentifierFactory.newLocal(mapToLLVMType(returnType), false),

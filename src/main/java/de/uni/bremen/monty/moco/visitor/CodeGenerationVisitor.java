@@ -56,6 +56,8 @@ import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
+import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.CastExpression;
 import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
@@ -190,6 +192,16 @@ public class CodeGenerationVisitor extends BaseVisitor {
 
 	protected void writeData() throws IOException {
 		this.codeWriter.write(this.contextUtils.getData());
+	}
+
+	@Override
+	public void visit(TypeInstantiation node) {
+
+	}
+
+	@Override
+	public void visit(TypeVariableDeclaration node) {
+
 	}
 
 	@Override

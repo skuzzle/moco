@@ -1,0 +1,69 @@
+class LinkedList<T>:
+    -BaseNode<T> tail
+    -BaseNode<T> head
+    -Int size
+    
+    +initializer():
+        self.head := EmptyNode<T>()
+        self.tail := EmptyNode<T>()
+        self.size := 0
+
+    +? isEmpty():
+        return self.size = 0
+
+    +? size():
+        return self.size
+        
+    +? get(Int index):
+        Int i := 0
+        BaseNode<T> current := self.head
+        while (i < index) and (current is Node):
+            current := (current as Node<T>).next
+            i += 1
+        return (current as Node<T>).data
+
+    +add(T element):
+        ? node := Node(element, EmptyNode<T>())
+        if self.isEmpty():
+            self.tail := node
+            self.head := node
+        else:
+            (self.tail as Node<T>).next := node
+        self.size += 1
+
+    +? contains(T element):
+        BaseNode<T> current := self.head
+        while (current is Node):
+            Node<T> c := current as Node<T>
+
+            if self.dataEquals(c.data, element):
+                return true
+            current := c.next
+        return false
+        
+    -? dataEquals(T t1, T t2):
+        return false
+
+class BaseNode<T>:
+    +initializer():
+        pass
+
+class EmptyNode<T> inherits BaseNode<T>:
+    +initializer():
+        pass
+    
+class Node<T> inherits BaseNode<T>:
+    -T data
+    +BaseNode<T> next
+    
+    +initializer(T data, BaseNode<T> next):
+        self.data := data
+        self.next := next
+        
+        
+? list := LinkedList<String>()
+list.add("1")
+list.add("2")
+print(list.size())
+print(list.get(0))
+print(list.get(1))

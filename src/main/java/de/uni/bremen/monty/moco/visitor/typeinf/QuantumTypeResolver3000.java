@@ -312,7 +312,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         } else {
             instanceType = node.getLeft().getType().asClass();
         }
-        final TypeDeclaration raw = node.getScope().resolveType(node, instanceType);
+        final TypeDeclaration raw = node.getScope().resolveRawType(node, instanceType);
         final Unification subst = Unification.testIf(raw.getType()).isA(instanceType);
         // Resolve type of the right hand node in the scope of the left hand
         // node. This will yield the raw (declared type) of the right hand node.
@@ -436,7 +436,6 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
     public void visit(ConditionalExpression node) {
         handleCondition(node.getCondition());
 
-        // TODO: find common type
         resolveTypeOf(node.getThenExpression());
         resolveTypeOf(node.getElseExpression());
 
@@ -450,13 +449,17 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
                     node.getElseExpression().getType());
         }
         node.setType(common.get());
-        // TODO: use proper type declaration
-        node.setTypeDeclaration(node.getThenExpression().getTypeDeclaration());
+        if (node.getType() == node.getThenExpression().getType()) {
+            node.setTypeDeclaration(node.getThenExpression().getTypeDeclaration());
+        } else {
+            node.setTypeDeclaration(node.getElseExpression().getTypeDeclaration());
+        }
     }
 
     private void handleCondition(Expression condition) {
         resolveTypeOf(condition);
         final Unification unification = Unification
+                .given(condition.getScope())
                 .testIf(condition)
                 .isA(CoreClasses.boolType().getType());
 

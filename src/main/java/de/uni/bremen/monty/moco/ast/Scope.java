@@ -49,7 +49,6 @@ import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeContext;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
@@ -231,10 +230,11 @@ public class Scope implements TypeContext {
 		}
 	}
 
-    public TypeDeclaration resolveType(Location location, ClassType typeBinding) {
+    public TypeDeclaration resolveRawType(Location location, Type typeBinding) {
         final ResolvableIdentifier typeName = ResolvableIdentifier
                 .of(typeBinding.getName());
-        return resolveType(location, typeName);
+        final TypeDeclaration decl = resolveType(location, typeName);
+        return decl;
     }
 
     public Type resolveTypeBinding(Location position, ResolvableIdentifier identifier) {

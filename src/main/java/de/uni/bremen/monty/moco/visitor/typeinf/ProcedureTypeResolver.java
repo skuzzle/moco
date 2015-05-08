@@ -15,6 +15,7 @@ import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
@@ -152,7 +153,9 @@ class ProcedureTypeResolver extends TypeResolverFragment {
                 .andParameters(signature)
                 .createType();
         node.setType(nodeType);
-        node.setTypeDeclaration(node.getReturnTypeIdentifier().getTypeDeclaration());
+        final TypeDeclaration typeDecl = node.getScope().resolveRawType(node,
+                nodeType.getReturnType());
+        node.setTypeDeclaration(typeDecl);
     }
 
     private List<Type> getTypeParametersForConstructor(

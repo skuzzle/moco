@@ -98,7 +98,7 @@ public class TypeConverter {
 		}
 		if (type instanceof FunctionDeclaration) {
 			FunctionDeclaration func = (FunctionDeclaration) type;
-			final TypeDeclaration returnType = func.getReturnTypeIdentifier().getTypeDeclaration();
+			final TypeDeclaration returnType = func.getTypeDeclaration();
 			return pointer(function(mapToLLVMType(returnType), parameter));
 		}
 		return pointer(function(voidType(), parameter));

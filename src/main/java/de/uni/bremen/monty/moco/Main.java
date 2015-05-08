@@ -86,13 +86,6 @@ public class Main {
 	}
 
 	private void visitVisitors(Params params, Package ast) throws IOException {
-
-        // final BaseVisitor[] visitors =
-        // new BaseVisitor[] { new SetParentVisitor(), new DeclarationVisitor(),
-        // new ResolveVisitor(),
-        // new TypeCheckVisitor(), new ControlFlowVisitor(),
-        // new NameManglingVisitor() };
-
         final BaseVisitor[] visitors = new BaseVisitor[] {
                 new SetParentVisitor(),
                 new DeclarationVisitor(),
