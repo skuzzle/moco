@@ -38,18 +38,21 @@
  */
 package de.uni.bremen.monty.moco.ast.statement;
 
-import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.BasicASTNode;
+import de.uni.bremen.monty.moco.ast.Block;
+import de.uni.bremen.monty.moco.ast.Conditional;
+import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
-public class ConditionalStatement extends BasicASTNode implements Statement {
+public class ConditionalStatement extends BasicASTNode implements Statement, Conditional {
 
 	private final Expression condition;
 	private final Block thenBlock;
 	private final Block elseBlock;
 
 	/** Constructor.
-	 * 
+	 *
 	 * @param position
 	 *            Position of this node
 	 * @param condition
@@ -66,24 +69,25 @@ public class ConditionalStatement extends BasicASTNode implements Statement {
 	}
 
 	/** get the condition
-	 * 
+	 *
 	 * @return the condition */
-	public Expression getCondition() {
-		return condition;
+	@Override
+    public Expression getCondition() {
+		return this.condition;
 	}
 
 	/** get the then block
-	 * 
+	 *
 	 * @return the then block */
 	public Block getThenBlock() {
-		return thenBlock;
+		return this.thenBlock;
 	}
 
 	/** get the else block
-	 * 
+	 *
 	 * @return the else block */
 	public Block getElseBlock() {
-		return elseBlock;
+		return this.elseBlock;
 	}
 
 	/** {@inheritDoc} */
@@ -95,9 +99,9 @@ public class ConditionalStatement extends BasicASTNode implements Statement {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
-		visitor.visitDoubleDispatched(condition);
-		visitor.visitDoubleDispatched(thenBlock);
-		visitor.visitDoubleDispatched(elseBlock);
+		visitor.visitDoubleDispatched(this.condition);
+		visitor.visitDoubleDispatched(this.thenBlock);
+		visitor.visitDoubleDispatched(this.elseBlock);
 	}
 
 }

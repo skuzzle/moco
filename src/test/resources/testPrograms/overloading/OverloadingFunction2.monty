@@ -3,7 +3,7 @@
 // The correct overloaded function in combination with different blocks must
 // be called.
 //
-// Expected output: :No2:i:s:f:b:No1
+// Expected output: :i:s:f:b:No1
 
 Bool function():
     print(":No1")
@@ -27,7 +27,7 @@ if true:
         print(":b")
         return false
 
-    function()
+    //function()
 
     function(42)
     function("Hallo")

@@ -205,4 +205,5 @@ public class ClassScope extends Scope {
 		}
 		return result;
 	}
+
 }

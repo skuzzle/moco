@@ -219,19 +219,17 @@ public class Function extends Type {
     @Override
     public String toString() {
         final StringBuilder b = new StringBuilder();
-        b.append(getName().getSymbol()).append(": ");
+        b.append(getName().getSymbol());
         final Iterator<Type> qunatIt = getQuantification().iterator();
-        if (!qunatIt.hasNext()) {
-            b.append("[]");
-        } else {
-            b.append("[");
+        if (qunatIt.hasNext()) {
+            b.append("<");
             while (qunatIt.hasNext()) {
                 b.append(qunatIt.next().toString());
                 if (qunatIt.hasNext()) {
                     b.append(", ");
                 }
             }
-            b.append("]");
+            b.append(">");
         }
         final Iterator<Type> it = getParameterTypes().iterator();
         if (!it.hasNext()) {

@@ -16,6 +16,10 @@ import de.uni.bremen.monty.moco.util.ASTUtil;
 
 public class Predicates {
 
+    public static <C extends ASTNode> Predicate<C> is(Object obj) {
+        return node -> node != null && node.equals(obj);
+    }
+
     public static <C extends VariableDeclaration> Predicate<C> declarationTypeIs(
             DeclarationType type) {
         return c -> c.getDeclarationType() == type;

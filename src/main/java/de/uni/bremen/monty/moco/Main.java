@@ -59,7 +59,6 @@ import de.uni.bremen.monty.moco.visitor.ControlFlowVisitor;
 import de.uni.bremen.monty.moco.visitor.DeclarationVisitor;
 import de.uni.bremen.monty.moco.visitor.DotVisitor;
 import de.uni.bremen.monty.moco.visitor.NameManglingVisitor;
-import de.uni.bremen.monty.moco.visitor.PrintVisitor;
 import de.uni.bremen.monty.moco.visitor.SetParentVisitor;
 import de.uni.bremen.monty.moco.visitor.typeinf.QuantumTypeErasor9k;
 import de.uni.bremen.monty.moco.visitor.typeinf.QuantumTypeResolver3000;
@@ -124,7 +123,7 @@ public class Main {
 		}
 
 		if (params.usePrintVisitor()) {
-			(new PrintVisitor()).visitDoubleDispatched(ast);
+			//(new PrintVisitor()).visitDoubleDispatched(ast);
             try (final DotVisitor v = DotVisitor.toFile(new File("ast.dot"), false)) {
 			    v.visitDoubleDispatched(ast);
 			} catch (IOException e) {

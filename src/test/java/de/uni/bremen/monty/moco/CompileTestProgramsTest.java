@@ -45,6 +45,7 @@ import static de.uni.bremen.monty.moco.IntegrationTestUtils.outputFileExists;
 import static de.uni.bremen.monty.moco.IntegrationTestUtils.setStdErr;
 import static de.uni.bremen.monty.moco.IntegrationTestUtils.setStdout;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyString;
 
@@ -85,10 +86,10 @@ public class CompileTestProgramsTest extends CompileFilesBaseTest {
 
 		if (outputFileExists(this.file)) {
 			assertThat(getOutput(errorStream), is(isEmptyString()));
-			assertThat(getOutput(outStream), is(expectedResultFromFile(this.file)));
+			assertThat(getOutput(outStream), containsString(expectedResultFromFile(this.file)));
 		} else {
 			// chop the last char to not contain /n in the string
-			assertThat(StringUtils.chop(getOutput(errorStream)), is(expectedErrorFromFile(this.file)));
+			assertThat(StringUtils.chop(getOutput(errorStream)), containsString(expectedErrorFromFile(this.file)));
 			assertThat(getOutput(outStream), is(isEmptyString()));
 		}
 		System.setOut(bufferOut);

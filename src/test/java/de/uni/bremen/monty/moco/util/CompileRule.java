@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -69,12 +71,28 @@ public class CompileRule implements TestRule {
     }
 
     public ASTNode typeCheck() throws Exception {
-        this.ast = createAST(false);
+        final Params params = createParams();
+        this.ast = createAST(params, Collections.emptyList());
+        return this.ast;
+    }
+
+    public ASTNode typeCheckAndErase() throws Exception {
+        final Params params = createParams();
+        this.ast = createAST(params,
+                Collections.singletonList(new QuantumTypeErasor9k()));
         return this.ast;
     }
 
     public ASTNode compile() throws Exception {
-        this.ast = createAST(true);
+        final Params params = createParams();
+        final List<BaseVisitor> additional = Arrays.asList(
+            new QuantumTypeErasor9k(),
+            new ControlFlowVisitor(),
+            new NameManglingVisitor(),
+            new CodeGenerationVisitor(params)
+        );
+
+        this.ast = createAST(params, additional);
         return this.ast;
     }
 
@@ -137,8 +155,9 @@ public class CompileRule implements TestRule {
         return new File(url.getPath());
     }
 
-    private ASTNode createAST(boolean full) throws Exception {
+    private Params createParams() {
         final Params params = new Params();
+        params.setGenerateOnlyLLVM(true);
         if (this.montyResource != null) {
             final File file = asFile(this.montyResource.value());
             final File inputFolder = file.getParentFile();
@@ -147,15 +166,21 @@ public class CompileRule implements TestRule {
         } else {
             params.setInputCode(this.monty.value());
         }
+        return params;
+    }
+
+    private ASTNode createAST(Params params, List<BaseVisitor> additionalVisitors)
+            throws Exception {
         final PackageBuilder builder = new PackageBuilder(params);
         final Package mainPackage = builder.buildPackage();
-        executeVisitorChain(this.testName, params, full, mainPackage);
+        executeVisitorChain(this.testName, params, additionalVisitors, mainPackage);
         return mainPackage;
     }
 
 
     private void executeVisitorChain(String testFileName, Params params,
-            boolean full, ASTNode root) throws Exception {
+            List<BaseVisitor> additionalVisitors, ASTNode root)
+                    throws Exception {
 
         final String llvmOutput = LLVM_OUTPUT + getFileName(testFileName) + ".ll";
         final File llvmDir = new File(LLVM_OUTPUT);
@@ -169,13 +194,8 @@ public class CompileRule implements TestRule {
         visitors.add(new SetParentVisitor());
         visitors.add(new DeclarationVisitor());
         visitors.add(new QuantumTypeResolver3000());
-        visitors.add(new QuantumTypeErasor9k());
+        visitors.addAll(additionalVisitors);
 
-        if (full) {
-            visitors.add(new ControlFlowVisitor());
-            visitors.add(new NameManglingVisitor());
-            visitors.add(new CodeGenerationVisitor(params));
-        }
         Exception error = null;
         for (final BaseVisitor bv : visitors) {
             try {

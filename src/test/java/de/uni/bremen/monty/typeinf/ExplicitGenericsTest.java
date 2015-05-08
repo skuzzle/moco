@@ -28,6 +28,39 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
     @Test
     @Monty(
+    "class A<X>:\n" +
+    "    pass\n" +
+    "class B inherits A<?>:\n" +
+    "    pass"
+    )
+    public void testInheritFromQuestionMark() throws Exception {
+        typeCheckAndExpectFailure("can not be quantified with anonymous");
+    }
+
+    @Test
+    @Monty(
+    "class A<X>:\n" +
+    "    pass\n" +
+    "class B<Y> inherits A<Y<A>>:\n" +
+    "    pass"
+    )
+    public void testTypeVariableyCanNotBeQuantified() throws Exception {
+        typeCheckAndExpectFailure("Typevariables can not be quantified");
+    }
+
+    @Test
+    @Monty(
+    "class A<X>:\n" +
+    "    pass\n" +
+    "class B<Y> inherits A<String, Int>:\n" +
+    "    pass"
+    )
+    public void testSpecifyIllegalQuantification() throws Exception {
+        typeCheckAndExpectFailure("count mismatch");
+    }
+
+    @Test
+    @Monty(
     "class Pair<A, B>:\n" +
     "    pass"
     )

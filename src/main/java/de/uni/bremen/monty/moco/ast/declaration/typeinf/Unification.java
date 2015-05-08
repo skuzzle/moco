@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
 
+import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Scope;
 
 /**
@@ -41,8 +42,8 @@ public class Unification {
         @Override
         public boolean equals(Object obj) {
             return obj == this || obj instanceof TypePair &&
-                    this.t1 == ((TypePair) obj).t1 &&
-                    this.t2 == ((TypePair) obj).t2;
+                this.t1 == ((TypePair) obj).t1 &&
+                this.t2 == ((TypePair) obj).t2;
         }
     }
 
@@ -181,6 +182,21 @@ public class Unification {
      */
     public static Unification failed() {
         return FAILED;
+    }
+
+    /**
+     * Creates an Unification which substitutes every TypeVariable with the
+     * Object type.
+     *
+     * @return The substitution.
+     */
+    public static Unification eraseTypes() {
+        return new Unification(true, null) {
+            @Override
+            Type getSubstitute(TypeVariable other) {
+                return CoreClasses.objectType().getType();
+            }
+        };
     }
 
     public static SimultaneousBuilder substitute(Iterable<TypeVariable> typeVars) {
@@ -438,8 +454,8 @@ public class Unification {
      */
     public boolean substitutesAll(Collection<? extends Typed> types) {
         return isSuccessful()
-                && types.stream().map(Typed::getType)
-                        .allMatch(this.subst.keySet()::contains);
+            && types.stream().map(Typed::getType)
+                    .allMatch(this.subst.keySet()::contains);
     }
 
     @Override

@@ -38,17 +38,20 @@
  */
 package de.uni.bremen.monty.moco.ast.statement;
 
-import de.uni.bremen.monty.moco.ast.*;
+import de.uni.bremen.monty.moco.ast.BasicASTNode;
+import de.uni.bremen.monty.moco.ast.Block;
+import de.uni.bremen.monty.moco.ast.Conditional;
+import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
-public class WhileLoop extends BasicASTNode implements Statement {
+public class WhileLoop extends BasicASTNode implements Statement, Conditional {
 
 	private final Expression condition;
 	private final Block body;
 
 	/** Constructor.
-	 * 
+	 *
 	 * @param position
 	 *            Position of this node
 	 * @param condition
@@ -62,17 +65,18 @@ public class WhileLoop extends BasicASTNode implements Statement {
 	}
 
 	/** get the condition
-	 * 
+	 *
 	 * @return the condition */
-	public Expression getCondition() {
-		return condition;
+	@Override
+    public Expression getCondition() {
+		return this.condition;
 	}
 
 	/** get the body
-	 * 
+	 *
 	 * @return the body */
 	public Block getBody() {
-		return body;
+		return this.body;
 	}
 
 	/** {@inheritDoc} */
@@ -84,8 +88,8 @@ public class WhileLoop extends BasicASTNode implements Statement {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
-		visitor.visitDoubleDispatched(condition);
-		visitor.visitDoubleDispatched(body);
+		visitor.visitDoubleDispatched(this.condition);
+		visitor.visitDoubleDispatched(this.body);
 	}
 
 }

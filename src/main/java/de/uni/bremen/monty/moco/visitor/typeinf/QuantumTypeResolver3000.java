@@ -27,6 +27,7 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.expression.CastExpression;
 import de.uni.bremen.monty.moco.ast.expression.ConditionalExpression;
+import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.IsExpression;
 import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
@@ -39,6 +40,8 @@ import de.uni.bremen.monty.moco.ast.expression.literal.FloatLiteral;
 import de.uni.bremen.monty.moco.ast.expression.literal.IntegerLiteral;
 import de.uni.bremen.monty.moco.ast.expression.literal.StringLiteral;
 import de.uni.bremen.monty.moco.ast.statement.Assignment;
+import de.uni.bremen.monty.moco.ast.statement.ConditionalStatement;
+import de.uni.bremen.monty.moco.ast.statement.WhileLoop;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
@@ -72,10 +75,10 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
 
         final TypeDeclaration nodeDecl;
         if (typeName.isTypeVariableIdentifier() &&
-                node.getParentNode() instanceof TypeInstantiation) {
+            node.getParentNode() instanceof TypeInstantiation) {
             // forbidden case: typename < ? >
             reportError(node,
-                "Type can not be quantified with anonymous type variable");
+                    "Type can not be quantified with anonymous type variable");
             return;
         } else if (typeName.isTypeVariableIdentifier()) {
             final Type nodeType = TypeVariable.anonymous().atLocation(node).createType();
@@ -192,6 +195,10 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         node.setTypeDeclaration(node);
         node.getBlock().visit(this);
 
+        if (node.getDefaultInitializer() != null) {
+            resolveTypeOf(node.getDefaultInitializer());
+        }
+
         fillVTable(node);
     }
 
@@ -278,14 +285,20 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
                     node.getIdentifier());
         }
         final VariableDeclaration varDecl = (VariableDeclaration) decl;
+
         resolveTypeOf(varDecl);
         varDecl.addUsage(node);
 
-        assert varDecl.isTypeResolved();
         final Type nodeType = node.getScope().getSubstitutions().apply(varDecl.getType());
         node.setType(nodeType);
-        node.setDeclaration(decl);
-        node.setTypeDeclaration(decl.getTypeDeclaration());
+        node.setDeclaration(varDecl);
+        node.setTypeDeclaration(varDecl.getTypeDeclaration());
+
+        if (!varDecl.isAttribute() &&
+            varDecl.getPosition().getLineNumber() > node.getPosition().getLineNumber()) {
+
+            reportError(node, "Variable not initialized: <%s>", varDecl.getIdentifier());
+        }
     }
 
     @Override
@@ -398,16 +411,30 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
     }
 
     @Override
-    public void visit(ConditionalExpression node) {
+    public void visit(ConditionalStatement node) {
         resolveTypeOf(node.getCondition());
         final Unification condition = Unification
-                .testIf(node.getCondition().getType())
-                .isA(CoreClasses.boolType().getType());
+                .testIf(node.getCondition())
+                .isA(CoreClasses.boolType());
 
         if (!condition.isSuccessful()) {
             reportError(node.getCondition(), "%s is not a bool",
                     node.getCondition().getType());
         }
+
+        resolveTypeOf(node.getThenBlock());
+        resolveTypeOf(node.getElseBlock());
+    }
+
+    @Override
+    public void visit(WhileLoop node) {
+        handleCondition(node.getCondition());
+        resolveTypeOf(node.getBody());
+    }
+
+    @Override
+    public void visit(ConditionalExpression node) {
+        handleCondition(node.getCondition());
 
         // TODO: find common type
         resolveTypeOf(node.getThenExpression());
@@ -418,12 +445,24 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
                 node.getElseExpression());
 
         if (!common.isPresent()) {
-            reportError(node, "Conditional branches type mismatch: %s != %s", node.getThenExpression().getType(),
+            reportError(node, "Conditional branches type mismatch: %s != %s",
+                    node.getThenExpression().getType(),
                     node.getElseExpression().getType());
         }
         node.setType(common.get());
         // TODO: use proper type declaration
         node.setTypeDeclaration(node.getThenExpression().getTypeDeclaration());
+    }
+
+    private void handleCondition(Expression condition) {
+        resolveTypeOf(condition);
+        final Unification unification = Unification
+                .testIf(condition)
+                .isA(CoreClasses.boolType().getType());
+
+        if (!unification.isSuccessful()) {
+            reportError(condition, "%s is not a bool", condition.getType());
+        }
     }
 
     @Override
@@ -440,9 +479,13 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
 
     @Override
     public void visit(IsExpression node) {
+        resolveTypeOf(node.getExpression());
+
         final TypeDeclaration decl = node.getScope().resolveType(
                 node, node.getIsIdentifier());
         resolveTypeOf(decl);
+
+        node.setToType(decl);
         node.setType(CoreClasses.boolType().getType());
         node.setTypeDeclaration(CoreClasses.boolType());
     }

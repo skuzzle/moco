@@ -1,1 +1,1 @@
-ResolveVisitor caught error in null: Identifier is not defined: answer
+Variable not initialized: <answer>

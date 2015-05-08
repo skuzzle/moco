@@ -39,18 +39,17 @@
 package de.uni.bremen.monty.moco.ast;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
-import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeContext;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
@@ -183,40 +182,6 @@ public class Scope implements TypeContext {
         }
     }
 
-    public Declaration resolveFromType(Type type) {
-        final ResolvableIdentifier name = new ResolvableIdentifier(
-                type.getName().getSymbol());
-        if (type instanceof ClassType) {
-            return resolveType(type, name);
-        } else if (type instanceof Function) {
-            final List<ProcedureDeclaration> procedures = resolveProcedure(type, name);
-            final Collection<ProcedureDeclaration> matches = new ArrayList<>();
-
-            for (final ProcedureDeclaration proc : procedures) {
-                final Function declared = (Function) proc.getType();
-                if (Unification.testIf(type).isA(declared).isSuccessful()) {
-                    matches.add(proc);
-                }
-            }
-
-            if (matches.isEmpty()) {
-                throw new UnknownTypeException(name);
-            } else if (matches.size() > 1) {
-                // TODO: best fit
-                throw new RuntimeException();
-            } else {
-                return matches.iterator().next();
-            }
-        } else {
-            // TODO: proper error handling
-            throw new RuntimeException(type.toString());
-        }
-    }
-
-    private int compare(ClassType t1, ClassType t2) {
-        return Math.abs(t1.distanceToObject() - t2.distanceToObject());
-    }
-
     /**
      * Resolve an identifier for a declaration.
      * <p>
@@ -310,6 +275,15 @@ public class Scope implements TypeContext {
 		}
 		return result;
 	}
+
+    public List<ProcedureDeclaration> resolveProceduresInSameScope(ProcedureDeclaration proc) {
+        final List<ProcedureDeclaration> decls = resolveProcedure(proc,
+                ResolvableIdentifier.of(proc.getIdentifier()));
+        return decls.stream()
+                .filter(decl -> decl != proc)
+                .filter(decl -> !decl.isInitializer())
+                .collect(Collectors.toList());
+    }
 
     public Unification getSubstitutions() {
         Scope parent = this.parent;

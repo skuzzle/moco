@@ -41,7 +41,7 @@ package de.uni.bremen.monty.moco.ast.expression;
 import de.uni.bremen.monty.moco.ast.*;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
-public class ConditionalExpression extends Expression {
+public class ConditionalExpression extends Expression implements Conditional {
 	private final Expression condition;
 	private final Expression thenExpression;
 	private final Expression elseExpression;
@@ -55,24 +55,25 @@ public class ConditionalExpression extends Expression {
 	}
 
 	/** get the condition.
-	 * 
+	 *
 	 * @return the condition */
-	public Expression getCondition() {
-		return condition;
+	@Override
+    public Expression getCondition() {
+		return this.condition;
 	}
 
 	/** get the expression of the then part.
-	 * 
+	 *
 	 * @return the then expression */
 	public Expression getThenExpression() {
-		return thenExpression;
+		return this.thenExpression;
 	}
 
 	/** get the expression of the else part.
-	 * 
+	 *
 	 * @return the else expression */
 	public Expression getElseExpression() {
-		return elseExpression;
+		return this.elseExpression;
 	}
 
 	/** {@inheritDoc} */
@@ -84,9 +85,9 @@ public class ConditionalExpression extends Expression {
 	/** {@inheritDoc} */
 	@Override
 	public void visitChildren(BaseVisitor visitor) {
-		visitor.visitDoubleDispatched(condition);
-		visitor.visitDoubleDispatched(thenExpression);
-		visitor.visitDoubleDispatched(elseExpression);
+		visitor.visitDoubleDispatched(this.condition);
+		visitor.visitDoubleDispatched(this.thenExpression);
+		visitor.visitDoubleDispatched(this.elseExpression);
 	}
 
 }

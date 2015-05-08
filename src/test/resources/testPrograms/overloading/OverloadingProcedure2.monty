@@ -3,7 +3,7 @@
 // The correct overloaded procedure in combination with different blocks must
 // be called.
 //
-// Expected output: :No2:i:s:f:b:No1
+// Expected output: :i:s:f:b:No1
 
 procedure():
     print(":No1")
@@ -21,7 +21,7 @@ if true:
     procedure(Bool x):
         print(":b")
 
-    procedure()
+    //procedure()
 
     procedure(42)
     procedure("Hallo")
