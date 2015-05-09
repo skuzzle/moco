@@ -38,18 +38,18 @@
  */
 package de.uni.bremen.monty.moco;
 
-import de.uni.bremen.monty.moco.util.MultiOutputStream;
-import org.apache.commons.io.FileUtils;
-
 import java.io.File;
-import java.io.FilenameFilter;
-import java.net.URI;
 import java.net.URISyntaxException;
-
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.apache.commons.io.FileUtils;
+
 public class CompileFilesBaseTest {
+
+    public static final boolean SKIP_COMPILE = Boolean.parseBoolean(
+            System.getProperty("monty.tests.skipCompileTests", "false"));
+
 	protected File file;
 	protected String fileName;
 

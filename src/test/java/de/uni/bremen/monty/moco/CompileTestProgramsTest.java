@@ -56,6 +56,7 @@ import java.io.PrintStream;
 import java.util.Collection;
 
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -77,6 +78,7 @@ public class CompileTestProgramsTest extends CompileFilesBaseTest {
 
 	@Test
 	public void compileProgramTest() throws IOException {
+	    Assume.assumeFalse("Skipping Compile tests due to system property", SKIP_COMPILE);
 		final PrintStream bufferOut = System.out;
 		final PrintStream bufferErr = System.err;
 		final ByteArrayOutputStream outStream = setStdout();
