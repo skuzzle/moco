@@ -1,0 +1,8 @@
+class A:
+    +initializer():
+        pass
+class B inherits A:
+    +initializer():
+        pass
+A a := A()
+A b := B()

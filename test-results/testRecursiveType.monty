@@ -6,4 +6,3 @@ class Node<A>:
     +Node<A> next
     +initializer(A data):
         self.data := data
-

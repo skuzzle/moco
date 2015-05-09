@@ -1,0 +1,6 @@
+Int a := method("foo", 5)
+method(1337)
+Int method(String a, Int b):
+    return 5
+method(Int a):
+    pass

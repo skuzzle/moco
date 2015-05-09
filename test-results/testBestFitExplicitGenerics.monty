@@ -1,0 +1,9 @@
+Int a := method<B>(B())
+class A:
+    pass
+class B inherits A:
+    pass
+A method(A a):
+    return a
+<X> Int method(X x):
+    return 5

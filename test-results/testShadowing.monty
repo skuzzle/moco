@@ -1,8 +1,6 @@
 class Foo<X>:
-    +X x
+    +X y
     +initializer(X x):
-        self.x := identity<X>(x)
-    
+        self.y := self.identity<X>(x)
     +<X> X identity(X x):
         return x
-

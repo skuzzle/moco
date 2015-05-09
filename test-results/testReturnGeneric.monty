@@ -1,16 +1,10 @@
 class Pair<A, B>:
     -A t1
     -B t2
-    
     +initializer(A f, B s):
-        t1 := f
-        t2 := s
-    
-
+        self.t1 := f
+        self.t2 := s
 Pair<Int, Int> foo(Int a, Int b):
     return Pair(a, b)
-
 test():
     Pair<Int, Int> p := foo(1, 2)
-
-

@@ -1,8 +1,0 @@
-class Foo<X>:
-    +X x
-    +initializer(X x):
-        self.x := identity(x)
-    
-    +<X> X identity(X x):
-        return x
-

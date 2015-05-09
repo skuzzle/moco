@@ -1,0 +1,2 @@
+<X> X conditionalIdentity(X a, X b):
+    return a if true else b

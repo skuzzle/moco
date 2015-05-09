@@ -1,4 +1,3 @@
 ? x := identity<String>("5")
 <A> A identity(A a):
     return a
-

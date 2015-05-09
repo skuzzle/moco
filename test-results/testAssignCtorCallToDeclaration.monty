@@ -1,6 +1,4 @@
 class Circle:
     pass
-
 test():
     ? var := Circle()
-

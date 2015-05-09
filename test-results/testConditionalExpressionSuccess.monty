@@ -1,0 +1,2 @@
+Bool a := true
+String c := "a" if a else "b"

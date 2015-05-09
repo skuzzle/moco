@@ -1,0 +1,4 @@
+class Foo<X>:
+     pass
+Object a := Foo<String>()
+Foo<String> b := a as Foo<String>

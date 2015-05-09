@@ -1,7 +1,4 @@
 class Pair<A, B>:
     pass
-
-
-class Bc inherits Pair<Char, String>:
+class B inherits Pair<Char, String>:
     pass
-

@@ -1,5 +1,5 @@
 // Just a useless fake generic argument
-<T> Int factorial(Int n, T t):
+<T> ? factorial(Int n, T t):
     if n<2:
         return 1
     return n * factorial<T>(n - 1, t)

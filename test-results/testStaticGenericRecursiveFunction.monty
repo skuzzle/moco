@@ -2,7 +2,5 @@ Int x := factorial<String>(5, "5")
 <A> Int factorial(Int n, A a):
     if (n<=1):
         return 1
-    
     else:
         return n * factorial<A>(n - 1, a)
-
