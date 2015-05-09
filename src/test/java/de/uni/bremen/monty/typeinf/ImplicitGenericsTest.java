@@ -350,7 +350,6 @@ public class ImplicitGenericsTest extends AbstractTypeInferenceTest {
     )
     public void testAssignMultipleInheritance() throws Exception {
         this.compiler.compile();
-
         final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("x"));
         final VariableDeclaration y = this.compiler.searchFor(VariableDeclaration.class,

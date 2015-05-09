@@ -544,10 +544,12 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			}
 		} else {
 			if (declaration instanceof FunctionDeclaration) {
+			    // HINT: use type declaration of the called function's declaration to
+			    // get the correct erasure type
 				this.stack.push((LLVMIdentifier<LLVMType>) this.codeGenerator.call(
 				        this.contextUtils.active(),
 				        declaration.getMangledIdentifier().getSymbol(),
-				        node.getTypeDeclaration(),
+				        declaration.getTypeDeclaration(),
 				        arguments,
 				        expectedParameters));
 			} else {
