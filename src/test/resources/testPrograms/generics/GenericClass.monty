@@ -1,0 +1,40 @@
+class Tuple<A, B>:
+    -A a
+    -B b
+    
+    +initializer(A a, B b):
+        self.a := a
+        self.b := b
+        
+    +A a():
+        return self.a
+    +B b():
+        return self.b
+        
+class Triple<A,B,C> inherits Tuple<A,B>:
+
+    -C c
+    
+    +initializer(A a, B b, C c):
+        parent(Tuple).initializer(a, b)
+        self.c := c
+        
+    +C c():
+        return self.c
+        
+Tuple<Int, String> is1 := Tuple(1, "a")
+? is2 := Tuple(2, "b")
+Tuple<Int, Int> triple := Triple(3, 3, "c")
+? realTriple := triple as Triple<Int, Int, String>
+
+String c := realTriple.c()
+Tuple<String, String> tuple := Tuple(c, c)
+
+print(is1.a())
+print(is1.b())
+print(is2.a())
+print(is2.b())
+print(triple.a())
+print(triple.b())
+print(realTriple.c())
+print(tuple.a())

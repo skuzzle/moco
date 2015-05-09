@@ -1,0 +1,8 @@
+<T> T identity(T t):
+    return t
+    
+String s := identity("A")
+Int i := identity(5)
+print(s)
+print(i)
+print(identity('c'))

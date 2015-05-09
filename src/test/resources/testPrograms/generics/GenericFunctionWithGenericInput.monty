@@ -1,0 +1,15 @@
+class Holder<A>:
+    - A data
+    +initializer(A data):
+        self.data := data
+        
+    +A data():
+        return self.data
+
+<E> E identity(E e):
+    return e
+    
+? h1 := Holder(5)
+print(identity(h1).data())
+Holder<String> h2 := Holder<String>("a")
+print(identity(h2).data())
