@@ -48,12 +48,16 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import org.junit.Assume;
 import org.junit.Test;
 
 public class ModuleProgramsTest {
 
+
 	@Test
 	public void compileProgramTest() throws Exception {
+	    Assume.assumeFalse(CompileFilesBaseTest.SKIP_COMPILE);
+
 		ByteArrayOutputStream outStream = IntegrationTestUtils.setStdout();
 		ByteArrayOutputStream errorStream = IntegrationTestUtils.setStdErr();
 
