@@ -3,6 +3,7 @@ package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 
 public class TypeVariable extends Type {
 
@@ -70,6 +71,18 @@ public class TypeVariable extends Type {
         // Type variables count as object itself (as long as we have no bounded
         // quantification)
         return 0;
+    }
+
+    /**
+     * Determines whether this is an artificially created intermediate type variable.
+     * That is, there is no conrete {@link TypeVariableDeclaration} where this type
+     * originates from.
+     *
+     * @return Whether this is an intermediate variable.
+     */
+    public boolean isIntermediate() {
+        // XXX: probably not the best condition
+        return getName().getSymbol().startsWith("$");
     }
 
     @Override

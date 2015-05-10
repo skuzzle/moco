@@ -1,8 +1,13 @@
 package de.uni.bremen.monty.typeinf;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 
+import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.util.Monty;
+import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 
 public class FunctionCallTest extends AbstractTypeInferenceTest {
 
@@ -106,5 +111,31 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     public void testRecursiveProcedure() throws Exception {
         this.compiler.compile();
         this.compiler.assertAllTypesResolved();
+    }
+
+    @Test
+    @Monty(
+    "? foo(Int n):\n" +
+    "    return foo(n - 1)"
+    )
+    public void testRecursiveCall() throws Exception {
+        typeCheckAndExpectFailure("Could not infer return type of <foo>");
+    }
+
+    @Test
+    @Monty(
+    "? factorial(Int n):\n" +
+    "    if n < 2:\n" +
+    "        return 1\n" +
+    "    else:\n" +
+    "        return n * factorial(n - 1)"
+    )
+    public void testRecursiveFactorial() throws Exception {
+        this.compiler.compile();
+        final FunctionCall call = this.compiler.searchFor(FunctionCall.class,
+                Predicates.hasName("factorial"));
+
+        assertEquals(CoreClasses.intType().getType(), call.getType());
+        assertEquals(CoreClasses.intType(), call.getTypeDeclaration());
     }
 }

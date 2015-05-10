@@ -15,6 +15,8 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 import de.uni.bremen.monty.moco.exception.UnknownTypeException;
+import de.uni.bremen.monty.moco.util.astsearch.Predicates;
+import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 import de.uni.bremen.monty.moco.visitor.typeinf.TypeHelper.BestFit;
 
 class CallTypeResolver extends TypeResolverFragment {
@@ -47,7 +49,18 @@ class CallTypeResolver extends TypeResolverFragment {
         node.setType(unified.getReturnType());
         node.setDeclaration(match);
         match.addUsage(node);
+        if (isRecursive(node, match)) {
+            match.addRecursiveCall(node);
+        }
         node.setTypeDeclarationIfResolved(match);
+    }
+
+    private boolean isRecursive(FunctionCall call, ProcedureDeclaration callDecl) {
+        return SearchAST
+                .forParent(ProcedureDeclaration.class)
+                .where(Predicates.is(callDecl))
+                .in(call)
+                .isPresent();
     }
 
     private List<ProcedureDeclaration> getConstructorOverloads(FunctionCall call) {

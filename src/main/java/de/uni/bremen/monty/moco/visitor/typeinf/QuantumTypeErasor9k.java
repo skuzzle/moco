@@ -15,7 +15,6 @@ import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Product;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
-import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.exception.RedeclarationException;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
@@ -42,12 +41,6 @@ public class QuantumTypeErasor9k extends BaseVisitor {
         } else if (decl instanceof TypeVariableDeclaration) {
             node.setTypeDeclaration(CoreClasses.objectType());
         }
-    }
-
-    @Override
-    public void visit(FunctionCall node) {
-        final ProcedureDeclaration decl = node.getDeclaration();
-        super.visit(node);
     }
 
     @Override

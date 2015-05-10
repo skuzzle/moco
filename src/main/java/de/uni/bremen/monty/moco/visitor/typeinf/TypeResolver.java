@@ -12,6 +12,8 @@ public interface TypeResolver {
 
     public void resolveTypeOf(ASTNode node);
 
+    public void resolveTypeAgain(ASTNode node);
+
     public default List<Type> resolveTypesOf(Iterable<? extends ASTNode> nodes) {
         final List<Type> result = new ArrayList<>();
         for (final ASTNode node : nodes) {
