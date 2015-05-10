@@ -138,4 +138,19 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
         assertEquals(CoreClasses.intType().getType(), call.getType());
         assertEquals(CoreClasses.intType(), call.getTypeDeclaration());
     }
+
+    @Test
+    @Monty(
+    "? factorial(Int n):\n" +
+    "    if n < 2:\n" +
+    "        return 1\n" +
+    "    else:\n" +
+    "        return n * doFactorial(n-1)\n" +
+    "Int doFactorial(Int n):\n" +
+    "    return factorial(n)"
+    )
+    public void testIndirectRecursion() throws Exception {
+        // XXX: TODO: handle this
+        typeCheckAndExpectFailure();
+    }
 }

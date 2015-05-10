@@ -1,7 +1,9 @@
 package de.uni.bremen.monty.moco.visitor.typeinf;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import de.uni.bremen.monty.moco.ast.Scope;
@@ -12,6 +14,7 @@ import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
+import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 import de.uni.bremen.monty.moco.exception.UnknownTypeException;
@@ -40,6 +43,8 @@ class CallTypeResolver extends TypeResolverFragment {
 
         final List<ProcedureDeclaration> candidates = overloadSupplier.apply(node);
         final BestFit bestFit = TypeHelper.bestFit(candidates, node, this);
+        checkIsUnique(bestFit, node);
+
         final ProcedureDeclaration match = bestFit.getBestMatch();
         final Unification unification = bestFit.getUnification();
         final Function callType = bestFit.getCallType();
@@ -102,9 +107,37 @@ class CallTypeResolver extends TypeResolverFragment {
         return false;
     }
 
+    private void checkIsUnique(BestFit bestFit, FunctionCall call) {
+        final Collection<ProcedureDeclaration> matches = bestFit.getMatches();
+        if (matches.isEmpty()) {
+            reportError(call, "Found no matching overload of <%s>",
+                    call.getIdentifier());
+        } else if (matches.size() > 1) {
+            final StringBuilder b = new StringBuilder();
+            final Iterator<ProcedureDeclaration> it = matches.iterator();
+            while (it.hasNext()) {
+                b.append(it.next().getType());
+                b.append("\n");
+            }
+            final StringBuilder b2 = new StringBuilder();
+            b2.append(call.getIdentifier()).append("(");
+            final Iterator<Expression> expIt = call.getArguments().iterator();
+            while (expIt.hasNext()) {
+                b2.append(expIt.next().getType());
+                if (expIt.hasNext()) {
+                    b2.append(" x ");
+                }
+            }
+            b2.append(")");
+            reportError(call, "Ambiguous call.%nCall: %s%nCandidates:%n%s",
+                    b2.toString(),
+                    b.toString());
+        }
+    }
+
     private void checkValidTypeParameterDecls(FunctionCall node, BestFit bestFit) {
         final ProcedureDeclaration match = bestFit.getBestMatch();
-        if (node.getTypeArguments().size() > 0 &&
+        if (!node.getTypeArguments().isEmpty() &&
             node.getTypeArguments().size() != match.getTypeParameters().size()) {
             // either specify none or all type parameters
             reportError(node, "Call <%s> only specifies partial type parameters",

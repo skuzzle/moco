@@ -68,6 +68,11 @@ public class AbstractTypeInferenceTest {
             .around(this.compiler)
             .around(this.exception);
 
+    protected void typeCheckAndExpectFailure() throws Exception {
+        this.exception.expect(TypeInferenceException.class);
+        this.compiler.typeCheck();
+    }
+
     protected void typeCheckAndExpectFailure(String subString) throws Exception {
         this.exception.expect(TypeInferenceException.class);
         this.exception.expectMessage(subString);

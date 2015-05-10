@@ -53,7 +53,6 @@ import org.junit.Test;
 
 public class ModuleProgramsTest {
 
-
 	@Test
 	public void compileProgramTest() throws Exception {
 	    Assume.assumeFalse(CompileFilesBaseTest.SKIP_COMPILE);

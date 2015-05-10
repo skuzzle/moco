@@ -24,7 +24,6 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeContext;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
-import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 
 /**
@@ -37,7 +36,6 @@ public final class TypeHelper {
     private TypeHelper() {
         // hidden
     }
-
 
     public static void testIsPossibleCast(TypeResolver resolver, Location location,
             Typed from, Typed to) {
@@ -146,6 +144,10 @@ public final class TypeHelper {
             return this.unification;
         }
 
+        public List<ProcedureDeclaration> getMatches() {
+            return this.matches;
+        }
+
         public Function getCallType() {
             assert isUnique();
             return this.callType;
@@ -154,36 +156,6 @@ public final class TypeHelper {
         public ProcedureDeclaration getBestMatch() {
             assert isUnique();
             return this.matches.get(0);
-        }
-
-        private BestFit checkIsUnique(FunctionCall call, TypeResolver typeResolver) {
-            if (this.matches.isEmpty()) {
-                typeResolver.reportError(call,
-                        "Found no matching overload of <%s>",
-                        call.getIdentifier());
-            } else if (this.matches.size() > 1) {
-                final StringBuilder b = new StringBuilder();
-                final Iterator<ProcedureDeclaration> it = this.matches.iterator();
-                while (it.hasNext()) {
-                    b.append(it.next().getType());
-                    b.append("\n");
-                }
-                final StringBuilder b2 = new StringBuilder();
-                b2.append(call.getIdentifier()).append("(");
-                final Iterator<Expression> expIt = call.getArguments().iterator();
-                while (expIt.hasNext()) {
-                    b2.append(expIt.next().getType());
-                    if (expIt.hasNext()) {
-                        b2.append(" x ");
-                    }
-                }
-                b2.append(")");
-                typeResolver.reportError(call,
-                        "Ambiguous call.%nCall: %s%nCandidates:%n%s",
-                        b2.toString(),
-                        b.toString());
-            }
-            return this;
         }
     }
 
@@ -265,8 +237,7 @@ public final class TypeHelper {
         for (final TypeInstantiation actualTypeArg : call.getTypeArguments()) {
             bestUnification = bestUnification.merge(actualTypeArg.getUnification());
         }
-        return new BestFit(matches, bestUnification, callType)
-                .checkIsUnique(call, typeResolver);
+        return new BestFit(matches, bestUnification, callType);
     }
 
     private static int rateSignature(Unification subst, Product call, Product candidate) {
