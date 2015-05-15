@@ -13,6 +13,7 @@
         <checkstyle.config.location>${project.basedir}/src/main/resources/checkstyle.xml</checkstyle.config.location>
         <jacoco.version>0.7.4.201502262128</jacoco.version>
         <sonar.jacoco.reportPath>${project.build.directory}/jacoco.exec</sonar.jacoco.reportPath>
+        <monty.tests.dot></monty.tests.dot>
     </properties>
 
     <profiles>
@@ -28,6 +29,10 @@
                             <systemProperties>
                                 <property>
                                     <name>monty.tests.skipCompileTests</name>
+                                    <value>true</value>
+                                </property>
+                                <property>
+                                    <name>monty.tests.skipResources</name>
                                     <value>true</value>
                                 </property>
                             </systemProperties>
