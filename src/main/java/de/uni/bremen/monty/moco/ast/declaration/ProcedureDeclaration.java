@@ -108,6 +108,11 @@ public class ProcedureDeclaration extends TypeDeclaration implements
         this(position, identifier, body, parameter, DeclarationType.UNBOUND);
     }
 
+    /**
+     * Checks whether this decalration's type is an overriding type of the given one.
+     * @param other The declaration to check against.
+     * @return Whether this declaration is an override of given one.
+     */
     public boolean overrides(ProcedureDeclaration other) {
         return getIdentifier().equals(other.getIdentifier()) &&
             Unification.given(getScope())
