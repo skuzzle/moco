@@ -40,7 +40,6 @@ package de.uni.bremen.monty.moco.ast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -270,17 +269,6 @@ public class Scope implements TypeContext {
 			    final List<ProcedureDeclaration> parentProcs =
 			            this.parent.resolveProcedure(positionHint, identifier);
 
-			    // Only add parent declarations which are not overridden.
-			    outer: for (Iterator<ProcedureDeclaration> it = parentProcs.iterator();
-			            it.hasNext();) {
-			        final ProcedureDeclaration parentDecl = it.next();
-			        for (final ProcedureDeclaration decl : result) {
-			            if (decl.overrides(parentDecl)) {
-			                it.remove();
-			                continue outer;
-			            }
-			        }
-			    }
 			    result.addAll(parentProcs);
 			} catch (UnknownIdentifierException e) {
 			}

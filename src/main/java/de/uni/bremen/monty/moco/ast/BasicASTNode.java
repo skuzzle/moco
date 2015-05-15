@@ -1,117 +1,126 @@
 /*
- * moco, the Monty Compiler
- * Copyright (c) 2013-2014, Monty's Coconut, All rights reserved.
+ * moco, the Monty Compiler Copyright (c) 2013-2014, Monty's Coconut, All rights
+ * reserved.
  *
  * This file is part of moco, the Monty Compiler.
  *
- * moco is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 3.0 of the License, or (at your option) any later version.
+ * moco is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 3.0 of the License, or (at your option) any later
+ * version.
  *
- * moco is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * moco is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  *
  * Linking this program and/or its accompanying libraries statically or
  * dynamically with other modules is making a combined work based on this
  * program. Thus, the terms and conditions of the GNU General Public License
  * cover the whole combination.
  *
- * As a special exception, the copyright holders of moco give
- * you permission to link this programm and/or its accompanying libraries
- * with independent modules to produce an executable, regardless of the
- * license terms of these independent modules, and to copy and distribute the
- * resulting executable under terms of your choice, provided that you also meet,
- * for each linked independent module, the terms and conditions of the
- * license of that module.
+ * As a special exception, the copyright holders of moco give you permission to
+ * link this programm and/or its accompanying libraries with independent modules
+ * to produce an executable, regardless of the license terms of these
+ * independent modules, and to copy and distribute the resulting executable
+ * under terms of your choice, provided that you also meet, for each linked
+ * independent module, the terms and conditions of the license of that module.
  *
- * An independent module is a module which is not
- * derived from or based on this program and/or its accompanying libraries.
- * If you modify this library, you may extend this exception to your version of
- * the program or library, but you are not obliged to do so. If you do not wish
- * to do so, delete this exception statement from your version.
+ * An independent module is a module which is not derived from or based on this
+ * program and/or its accompanying libraries. If you modify this library, you
+ * may extend this exception to your version of the program or library, but you
+ * are not obliged to do so. If you do not wish to do so, delete this exception
+ * statement from your version.
  *
- * You should have received a copy of the GNU General Public
- * License along with this library.
+ * You should have received a copy of the GNU General Public License along with
+ * this library.
  */
 package de.uni.bremen.monty.moco.ast;
-
-
 
 /** Baseclass for every node in the AST. */
 public abstract class BasicASTNode implements ASTNode {
 
-	/** Sourcecode position of this node. */
-	private final Position position;
+    /** Sourcecode position of this node. */
+    private final Position position;
 
-	/** Parent node. */
-	private ASTNode parentNode;
+    /** Parent node. */
+    private ASTNode parentNode;
 
-	/** Associated scope. */
-	private Scope scope;
+    /** Associated scope. */
+    private Scope scope;
 
-	/** Constructor.
-	 *
-	 * @param position
-	 *            Position of this node */
-	public BasicASTNode(Position position) {
-		this.position = position;
-	}
+    /**
+     * Constructor.
+     *
+     * @param position Position of this node
+     */
+    public BasicASTNode(Position position) {
+        this.position = position;
+    }
 
-	/** {@inheritDoc} */
-	@Override
-	public String toString() {
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
         final StringBuilder b = new StringBuilder();
         b.append(getClass().getSimpleName());
         if (this instanceof NamedNode) {
             final NamedNode me = (NamedNode) this;
             b.append(" '").append(me.getIdentifier()).append("'");
         }
+        b.append(" [")
+                .append("line: ").append(getPosition().getLineNumber())
+                .append(", col: ").append(getPosition().getCharNumber())
+                .append("]");
         return b.toString();
-	}
+    }
 
-	/** Get parent node.
-	 *
-	 * @return the parent node */
-	@Override
-	public ASTNode getParentNode() {
-		return this.parentNode;
-	}
+    /**
+     * Get parent node.
+     *
+     * @return the parent node
+     */
+    @Override
+    public ASTNode getParentNode() {
+        return this.parentNode;
+    }
 
-	/** Set parent node.
-	 *
-	 * @param parentNode
-	 *            the parent node */
-	@Override
-	public void setParentNode(ASTNode parentNode) {
-		this.parentNode = parentNode;
-	}
+    /**
+     * Set parent node.
+     *
+     * @param parentNode the parent node
+     */
+    @Override
+    public void setParentNode(ASTNode parentNode) {
+        this.parentNode = parentNode;
+    }
 
-	/** Get the sourcecode position.
-	 *
-	 * @return the position */
-	@Override
-	public Position getPosition() {
-		return this.position;
-	}
+    /**
+     * Get the sourcecode position.
+     *
+     * @return the position
+     */
+    @Override
+    public Position getPosition() {
+        return this.position;
+    }
 
-	/** Set the associated scope.
-	 *
-	 * @param scope
-	 *            the associated scope */
-	@Override
-	public void setScope(Scope scope) {
-		this.scope = scope;
-	}
+    /**
+     * Set the associated scope.
+     *
+     * @param scope the associated scope
+     */
+    @Override
+    public void setScope(Scope scope) {
+        this.scope = scope;
+    }
 
-	/** Get the accociated scope.
-	 *
-	 * @return the scope */
-	@Override
-	public Scope getScope() {
-		return this.scope;
-	}
+    /**
+     * Get the accociated scope.
+     *
+     * @return the scope
+     */
+    @Override
+    public Scope getScope() {
+        return this.scope;
+    }
 
 }

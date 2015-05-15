@@ -44,6 +44,7 @@ import java.util.List;
 import de.uni.bremen.monty.moco.ast.Block;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
@@ -114,10 +115,12 @@ public class ProcedureDeclaration extends TypeDeclaration implements
      * @return Whether this declaration is an override of given one.
      */
     public boolean overrides(ProcedureDeclaration other) {
+        final Function thisType = getType().asFunction();
+        final Function otherType = other.getType().asFunction();
         return getIdentifier().equals(other.getIdentifier()) &&
             Unification.given(getScope())
-                    .testIf(getType().asFunction().getParameters())
-                    .isA(other.getType().asFunction().getParameters())
+                    .testIf(thisType)
+                    .isA(otherType)
                     .isSuccessful();
     }
 
