@@ -39,11 +39,14 @@ package de.uni.bremen.monty.moco.ast;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
+import de.uni.bremen.monty.moco.visitor.typeinf.TypeResolver;
 
 /**
  * A scope in which identifier are associated with declarations.
@@ -182,6 +185,46 @@ public class ClassScope extends Scope {
         return result;
     }
 
+
+    @Override
+    public Optional<ProcedureDeclaration> getOverridden(TypeResolver resolver,
+            ProcedureDeclaration decl) {
+        final ResolvableIdentifier name = ResolvableIdentifier.of(decl.getIdentifier());
+        final List<ProcedureDeclaration> candidates = this.procedures.get(name);
+
+        if (candidates != null) {
+            final Optional<ProcedureDeclaration> opt = candidates.stream()
+                    .filter(d -> d != decl)
+                    .peek(resolver::resolveTypeOf)
+                    .filter(d -> isPossibleOverride(d, decl))
+                    .findFirst();
+
+            if (opt.isPresent()) {
+                return opt;
+            }
+        }
+
+        for (final ClassScope scope : this.parentClassesScopes) {
+            final Optional<ProcedureDeclaration> opt = scope.getOverridden(resolver, decl);
+            if (opt.isPresent()) {
+                return opt;
+            }
+        }
+        return Optional.empty();
+    }
+
+    private boolean isPossibleOverride(ProcedureDeclaration overridden,
+            ProcedureDeclaration override) {
+
+        final Function overriddenType = overridden.getType().asFunction();
+        final Function overrideType = override.getType().asFunction();
+        return overridden.getIdentifier().equals(override.getIdentifier()) &&
+            Unification.given(override.getScope())
+                    .testIf(overrideType.getParameters())
+                    .isA(overriddenType.getParameters())
+                    .isSuccessful();
+    }
+
     /**
      * Resolve an identifier for a declaration
      * <p>
@@ -227,5 +270,4 @@ public class ClassScope extends Scope {
         }
         return result;
     }
-
 }

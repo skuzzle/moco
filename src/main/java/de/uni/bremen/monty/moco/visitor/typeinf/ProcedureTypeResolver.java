@@ -12,7 +12,6 @@ import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.NamedNode;
 import de.uni.bremen.monty.moco.ast.Package;
-import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
@@ -114,6 +113,7 @@ class ProcedureTypeResolver extends TypeResolverFragment {
         } else if (bodyType.get() != returnType) {
             reportError(node, "Procedures must not return a value");
         }
+        validateOverride(node);
     }
 
     private void resolveFunctionType(FunctionDeclaration node) {
@@ -222,45 +222,21 @@ class ProcedureTypeResolver extends TypeResolverFragment {
         return TypeHelper.findCommonType(returnTypes, node.getScope());
     }
 
-    private boolean isPossibleOverride(ProcedureDeclaration overridden,
-            ProcedureDeclaration override) {
-
-        final Function overriddenType = overridden.getType().asFunction();
-        final Function overrideType = override.getType().asFunction();
-        return overridden.getIdentifier().equals(override.getIdentifier()) &&
-            Unification.given(override.getScope())
-                    .testIf(overrideType.getParameters())
-                    .isA(overriddenType.getParameters())
-                    .isSuccessful();
-    }
-
-    private Optional<ProcedureDeclaration> getOverride(ProcedureDeclaration decl) {
-        final Scope scope = decl.getScope();
-        final ResolvableIdentifier name = ResolvableIdentifier.of(decl.getIdentifier());
-        final List<ProcedureDeclaration> all = scope.resolveProcedure(decl, name);
-
-        return all.stream()
-                .filter(d -> d != decl)
-                .peek(this::resolveTypeOf)
-                .filter(d -> isPossibleOverride(d, decl))
-                .findFirst();
-    }
-
     private void validateOverride(ProcedureDeclaration decl) {
         if (decl.isUnbound()) {
             return;
         }
         final Scope scope = decl.getScope();
-        final Optional<ProcedureDeclaration> overridden = getOverride(decl);
+        final Optional<ProcedureDeclaration> overridden = scope.getOverridden(this, decl);
         if (overridden.isPresent()) {
             final Unification test = Unification
-                    .given(scope)
+                    .given(overridden.get().getScope())
                     .testIf(decl.getType().asFunction().getReturnType())
                     .isA(overridden.get().getType().asFunction().getReturnType());
 
             if (!test.isSuccessful()) {
                 reportError(decl,
-                        "Return type <%s> not compatible to overriden return type <%s>",
+                        "Return type <%s> not compatible to overridden return type <%s>",
                         decl.getType().asFunction().getReturnType(),
                         overridden.get().getType().asFunction().getReturnType());
             }

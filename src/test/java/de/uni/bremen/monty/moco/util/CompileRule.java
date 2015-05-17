@@ -49,14 +49,13 @@ public class CompileRule implements TestRule {
     /** Path to resource folder from which test monty files are read */
     private static final String TEST_DIR = "testTypeInference/";
 
-    private static final long DOT_TIME_OUT = 30; // seconds
-
     private static final String DOT_EXECUTABLE = "monty.tests.dot";
     private static final String SKIP_GENERATE_RESOURCES = "monty.tests.skipResources";
 
     private ASTNode ast;
     private Monty monty;
     private TestResource montyResource;
+    private Debug debug;
     private String testName;
     private String namespace;
 
@@ -65,6 +64,10 @@ public class CompileRule implements TestRule {
         this.namespace = getNameSpace(description.getTestClass().getSimpleName());
         this.monty = description.getAnnotation(Monty.class);
         this.montyResource = description.getAnnotation(TestResource.class);
+        this.debug = description.getAnnotation(Debug.class);
+        if (this.debug == null) {
+            this.debug = description.getTestClass().getAnnotation(Debug.class);
+        }
 
         if (this.monty != null && this.montyResource != null) {
             fail("Can not specify @Monty and @TestResource on same test");
@@ -316,7 +319,8 @@ public class CompileRule implements TestRule {
     }
 
     private boolean skipGenerateResources() {
-        return Boolean.parseBoolean(System.getProperty(SKIP_GENERATE_RESOURCES, "false"));
+        return this.debug == null || Boolean.parseBoolean(
+                System.getProperty(SKIP_GENERATE_RESOURCES, "false"));
     }
 
     private String getDotExecutable() {

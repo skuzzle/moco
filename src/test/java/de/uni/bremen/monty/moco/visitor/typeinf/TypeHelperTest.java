@@ -82,7 +82,7 @@ public class TypeHelperTest {
         final TypeVariable boundVar1 = TypeVariable.named("bound1").createType();
         final Optional<Type> opt = TypeHelper.findCommonType(
                 setOf(boundVar1, CoreClasses.intType().getType()), this.scope);
-        System.out.println(opt);
+        assertFalse(opt.isPresent());
     }
 
     @Test

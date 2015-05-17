@@ -118,7 +118,7 @@ public class ProcedureDeclaration extends TypeDeclaration implements
         final Function thisType = getType().asFunction();
         final Function otherType = other.getType().asFunction();
         return getIdentifier().equals(other.getIdentifier()) &&
-            Unification.given(getScope())
+            Unification
                     .testIf(thisType)
                     .isA(otherType)
                     .isSuccessful();

@@ -237,7 +237,6 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     public void testOverrideFunctionReturnType() throws Exception {
         this.compiler.compile();
         this.compiler.assertAllTypesResolved();
-
     }
 
     @Test
@@ -251,6 +250,176 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     )
     public void testOverrideFunctionReturnTypeMismatch() throws Exception {
         typeCheckAndExpectFailure(
-                "Return type <Int> not compatible to overriden return type <$void>");
+                "Return type <Int> not compatible to overridden return type <$void>");
+    }
+
+    @Test
+    @Monty(
+    "class A inherits B:\n" +
+    "    +test(Int b):\n" +
+    "        print(1)\n" +
+    "class B:\n" +
+    "    +Int test(Int b):\n" +
+    "        return 1"
+    )
+    public void testOverrideFunctionReturnTypeMismatch2() throws Exception {
+        typeCheckAndExpectFailure(
+                "Return type <$void> not compatible to overridden return type <Int>");
+    }
+
+    @Test
+    @Monty(
+    "A a := A()\n" +
+    "B b := B()\n" +
+    "a.test(1)\n" +
+    "b.test(2)\n" +
+    "a.test('c')\n" +
+    "class A inherits B:\n" +
+    "    +test(Object b):\n" +
+    "        print(1)\n" +
+    "class B:\n" +
+    "    +test(Int b):\n" +
+    "        print(2)"
+    )
+    public void testOverrideExtendParameter() throws Exception {
+        this.compiler.compile();
+        this.compiler.assertAllTypesResolved();
+
+        final ProcedureDeclaration testA = SearchAST.forNode(ProcedureDeclaration.class)
+                .where(Predicates.hasName("test"))
+                .and(Predicates.onLine(7))
+                .in(this.compiler.getAst())
+                .get();
+
+        final ProcedureDeclaration testB = SearchAST.forNode(ProcedureDeclaration.class)
+                .where(Predicates.hasName("test"))
+                .and(Predicates.onLine(10))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionCall callA = SearchAST.forNode(FunctionCall.class)
+                .where(Predicates.hasName("test"))
+                .and(Predicates.onLine(3))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionCall callA2 = SearchAST.forNode(FunctionCall.class)
+                .where(Predicates.hasName("test"))
+                .and(Predicates.onLine(5))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionCall callB = SearchAST.forNode(FunctionCall.class)
+                .where(Predicates.hasName("test"))
+                .and(Predicates.onLine(4))
+                .in(this.compiler.getAst())
+                .get();
+
+        assertSame(callA.getDeclaration(), testB);
+        assertSame(callA2.getDeclaration(), testA);
+        assertSame(callB.getDeclaration(), testB);
+    }
+
+    @Test
+    @Monty(
+    "A<Char> a := A<Char>()\n" +
+    "B<Int> b := B<Int>()\n" +
+    "a.test('c')\n" +
+    "b.test(2)\n" +
+    "class A<T> inherits B<T>:\n" +
+    "    +test(T t):\n" +
+    "        print(1)\n" +
+    "class B<T>:\n" +
+    "    +test(T t):\n" +
+    "        pass"
+    )
+    public void testOverrideGenericClassParameter() throws Exception {
+        this.compiler.compile();
+        this.compiler.assertAllTypesResolved();
+
+        final ProcedureDeclaration testA = SearchAST.forNode(ProcedureDeclaration.class)
+                .where(Predicates.hasName("test"))
+                .and(Predicates.onLine(6))
+                .in(this.compiler.getAst())
+                .get();
+
+        final ProcedureDeclaration testB = SearchAST.forNode(ProcedureDeclaration.class)
+                .where(Predicates.hasName("test"))
+                .and(Predicates.onLine(9))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionCall callA = SearchAST.forNode(FunctionCall.class)
+                .where(Predicates.hasName("test"))
+                .and(Predicates.onLine(3))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionCall callB = SearchAST.forNode(FunctionCall.class)
+                .where(Predicates.hasName("test"))
+                .and(Predicates.onLine(4))
+                .in(this.compiler.getAst())
+                .get();
+
+        assertSame(callA.getDeclaration(), testA);
+        assertSame(callB.getDeclaration(), testB);
+    }
+
+    @Test
+    @Monty(
+    "class A<T> inherits B<T>:\n" +
+    "    +<X> test(T t, X y):\n" +
+    "        pass\n" +
+    "class B<T>:\n" +
+    "    +<X> X test(T t, X y):\n" +
+    "        return y"
+    )
+    public void testOverrideGenericMethodParameterReturnTypeMismatch() throws Exception {
+        typeCheckAndExpectFailure("<$void> not compatible to overridden return type <X>");
+    }
+
+    @Test
+    @Monty(
+    "A<Char> a := A<Char>()\n" +
+    "B<Int> b := B<Int>()\n" +
+    "a.test('c', 4)\n" +
+    "b.test(2, 1337)\n" +
+    "class A<T> inherits B<T>:\n" +
+    "    +<X> test(T t, X y):\n" +
+    "        pass\n" +
+    "class B<T>:\n" +
+    "    +<X> X test(T t, X y):\n" +
+    "        return y"
+    )
+    public void testOverrideGenericMethodParameter() throws Exception {
+        this.compiler.compile();
+        this.compiler.assertAllTypesResolved();
+
+        final ProcedureDeclaration testA = SearchAST.forNode(ProcedureDeclaration.class)
+                .where(Predicates.hasName("test"))
+                .and(Predicates.onLine(6))
+                .in(this.compiler.getAst())
+                .get();
+
+        final ProcedureDeclaration testB = SearchAST.forNode(ProcedureDeclaration.class)
+                .where(Predicates.hasName("test"))
+                .and(Predicates.onLine(9))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionCall callA = SearchAST.forNode(FunctionCall.class)
+                .where(Predicates.hasName("test"))
+                .and(Predicates.onLine(3))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionCall callB = SearchAST.forNode(FunctionCall.class)
+                .where(Predicates.hasName("test"))
+                .and(Predicates.onLine(4))
+                .in(this.compiler.getAst())
+                .get();
+
+        assertSame(callA.getDeclaration(), testA);
+        assertSame(callB.getDeclaration(), testB);
     }
 }
