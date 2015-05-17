@@ -1,0 +1,13 @@
+A<Char> a := A<Char>()
+B<Int> b := B<Int>()
+print(a.test('c', 1))
+print(b.test(2, 2))
+
+class A<T> inherits B<T>:
+    +<X> X test(T t, X y):
+        return y
+
+class B<T>:
+    +<X> X test(T t, X y):
+        print("b")
+        return y

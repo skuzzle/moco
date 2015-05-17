@@ -385,8 +385,8 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     "a.test('c', 4)\n" +
     "b.test(2, 1337)\n" +
     "class A<T> inherits B<T>:\n" +
-    "    +<X> test(T t, X y):\n" +
-    "        pass\n" +
+    "    +<X> X test(T t, X y):\n" +
+    "        return y\n" +
     "class B<T>:\n" +
     "    +<X> X test(T t, X y):\n" +
     "        return y"
