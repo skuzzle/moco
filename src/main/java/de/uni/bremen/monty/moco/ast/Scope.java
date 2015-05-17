@@ -306,14 +306,31 @@ public class Scope implements TypeContext {
         this.substitutions = this.substitutions.merge(unification);
     }
 
+    private TypeVariableDeclaration resolveTypeVarDeclaration(TypeVariable expected,
+            ResolvableIdentifier name) {
+        Scope current = this;
+        while (current != null) {
+            try {
+                Declaration decl = current.resolve(expected, name);
+                if (decl.isTypeResolved() && decl.getType() == expected
+                        && decl instanceof TypeVariableDeclaration) {
+                    return (TypeVariableDeclaration) decl;
+                }
+            } catch (UnknownIdentifierException ignore) { }
+            current = current.parent;
+        }
+
+        return null;
+    }
+
     @Override
     public boolean isFree(TypeVariable variable) {
         try {
             final ResolvableIdentifier ri = ResolvableIdentifier.of(variable.getName());
-            final TypeVariableDeclaration type = (TypeVariableDeclaration) resolveType(variable, ri);
-            assert type instanceof TypeVariableDeclaration;
+            final TypeVariableDeclaration type = resolveTypeVarDeclaration(
+                    variable, ri);
             // assert type.getType() == variable;
-            return type.getType() == variable && !type.isArtificial();
+            return type != null && !type.isArtificial();
         } catch (UnknownTypeException e) {
             return false;
         }
