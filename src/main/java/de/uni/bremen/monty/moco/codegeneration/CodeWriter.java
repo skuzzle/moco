@@ -38,29 +38,31 @@
  */
 package de.uni.bremen.monty.moco.codegeneration;
 
-import de.uni.bremen.monty.moco.util.Params;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+
+import de.uni.bremen.monty.moco.util.Params;
+
 public class CodeWriter {
 
-	private OutputStream llOutputStream;
+	private final OutputStream llOutputStream;
 
 	public CodeWriter(Params params) throws IOException {
-		llOutputStream = initLlvmOutput(params);
-		IOUtils.copy(getClass().getResourceAsStream("/std_llvm_include.ll"), llOutputStream);
+		this.llOutputStream = initLlvmOutput(params);
+		IOUtils.copy(getClass().getResourceAsStream("/std_llvm_include.ll"), this.llOutputStream);
 	}
 
 	private OutputStream initLlvmOutput(Params params) throws FileNotFoundException {
 		OutputStream llOutputStream;
 		if (params.isGenerateOnlyLLVM()) {
 			if (params.getOutputFile() == null) {
-				llOutputStream = System.out;
+				//llOutputStream = System.out;
+			    llOutputStream = new NopOutputStream();
 			} else {
 				llOutputStream = new FileOutputStream(params.getOutputFile());
 			}
@@ -78,7 +80,7 @@ public class CodeWriter {
 	}
 
 	public void write(String data) throws IOException {
-		llOutputStream.write(data.getBytes());
-		llOutputStream.flush();
+		this.llOutputStream.write(data.getBytes());
+		this.llOutputStream.flush();
 	}
 }
