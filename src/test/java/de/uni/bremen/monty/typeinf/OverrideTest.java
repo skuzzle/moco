@@ -422,4 +422,29 @@ public class OverrideTest extends AbstractTypeInferenceTest {
         assertSame(callA.getDeclaration(), testA);
         assertSame(callB.getDeclaration(), testB);
     }
+
+    @Test
+    @Monty(
+    "class A:\n" +
+    "    +<A> test(A a):\n" +
+    "        pass\n" +
+    "    +<B> test(B b):\n" +
+    "        pass"
+    )
+    public void testSameErasureSameScope() throws Exception {
+        typeCheckAndExpectFailure();
+    }
+
+    @Test
+    @Monty(
+    "foo(A<Char> a):\n"+
+    "    pass\n" +
+    "foo(A<Int> a)\n" +
+    "    pass\n" +
+    "class A<T>:\n" +
+    "    pass"
+    )
+    public void testSameErasureClass() throws Exception {
+        typeCheckAndExpectFailure();
+    }
 }

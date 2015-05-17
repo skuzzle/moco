@@ -28,6 +28,20 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
     @Test
     @Monty(
+    "class A:\n" +
+    "    +<A> test(A a):\n" +
+    "        pass"
+    )
+    public void testHidingType() throws Exception {
+        this.compiler.compile();
+        final VariableDeclaration a = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("a"));
+
+        assertTrue(a.getType().isVariable());
+    }
+
+    @Test
+    @Monty(
     "class A<X>:\n" +
     "    pass\n" +
     "class B inherits A<?>:\n" +
