@@ -9,7 +9,8 @@ public class ConditionalTest extends AbstractTypeInferenceTest {
     @Test
     @Monty(
     "Bool a := true\n" +
-    "String c := \"a\" if a else \"b\""
+    "String c := \"a\" if a else \"b\"\n" +
+    "print(c)"
     )
     public void testConditionalExpressionSuccess() throws Exception {
         this.compiler.compile();

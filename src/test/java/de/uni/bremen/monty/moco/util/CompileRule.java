@@ -1,5 +1,6 @@
 package de.uni.bremen.monty.moco.util;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -12,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -56,6 +58,8 @@ public class CompileRule implements TestRule {
     private Monty monty;
     private TestResource montyResource;
     private Debug debug;
+    private ExpectOutput expectOutput;
+    private ExpectError expectError;
     private String testName;
     private String namespace;
 
@@ -64,6 +68,9 @@ public class CompileRule implements TestRule {
         this.namespace = getNameSpace(description.getTestClass().getSimpleName());
         this.monty = description.getAnnotation(Monty.class);
         this.montyResource = description.getAnnotation(TestResource.class);
+        this.expectError = description.getAnnotation(ExpectError.class);
+        this.expectOutput = description.getAnnotation(ExpectOutput.class);
+
         this.debug = description.getAnnotation(Debug.class);
         if (this.debug == null) {
             this.debug = description.getTestClass().getAnnotation(Debug.class);
@@ -73,9 +80,15 @@ public class CompileRule implements TestRule {
             fail("Can not specify @Monty and @TestResource on same test");
         } else if (this.monty == null && this.montyResource == null) {
             fail("No Monty input given. Specify either @Monty or @TestResource");
+        } else if (this.expectError != null && this.expectOutput != null) {
+            fail("Can not specify @ExpectError and @ExpectOutput on same test");
         }
         this.testName = description.getMethodName();
         return base;
+    }
+
+    private boolean doRunLLvm() {
+        return this.expectError != null || this.expectOutput != null;
     }
 
     private String getNameSpace(String className) {
@@ -189,32 +202,33 @@ public class CompileRule implements TestRule {
         } else {
             params.setInputCode(this.monty.value());
         }
+
+        if (doRunLLvm() || !skipGenerateResources()) {
+            final File llvmFile = getNewFile(getTestFileName(), LLVM_OUTPUT, ".ll");
+            if (!llvmFile.getParentFile().exists()) {
+                llvmFile.getParentFile().mkdirs();
+            }
+            params.setOutputFile(llvmFile.getAbsolutePath());
+            params.setLlFile(llvmFile.getAbsolutePath());
+        }
         return params;
+    }
+
+    private String getTestFileName() {
+        return this.namespace + "_" + this.testName;
     }
 
     private ASTNode createAST(Params params, List<BaseVisitor> additionalVisitors)
             throws Exception {
         final PackageBuilder builder = new PackageBuilder(params);
         final Package mainPackage = builder.buildPackage();
-        executeVisitorChain(this.testName, params, additionalVisitors, mainPackage);
+        executeVisitorChain(params, additionalVisitors, mainPackage);
         return mainPackage;
     }
 
-    private void executeVisitorChain(String testFileName, Params params,
+    private void executeVisitorChain(Params params,
             List<BaseVisitor> additionalVisitors, ASTNode root)
             throws Exception {
-
-        testFileName = this.namespace + "_" + testFileName;
-        if (skipGenerateResources()) {
-
-        } else {
-            final String llvmOutput = LLVM_OUTPUT + getFileName(testFileName) + ".ll";
-            final File llvmDir = new File(LLVM_OUTPUT);
-            if (!llvmDir.exists()) {
-                llvmDir.mkdirs();
-            }
-            params.setOutputFile(llvmOutput);
-        }
 
         final List<BaseVisitor> visitors = new ArrayList<>();
         visitors.add(new SetParentVisitor());
@@ -238,22 +252,48 @@ public class CompileRule implements TestRule {
                 break;
             }
         }
-        writeDotFile(testFileName, root);
+
+        writeDotFile(root);
         if (params.getInputCode() != null) {
-            writeTestMontyFile(testFileName, params.getInputCode());
+            writeTestMontyFile(params.getInputCode());
         }
 
         if (error != null) {
             throw error;
         }
+        if (doRunLLvm()) {
+            runLLVM(params.getLlFile());
+        }
     }
 
-    private void writeTestMontyFile(String testFileName, String content)
+    private void runLLVM(String llvmFile) throws IOException {
+        final String expectedOutput = this.expectOutput == null
+                ? ""
+                : this.expectOutput.value();
+        final String expectedError = this.expectError == null
+                ? ""
+                : this.expectError.value();
+
+        final ProcessBuilder pb = new ProcessBuilder("lli", llvmFile);
+        final Process p = pb.start();
+
+        String in = IOUtils.toString(p.getInputStream());
+        String err = IOUtils.toString(p.getErrorStream());
+
+        assertEquals(expectedOutput, in);
+        assertEquals(expectedError, err);
+
+        if (skipGenerateResources()) {
+            new File(llvmFile).delete();
+        }
+    }
+
+    private void writeTestMontyFile(String content)
             throws IOException {
         if (skipGenerateResources()) {
             return;
         }
-        final File targetFile = getNewFile(testFileName, TEST_OUTPUT, ".monty");
+        final File targetFile = getNewFile(getTestFileName(), TEST_OUTPUT, ".monty");
 
         if (!targetFile.getParentFile().exists()) {
             targetFile.getParentFile().mkdirs();
@@ -264,12 +304,12 @@ public class CompileRule implements TestRule {
         }
     }
 
-    private void writeDotFile(String testFileName, ASTNode root)
+    private void writeDotFile(ASTNode root)
             throws IOException, InterruptedException {
         if (skipGenerateResources()) {
             return;
         }
-        final File targetDotFile = getNewFile(testFileName, DOT_OUTPUT, ".dot");
+        final File targetDotFile = getNewFile(getTestFileName(), DOT_OUTPUT, ".dot");
 
         if (!targetDotFile.getParentFile().exists()) {
             targetDotFile.getParentFile().mkdirs();
@@ -279,7 +319,7 @@ public class CompileRule implements TestRule {
             dotVisitor.visitDoubleDispatched(root);
         }
 
-        createASTasPdf(testFileName, targetDotFile);
+        createASTasPdf(getTestFileName(), targetDotFile);
     }
 
     private String getFileName(String nameWithExtension) {
@@ -313,9 +353,9 @@ public class CompileRule implements TestRule {
                 "-Tpdf",
                 "-o " + targetFile.getName(),
                 dotFile.getAbsolutePath())
-        .directory(targetFile.getParentFile())
-        .inheritIO()
-        .start();
+                .directory(targetFile.getParentFile())
+                .inheritIO()
+                .start();
     }
 
     private boolean skipGenerateResources() {
