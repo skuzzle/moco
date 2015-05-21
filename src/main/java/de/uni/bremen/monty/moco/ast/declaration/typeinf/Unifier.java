@@ -119,8 +119,6 @@ final class Unifier {
             // everything isA TOP, BOT isA everything
             // this also covers the case that both types are VOID
             return true;
-        } else if (s instanceof MonoType && t instanceof MonoType) {
-            return s.isA(t);
         } else if (s instanceof ClassType && t instanceof ClassType) {
             final ClassType cts = s.asClass();
             final ClassType ctt = t.asClass();
