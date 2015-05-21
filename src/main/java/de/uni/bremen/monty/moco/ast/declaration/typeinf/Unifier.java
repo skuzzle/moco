@@ -87,7 +87,7 @@ final class Unifier {
     }
 
     public Unification unify(Type first, Type second) {
-        final boolean success = unifyInternal(first, second);
+        final boolean success = unifyInternal(first, second, true);
         if (success) {
             final Map<TypeVariable, Type> subst = buildSubstitutions();
             return Unification.successful(subst);
@@ -110,7 +110,7 @@ final class Unifier {
         return result;
     }
 
-    private boolean unifyInternal(Type m, Type n) {
+    private boolean unifyInternal(Type m, Type n, boolean allowSubtyping) {
         final Type s = find(m);
         final Type t = find(n);
 
@@ -125,17 +125,17 @@ final class Unifier {
             final ClassType cts = s.asClass();
             final ClassType ctt = t.asClass();
 
-            return isA(cts, ctt);
+            return isA(cts, ctt, allowSubtyping);
         } else if (s instanceof Function && t instanceof Function) {
             union(s, t);
             final Function fs = s.asFunction();
             final Function ft = t.asFunction();
 
-            if (!unifyInternal(fs.getReturnType(), ft.getReturnType())) {
+            if (!unifyInternal(fs.getReturnType(), ft.getReturnType(), allowSubtyping)) {
                 return false;
             }
 
-            if (!unifyInternal(fs.getParameters(), ft.getParameters())) {
+            if (!unifyInternal(fs.getParameters(), ft.getParameters(), allowSubtyping)) {
                 return false;
             }
 
@@ -151,7 +151,7 @@ final class Unifier {
 
             final Iterator<Type> pIt = pt.getComponents().iterator();
             for (final Type ts : ps.getComponents()) {
-                if (!unifyInternal(ts, pIt.next())) {
+                if (!unifyInternal(ts, pIt.next(), allowSubtyping)) {
                     return false;
                 }
             }
@@ -183,7 +183,7 @@ final class Unifier {
      * @param a The type to check whether the first is an instance of.
      * @return Whether {@code is} is an instance of {@code a}.
      */
-    private boolean isA(ClassType is, ClassType a) {
+    private boolean isA(ClassType is, ClassType a, boolean allowSubtyping) {
         if (is == a) {
             return true;
         } else if (is.getName().equals(a.getName())) {
@@ -192,17 +192,20 @@ final class Unifier {
 
             final Iterator<Type> otherIt = a.getTypeParameters().iterator();
             for (final Type typeParam : is.getTypeParameters()) {
-                if (!unifyInternal(typeParam, otherIt.next())) {
+                if (!unifyInternal(typeParam, otherIt.next(), false)) {
                     return false;
                 }
             }
             return true;
         }
 
-        boolean result = false;
-        for (final ClassType superType : is.getSuperClasses()) {
-            result |= isA(superType, a);
+        if (allowSubtyping) {
+            for (final ClassType superType : is.getSuperClasses()) {
+                if (isA(superType, a, allowSubtyping)) {
+                    return true;
+                }
+            }
         }
-        return result;
+        return false;
     }
 }

@@ -53,7 +53,7 @@ public class UnificationTest {
         final Unification unification = Unification
                 .testIf(this.mySubType)
                 .isA(this.numberListInst);
-        assertTrue(unification.isSuccessful());
+        assertFalse(unification.isSuccessful());
     }
 
     @Test
@@ -70,7 +70,7 @@ public class UnificationTest {
         final Unification unification = Unification
                 .testIf(this.intListInst)
                 .isA(this.numberListInst);
-        assertTrue(unification.isSuccessful());
+        assertFalse(unification.isSuccessful());
     }
 
     @Test

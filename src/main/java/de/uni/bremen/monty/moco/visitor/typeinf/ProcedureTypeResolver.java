@@ -12,6 +12,7 @@ import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.NamedNode;
 import de.uni.bremen.monty.moco.ast.Package;
+import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
@@ -142,6 +143,14 @@ class ProcedureTypeResolver extends TypeResolverFragment {
         final Type returnType;
         if (node.getReturnTypeIdentifier().getIdentifier().isTypeVariableIdentifier()) {
             returnType = bodyType.get();
+
+            // if inferred type is a procedure, add a return statement
+            if (returnType.equals(CoreClasses.voidType().getType())) {
+                final ReturnStatement retStmt = new ReturnStatement(
+                        Position.UNKNOWN_POSITION, null);
+                retStmt.setParentNode(node.getBody());
+                node.getBody().addStatement(retStmt);
+            }
         } else {
             returnType = declaredReturnType;
         }

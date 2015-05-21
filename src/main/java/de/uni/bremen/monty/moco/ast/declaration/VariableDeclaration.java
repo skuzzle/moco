@@ -1,40 +1,38 @@
 /*
- * moco, the Monty Compiler
- * Copyright (c) 2013-2014, Monty's Coconut, All rights reserved.
+ * moco, the Monty Compiler Copyright (c) 2013-2014, Monty's Coconut, All rights
+ * reserved.
  *
  * This file is part of moco, the Monty Compiler.
  *
- * moco is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 3.0 of the License, or (at your option) any later version.
+ * moco is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 3.0 of the License, or (at your option) any later
+ * version.
  *
- * moco is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * moco is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  *
  * Linking this program and/or its accompanying libraries statically or
  * dynamically with other modules is making a combined work based on this
  * program. Thus, the terms and conditions of the GNU General Public License
  * cover the whole combination.
  *
- * As a special exception, the copyright holders of moco give
- * you permission to link this programm and/or its accompanying libraries
- * with independent modules to produce an executable, regardless of the
- * license terms of these independent modules, and to copy and distribute the
- * resulting executable under terms of your choice, provided that you also meet,
- * for each linked independent module, the terms and conditions of the
- * license of that module.
+ * As a special exception, the copyright holders of moco give you permission to
+ * link this programm and/or its accompanying libraries with independent modules
+ * to produce an executable, regardless of the license terms of these
+ * independent modules, and to copy and distribute the resulting executable
+ * under terms of your choice, provided that you also meet, for each linked
+ * independent module, the terms and conditions of the license of that module.
  *
- * An independent module is a module which is not
- * derived from or based on this program and/or its accompanying libraries.
- * If you modify this library, you may extend this exception to your version of
- * the program or library, but you are not obliged to do so. If you do not wish
- * to do so, delete this exception statement from your version.
+ * An independent module is a module which is not derived from or based on this
+ * program and/or its accompanying libraries. If you modify this library, you
+ * may extend this exception to your version of the program or library, but you
+ * are not obliged to do so. If you do not wish to do so, delete this exception
+ * statement from your version.
  *
- * You should have received a copy of the GNU General Public
- * License along with this library.
+ * You should have received a copy of the GNU General Public License along with
+ * this library.
  */
 package de.uni.bremen.monty.moco.ast.declaration;
 
@@ -44,98 +42,119 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class VariableDeclaration extends Declaration implements Typed {
-	public enum DeclarationType {
+    public enum DeclarationType {
         VARIABLE, PARAMETER, ATTRIBUTE, RETURN
-	}
+    }
 
     private final TypeInstantiation typeIdentifier;
-	private DeclarationType declarationType;
-	private boolean isGlobal;
+    private DeclarationType declarationType;
+    private boolean isGlobal;
+    private boolean initialized;
 
-	/* Index of the variable if it is an attribute in the class struct */
-	private int attributeIndex;
+    /* Index of the variable if it is an attribute in the class struct */
+    private int attributeIndex;
 
     public VariableDeclaration(Position position, Identifier identifier,
             TypeInstantiation typeIdentifier,
-	        DeclarationType declarationType) {
-		this(position, identifier, typeIdentifier);
-		this.declarationType = declarationType;
-	}
+            DeclarationType declarationType) {
+        this(position, identifier, typeIdentifier);
+        this.declarationType = declarationType;
+    }
 
     public VariableDeclaration(Position position, Identifier identifier,
             TypeInstantiation typeIdentifier) {
-		super(position, identifier);
-		this.typeIdentifier = typeIdentifier;
-		this.declarationType = DeclarationType.VARIABLE;
-		this.attributeIndex = -1;
-	}
+        super(position, identifier);
+        this.typeIdentifier = typeIdentifier;
+        this.declarationType = DeclarationType.VARIABLE;
+        this.attributeIndex = -1;
+    }
 
-	/** set the declaration type */
-	public void setDeclarationType(DeclarationType type) {
-		this.declarationType = type;
-	}
+    public void setInitialized(boolean initialized) {
+        this.initialized = initialized;
+    }
 
-	/** get the declaration type
-	 *
-	 * @return the declaration type */
-	public DeclarationType getDeclarationType() {
-		return this.declarationType;
-	}
+    /**
+     * Whether this variable has already been initialized.
+     *
+     * @return Whether this variable has already been initialized.
+     */
+    public boolean isInitialized() {
+        return this.declarationType == DeclarationType.PARAMETER || this.initialized;
+    }
 
-	public boolean isVariable() {
-		return this.declarationType == DeclarationType.VARIABLE;
-	}
+    /** set the declaration type */
+    public void setDeclarationType(DeclarationType type) {
+        this.declarationType = type;
+    }
 
-	public boolean isParameter() {
-		return this.declarationType == DeclarationType.PARAMETER;
-	}
+    /**
+     * get the declaration type
+     *
+     * @return the declaration type
+     */
+    public DeclarationType getDeclarationType() {
+        return this.declarationType;
+    }
 
-	public boolean isAttribute() {
-		return this.declarationType == DeclarationType.ATTRIBUTE;
-	}
+    public boolean isVariable() {
+        return this.declarationType == DeclarationType.VARIABLE;
+    }
 
-	/** get the identifier of the type.
-	 *
-	 * @return the type identifier */
+    public boolean isParameter() {
+        return this.declarationType == DeclarationType.PARAMETER;
+    }
+
+    public boolean isAttribute() {
+        return this.declarationType == DeclarationType.ATTRIBUTE;
+    }
+
+    /**
+     * get the identifier of the type.
+     *
+     * @return the type identifier
+     */
     public TypeInstantiation getTypeIdentifier() {
-		return this.typeIdentifier;
-	}
+        return this.typeIdentifier;
+    }
 
-	/** get if this variable is global.
-	 *
-	 * @return if global */
-	public boolean getIsGlobal() {
-		return this.isGlobal;
-	}
+    /**
+     * get if this variable is global.
+     *
+     * @return if global
+     */
+    public boolean getIsGlobal() {
+        return this.isGlobal;
+    }
 
-	/** set if this variable is global.
-	 *
-	 * @param isGlobal
-	 *            if global */
-	public void setIsGlobal(boolean isGlobal) {
-		this.isGlobal = isGlobal;
-	}
+    /**
+     * set if this variable is global.
+     *
+     * @param isGlobal if global
+     */
+    public void setIsGlobal(boolean isGlobal) {
+        this.isGlobal = isGlobal;
+    }
 
-	/** Get the attributeIndex. */
-	public int getAttributeIndex() {
-		return this.attributeIndex;
-	}
+    /** Get the attributeIndex. */
+    public int getAttributeIndex() {
+        return this.attributeIndex;
+    }
 
-	/** Set the attributeIndex. */
-	public void setAttributeIndex(int attributeIndex) {
-		this.attributeIndex = attributeIndex;
-	}
+    /** Set the attributeIndex. */
+    public void setAttributeIndex(int attributeIndex) {
+        this.attributeIndex = attributeIndex;
+    }
 
-	/** {@inheritDoc} */
-	@Override
-	public void visit(BaseVisitor visitor) {
-		visitor.visit(this);
-	}
+    /** {@inheritDoc} */
+    @Override
+    public void visit(BaseVisitor visitor) {
+        visitor.visit(this);
+    }
 
-	/** {@inheritDoc} */
-	@Override
-	public void visitChildren(BaseVisitor visitor) {
-	    visitor.visitDoubleDispatched(this.typeIdentifier);
-	}
+    /** {@inheritDoc} */
+    @Override
+    public void visitChildren(BaseVisitor visitor) {
+        visitor.visitDoubleDispatched(this.typeIdentifier);
+    }
 
 }

@@ -312,6 +312,27 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         }
     }
 
+    private boolean isUsage(VariableAccess access) {
+        // is usage if occurring:
+        // * right hand to assignment
+        // * as parameter to a call
+        // * left hand to a member access
+        ASTNode parent = access.getParentNode();
+        while (parent != null) {
+
+            if (parent instanceof Assignment && ((Assignment) parent).getRight() == access) {
+                return true;
+            } else if (parent instanceof MemberAccess && ((MemberAccess) parent).getLeft() == access) {
+                return true;
+            } else if (parent instanceof FunctionCall) {
+                return true;
+            }
+
+            parent = parent.getParentNode();
+        }
+        return false;
+    }
+
     @Override
     public void visit(MemberAccess node) {
         resolveTypeOf(node.getLeft());
@@ -369,11 +390,16 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         }
 
         if (node.getLeft() instanceof VariableAccess) {
-            ((VariableAccess) node.getLeft()).setLValue();
+            final VariableAccess left = (VariableAccess) node.getLeft();
+            left.setLValue();
+            ((VariableDeclaration) left.getDeclaration()).setInitialized(true);
+
         } else if (node.getLeft() instanceof MemberAccess) {
             MemberAccess ma = (MemberAccess) node.getLeft();
             if (ma.getRight() instanceof VariableAccess) {
-                ((VariableAccess) ma.getRight()).setLValue();
+                final VariableAccess maRight = (VariableAccess) ma.getRight();
+                maRight.setLValue();
+                ((VariableDeclaration) maRight.getDeclaration()).setInitialized(true);
             }
         } else {
             reportError(node, "Left side is no variable");

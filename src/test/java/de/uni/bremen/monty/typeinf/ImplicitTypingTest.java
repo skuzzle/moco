@@ -17,11 +17,12 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
+import de.uni.bremen.monty.moco.util.Debug;
 import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 
-public class ImplicitGenericsTest extends AbstractTypeInferenceTest {
+public class ImplicitTypingTest extends AbstractTypeInferenceTest {
 
     @Test
     @Monty(
@@ -34,6 +35,82 @@ public class ImplicitGenericsTest extends AbstractTypeInferenceTest {
                 FunctionDeclaration.class, Predicates.hasName("isEmpty"));
 
         assertEquals(CoreClasses.boolType(), decl.getTypeDeclaration());
+    }
+
+    @Test
+    @Monty(
+    "class Ab:\n" +
+    "    + initializer():\n" +
+    "        print(self.attr)\n" +
+    "        self.attr := \"Bernd\"\n" +
+    "    + String attr := \"Hallo\""
+    )
+    @Debug
+    public void testFoo() throws Exception {
+        this.compiler.compile();
+    }
+
+    @Test
+    @Monty(
+    "A a := A()\n"+
+    "String b := a.attr\n"+
+    "class A:\n" +
+    "    +? attr"
+    )
+    public void testImplicitAttributeDeclarationUsageBeforeAssignment() throws Exception {
+        typeCheckAndExpectFailure();
+    }
+
+    @Test
+    @Monty(
+    "foo():\n" +
+    "    ? a\n" +
+    "    if true:\n" +
+    "        a := 1\n" +
+    "    else:\n" +
+    "        a := 'c'"
+    )
+    public void testInferLocalVariableNoInitializationMultipleBranchesFail() throws Exception {
+        typeCheckAndExpectFailure("Can not assign <Char> to <Int>");
+    }
+
+    @Test
+    @Monty(
+    "foo():\n" +
+    "    ? a\n" +
+    "    if true:\n" +
+    "        a := 1\n" +
+    "    else:\n" +
+    "        a := 2\n" +
+    "    String b := a"
+    )
+    public void testInferLocalVariableNoInitializationMultipleBranchesUsageFail() throws Exception {
+        typeCheckAndExpectFailure("Can not assign <Int> to <String>");
+    }
+
+    @Test
+    @Monty(
+    "foo():\n" +
+    "    ? a\n" +
+    "    if true:\n" +
+    "        a := 1\n" +
+    "    else:\n" +
+    "        a := 2\n" +
+    "    Int b := a"
+    )
+    public void testInferLocalVariableNoInitializationMultipleBranches() throws Exception {
+        this.compiler.compile();
+    }
+
+    @Test
+    @Monty(
+    "foo():\n" +
+    "    ? a\n" +
+    "    ? b := a"
+    )
+    @Debug
+    public void testLocalVariableUsageBeforeAssignment() throws Exception {
+        typeCheckAndExpectFailure();
     }
 
     @Test

@@ -28,6 +28,16 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
     @Test
     @Monty(
+    "A<Object> a := A<Int>()\n" +
+    "class A<B>:\n" +
+    "    pass"
+    )
+    public void testInvariance() throws Exception {
+        typeCheckAndExpectFailure("Can not assign <A<Int>> to <A<Object>>");
+    }
+
+    @Test
+    @Monty(
     "class A:\n" +
     "    +<A> test(A a):\n" +
     "        pass"

@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
@@ -152,5 +153,35 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     public void testIndirectRecursion() throws Exception {
         // XXX: TODO: handle this
         typeCheckAndExpectFailure();
+    }
+
+    @Test
+    @Monty(
+    "? foo(Int a):\n" +
+    "    if a < 1:\n" +
+    "        return\n" +
+    "    return"
+    )
+    public void testInferVoidResultTypeMultipleReturns() throws Exception {
+        this.compiler.compile();
+        final ProcedureDeclaration decl = this.compiler.searchFor(
+                ProcedureDeclaration.class, Predicates.hasName("foo"));
+
+        assertEquals(CoreClasses.voidType().getType(),
+                decl.getType().asFunction().getReturnType());
+    }
+
+    @Test
+    @Monty(
+    "? foo(Int a):\n" +
+    "    pass"
+    )
+    public void testInferVoidResultTypeNoReturn() throws Exception {
+        this.compiler.compile();
+        final ProcedureDeclaration decl = this.compiler.searchFor(
+                ProcedureDeclaration.class, Predicates.hasName("foo"));
+
+        assertEquals(CoreClasses.voidType().getType(),
+                decl.getType().asFunction().getReturnType());
     }
 }

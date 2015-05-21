@@ -439,7 +439,7 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     @Monty(
     "foo(A<Char> a):\n"+
     "    pass\n" +
-    "foo(A<Int> a)\n" +
+    "foo(A<Int> a):\n" +
     "    pass\n" +
     "class A<T>:\n" +
     "    pass"
