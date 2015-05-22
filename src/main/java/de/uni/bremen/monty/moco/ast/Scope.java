@@ -40,9 +40,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
@@ -146,45 +144,6 @@ public class Scope implements TypeContext {
     }
 
     /**
-     * Creates a copy of this scope. The result will contain the same
-     * definitions as this store and will have the same parent. Modifications to
-     * the copy of the scope will *not* be reflected to this scope. However,
-     * modifications to the copy's parent will have influence on this scope as
-     * the parent is not copied.
-     *
-     * @return A copy of this scope.
-     */
-    public Scope copy() {
-        final Scope result = new Scope(this.name, this.parent);
-        copyThis(result, false);
-        return result;
-    }
-
-    /**
-     * Creates a deep copy of this scope. In contrast to {@link #copy()}, this
-     * method does create copies of all parent scopes.
-     *
-     * @return A deep copy.
-     * @see #copy()
-     */
-    public Scope deepCopy() {
-        final Scope copyParent = this.parent == null
-                ? null
-                : this.parent.deepCopy();
-        final Scope result = new Scope(this.name, copyParent);
-        copyThis(result, true);
-        return result;
-    }
-
-    protected void copyThis(Scope to, boolean deep) {
-        to.members.putAll(this.members);
-        for (final Entry<Identifier, List<ProcedureDeclaration>> e : this.procedures.entrySet()) {
-            final List<ProcedureDeclaration> listCopy = new ArrayList<>(e.getValue());
-            to.procedures.put(e.getKey(), listCopy);
-        }
-    }
-
-    /**
      * Resolve an identifier for a declaration.
      * <p>
      * First the declarations of this scope are searched. If the not successful
@@ -240,17 +199,6 @@ public class Scope implements TypeContext {
         return decl;
     }
 
-    public Type resolveTypeBinding(Location position, ResolvableIdentifier identifier) {
-        if (identifier == null) {
-            throw new IllegalArgumentException("identifier is null");
-        }
-
-        if (identifier.isTypeVariableIdentifier()) {
-            return TypeVariable.anonymous().atLocation(position).createType();
-        }
-        return resolveType(position, identifier).getType();
-    }
-
     /**
      * Resolve an identifier for list of overloaded procedures or functions.
      *
@@ -280,16 +228,6 @@ public class Scope implements TypeContext {
             throw new UnknownIdentifierException(positionHint, identifier);
         }
         return result;
-    }
-
-    public List<ProcedureDeclaration> resolveProceduresInSameScope(
-            ProcedureDeclaration proc) {
-        final List<ProcedureDeclaration> decls = resolveProcedure(proc,
-                ResolvableIdentifier.of(proc.getIdentifier()));
-        return decls.stream()
-                .filter(decl -> decl != proc)
-                .filter(decl -> !decl.isInitializer())
-                .collect(Collectors.toList());
     }
 
     public Unification getSubstitutions() {

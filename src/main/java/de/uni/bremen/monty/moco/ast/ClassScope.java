@@ -87,36 +87,6 @@ public class ClassScope extends Scope {
         this.substitutions = Unification.EMPTY;
     }
 
-    @Override
-    public ClassScope copy() {
-        final ClassScope result = new ClassScope(this.name, this.parent);
-        copyThis(result, false);
-        return result;
-    }
-
-    @Override
-    public ClassScope deepCopy() {
-        final Scope copyParent = this.parent == null
-                ? null
-                : this.parent.deepCopy();
-        final ClassScope result = new ClassScope(this.name, copyParent);
-        copyThis(result, true);
-        return result;
-    }
-
-    @Override
-    protected void copyThis(Scope to, boolean deep) {
-        final ClassScope cs = (ClassScope) to;
-        super.copyThis(cs, deep);
-        if (deep) {
-            for (final ClassScope parentClassScope : this.parentClassesScopes) {
-                cs.parentClassesScopes.add(parentClassScope.deepCopy());
-            }
-        } else {
-            cs.parentClassesScopes.addAll(this.parentClassesScopes);
-        }
-    }
-
     public void addParentClassScope(ClassScope scope, Unification substitutions) {
         if (scope == null) {
             throw new IllegalArgumentException("scope is null");
