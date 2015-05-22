@@ -3,6 +3,7 @@ package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import de.uni.bremen.monty.moco.ast.CoreTypes;
 
@@ -12,12 +13,14 @@ final class Unifier {
     private final Map<Integer, Type> classToType;
     private int classes;
     private final TypeContext context;
+    private final Set<UnificationOption> options;
 
-    Unifier(TypeContext context) {
+    Unifier(TypeContext context, Set<UnificationOption> options) {
         this.typeToClass = new HashMap<>();
         this.classToType = new HashMap<>();
         this.classes = 0;
         this.context = context;
+        this.options = options;
     }
 
     private int getEquivalenceClass(Type t) {
@@ -110,6 +113,10 @@ final class Unifier {
         return result;
     }
 
+    private boolean option(UnificationOption opt) {
+        return this.options.contains(opt);
+    }
+
     private boolean unifyInternal(Type m, Type n, boolean allowSubtyping) {
         final Type s = find(m);
         final Type t = find(n);
@@ -129,11 +136,15 @@ final class Unifier {
             final Function fs = s.asFunction();
             final Function ft = t.asFunction();
 
+            // covariant in return type (fs <: ft -> fs.return <: ft.return)
             if (!unifyInternal(fs.getReturnType(), ft.getReturnType(), allowSubtyping)) {
                 return false;
             }
 
-            if (!unifyInternal(fs.getParameters(), ft.getParameters(), allowSubtyping)) {
+            // if invariant, sub typing is not allowed
+            final boolean invariance = option(
+                    UnificationOption.PARAMETER_TYPE_INVARIANCE);
+            if (!unifyInternal(fs.getParameters(), ft.getParameters(), !invariance)) {
                 return false;
             }
 
@@ -163,15 +174,18 @@ final class Unifier {
     }
 
     private boolean canUnifyVariables(Type s, Type t) {
+        final boolean result;
         if (s.isVariable() && t.isVariable()) {
-            return !this.context.isFree(s.asVariable()) ||
+            result = !this.context.isFree(s.asVariable()) ||
                 !this.context.isFree(t.asVariable());
         } else if (s.isVariable()) {
-            return !this.context.isFree(s.asVariable());
+            result = !this.context.isFree(s.asVariable());
         } else if (t.isVariable()) {
-            return !this.context.isFree(t.asVariable());
+            result = !this.context.isFree(t.asVariable());
+        } else {
+            result = false;
         }
-        return false;
+        return result;
     }
 
     /**
@@ -179,6 +193,7 @@ final class Unifier {
      *
      * @param is The first type.
      * @param a The type to check whether the first is an instance of.
+     * @param allowSubtyping Whether subtype relation should be considered.
      * @return Whether {@code is} is an instance of {@code a}.
      */
     private boolean isA(ClassType is, ClassType a, boolean allowSubtyping) {

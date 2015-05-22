@@ -14,10 +14,12 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import org.apache.commons.io.IOUtils;
+import org.junit.Assume;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import de.uni.bremen.monty.moco.CompileFilesBaseTest;
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.AbstractTypedASTNode;
 import de.uni.bremen.monty.moco.ast.Package;
@@ -119,6 +121,10 @@ public class CompileRule implements TestRule {
     }
 
     public ASTNode compile() throws Exception {
+        // optionally ignore test if SKIP_COMPILE flag is set
+        if (doRunLLvm()) {
+            Assume.assumeFalse(CompileFilesBaseTest.SKIP_COMPILE);
+        }
         final Params params = createParams();
         final List<BaseVisitor> additional = Arrays.asList(
                 new QuantumTypeErasor9k(),

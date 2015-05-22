@@ -3,9 +3,11 @@ package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import de.uni.bremen.monty.moco.ast.CoreClasses;
@@ -59,14 +61,17 @@ public class Unification {
     public static final class TestIfBuilder {
         private final Type first;
         private final TypeContext context;
+        private final Set<UnificationOption> options;
 
         private TestIfBuilder(Type first) {
-            this(first, var -> false);
+            this(first, var -> false, Collections.emptySet());
         }
 
-        private TestIfBuilder(Type first, TypeContext context) {
+        private TestIfBuilder(Type first, TypeContext context,
+                Set<UnificationOption> options) {
             this.first = first;
             this.context = context;
+            this.options = options;
         }
 
         public Unification isA(Typed typedNode) {
@@ -81,7 +86,7 @@ public class Unification {
             final TypePair pair = new TypePair(this.first, second);
             Unification unification = UNIFICATION_CACHE.get(pair);
             if (unification == null) {
-                final Unifier unifier = new Unifier(this.context);
+                final Unifier unifier = new Unifier(this.context, this.options);
                 unification = unifier.unify(this.first, second).deep();
                 // XXX: caching disabled!
                 // UNIFICATION_CACHE.put(pair, unification);
@@ -92,17 +97,24 @@ public class Unification {
 
     public static final class GivenBuilder {
         private final TypeContext context;
+        private final Set<UnificationOption> options;
 
         private GivenBuilder(TypeContext context) {
             this.context = context;
+            this.options = new HashSet<>();
+        }
+
+        public GivenBuilder and(UnificationOption option) {
+            this.options.add(option);
+            return this;
         }
 
         public TestIfBuilder testIf(Type type) {
-            return new TestIfBuilder(type, this.context);
+            return new TestIfBuilder(type, this.context, this.options);
         }
 
         public TestIfBuilder testIf(Typed typed) {
-            return new TestIfBuilder(typed.getType(), this.context);
+            return new TestIfBuilder(typed.getType(), this.context, this.options);
         }
     }
 

@@ -45,6 +45,7 @@ import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.UnificationOption;
 import de.uni.bremen.monty.moco.exception.UnknownIdentifierException;
 import de.uni.bremen.monty.moco.visitor.typeinf.TypeResolver;
 
@@ -155,7 +156,6 @@ public class ClassScope extends Scope {
         return result;
     }
 
-
     @Override
     public Optional<ProcedureDeclaration> getOverridden(TypeResolver resolver,
             ProcedureDeclaration decl) {
@@ -190,6 +190,7 @@ public class ClassScope extends Scope {
         final Function overrideType = override.getType().asFunction();
         return overridden.getIdentifier().equals(override.getIdentifier()) &&
             Unification.given(override.getScope())
+                    .and(UnificationOption.PARAMETER_TYPE_INVARIANCE)
                     .testIf(overrideType.getParameters())
                     .isA(overriddenType.getParameters())
                     .isSuccessful();

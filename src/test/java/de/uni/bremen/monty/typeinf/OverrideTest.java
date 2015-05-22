@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
+import de.uni.bremen.monty.moco.util.ExpectOutput;
 import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
@@ -446,5 +447,42 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     )
     public void testSameErasureClass() throws Exception {
         typeCheckAndExpectFailure();
+    }
+
+    @Test
+    @Monty(
+    "A a := A()\n"+
+    "a.test(3)\n" +
+    "B b := B()\n" +
+    "b.test(5)\n" +
+    "b.test('c')\n"+
+    "class A:\n" +
+    "    +test(Object a):\n" +
+    "        print(\"a\")\n" +
+    "class B inherits A:\n" +
+    "    +test(Int b):\n" +
+    "        print(\"b\")"
+    )
+    @ExpectOutput("aba")
+    public void testOverrideInvariance() throws Exception {
+        // no override, because of parameter invariance
+        this.compiler.compile();
+    }
+
+    @Test
+    @Monty(
+    "A<Int> a := A<Int>()\n"+
+    "a.test(3)\n" +
+    "B b := B()\n" +
+    "b.test(\"b\")\n" +
+    "class A<T>:\n" +
+    "    +test(T a):\n" +
+    "        print(\"a\")\n" +
+    "class B inherits A<String>:\n" +
+    "    +test(String b):\n" +
+    "        print(\"b\")"
+    )
+    public void testOverrideTypeParameter() throws Exception {
+        this.compiler.compile();
     }
 }

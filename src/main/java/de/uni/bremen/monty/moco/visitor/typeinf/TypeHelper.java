@@ -174,7 +174,8 @@ public final class TypeHelper {
     public static BestFit bestFit(Collection<ProcedureDeclaration> candidates,
             FunctionCall call, TypeResolver typeResolver) {
 
-        final List<Type> actualSignature = typeResolver.resolveTypesOf(call.getArguments());
+        final List<Type> actualSignature = typeResolver.resolveTypesOf(
+                call.getArguments());
 
         final Function callType = Function.named(call.getIdentifier())
                 .atLocation(call)

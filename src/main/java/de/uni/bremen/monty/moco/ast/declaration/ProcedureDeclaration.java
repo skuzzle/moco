@@ -46,6 +46,7 @@ import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.UnificationOption;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
@@ -119,6 +120,8 @@ public class ProcedureDeclaration extends TypeDeclaration implements
         final Function otherType = other.getType().asFunction();
         return getIdentifier().equals(other.getIdentifier()) &&
             Unification
+                    .given(getScope())
+                    .and(UnificationOption.PARAMETER_TYPE_INVARIANCE)
                     .testIf(thisType)
                     .isA(otherType)
                     .isSuccessful();

@@ -13,6 +13,7 @@ import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.NamedNode;
 import de.uni.bremen.monty.moco.ast.Package;
 import de.uni.bremen.monty.moco.ast.Position;
+import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
 import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
@@ -236,6 +237,32 @@ class ProcedureTypeResolver extends TypeResolverFragment {
             return;
         }
         final Scope scope = decl.getScope();
+        final ResolvableIdentifier name = ResolvableIdentifier.of(decl.getIdentifier());
+        final List<ProcedureDeclaration> overloads = scope.resolveProcedure(decl, name);
+
+        /*ProcedureDeclaration override = null;
+        for (final ProcedureDeclaration overload : overloads) {
+            if (overload == decl) {
+                // do not compare with self
+                continue;
+            }
+            resolveTypeOf(overload);
+
+            final Unification test = Unification
+                .given(overload.getScope())
+                .and(UnificationOption.PARAMETER_TYPE_INVARIANCE)
+                .testIf(decl.getType())
+                .isA(overload.getType());
+
+            if (test.isSuccessful()) {
+                if (override == null) {
+                    override = decl;
+                } else {
+                    reportError(decl, "Procedure redeclaration: %s", name);
+                }
+            }
+        }*/
+
         final Optional<ProcedureDeclaration> overridden = scope.getOverridden(this, decl);
         if (overridden.isPresent()) {
             final Unification test = Unification
