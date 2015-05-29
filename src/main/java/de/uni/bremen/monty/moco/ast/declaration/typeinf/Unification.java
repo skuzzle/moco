@@ -24,39 +24,12 @@ import de.uni.bremen.monty.moco.ast.CoreClasses;
  */
 public class Unification {
 
-    private static final class TypePair {
-        private final Type t1;
-        private final Type t2;
-
-        private TypePair(Type t1, Type t2) {
-            this.t1 = t1;
-            this.t2 = t2;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 11 * this.t1.hashCode();
-            hash += 31 * this.t2.hashCode();
-            return hash;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return obj == this || obj instanceof TypePair &&
-                this.t1 == ((TypePair) obj).t1 &&
-                this.t2 == ((TypePair) obj).t2;
-        }
-    }
-
     /** A successful unification which does not contain any substitutions */
     public static final Unification EMPTY = successful(
             Collections.<TypeVariable, Type> emptyMap());
 
     /** An unsuccessful unification */
     public static final Unification FAILED = new Unification(false, null);
-
-    private static final Map<TypePair, Unification> UNIFICATION_CACHE =
-            new HashMap<>();
 
     public static final class TestIfBuilder {
         private final Type first;
@@ -83,15 +56,8 @@ public class Unification {
                 throw new IllegalArgumentException("second is null");
             }
 
-            final TypePair pair = new TypePair(this.first, second);
-            Unification unification = UNIFICATION_CACHE.get(pair);
-            if (unification == null) {
-                final Unifier unifier = new Unifier(this.context, this.options);
-                unification = unifier.unify(this.first, second).deep();
-                // XXX: caching disabled!
-                // UNIFICATION_CACHE.put(pair, unification);
-            }
-            return unification;
+            final Unifier unifier = new Unifier(this.context, this.options);
+            return unifier.unify(this.first, second).deep();
         }
     }
 
