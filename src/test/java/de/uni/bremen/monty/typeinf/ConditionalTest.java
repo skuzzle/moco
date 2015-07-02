@@ -45,4 +45,33 @@ public class ConditionalTest extends AbstractTypeInferenceTest {
     public void testIsAWithIf() throws Exception {
         this.compiler.compile();
     }
+
+    @Test
+    @Monty(
+    "foo():\n" +
+    "    if 1:\n" +
+    "        return"
+    )
+    public void testConditionIsNoBoolean() throws Exception {
+        typeCheckAndExpectFailure("Int is not a bool");
+    }
+
+    @Test
+    @Monty(
+    "foo():\n" +
+    "    Int a := 1 if 2 else 3\n"
+    )
+    public void testConditionIsNoBoolean2() throws Exception {
+        typeCheckAndExpectFailure("Int is not a bool");
+    }
+
+    @Test
+    @Monty(
+    "foo():\n" +
+    "    while 1:\n" +
+    "        return"
+    )
+    public void testConditionIsNoBooleanWhile() throws Exception {
+        typeCheckAndExpectFailure("Int is not a bool");
+    }
 }

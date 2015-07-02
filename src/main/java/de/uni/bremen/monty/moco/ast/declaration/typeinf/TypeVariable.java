@@ -75,7 +75,7 @@ public class TypeVariable extends Type {
 
     /**
      * Determines whether this is an artificially created intermediate type variable.
-     * That is, there is no conrete {@link TypeVariableDeclaration} where this type
+     * That is, there is no concrete {@link TypeVariableDeclaration} where this type
      * originates from.
      *
      * @return Whether this is an intermediate variable.

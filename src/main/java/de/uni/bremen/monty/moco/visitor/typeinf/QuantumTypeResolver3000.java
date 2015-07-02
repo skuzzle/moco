@@ -105,6 +105,9 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         }
 
         resolveTypeOf(nodeDecl);
+        if (!nodeDecl.isTypeResolved()) {
+            reportError(nodeDecl, "Detected inheritance cycle");
+        }
         final boolean isTypeVariable = nodeDecl.getType().isVariable();
 
         if (isTypeVariable && !node.getTypeArguments().isEmpty()) {
@@ -220,9 +223,9 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         final List<TypeDeclaration> superClasses = node.getSuperClassDeclarations();
         // This can only deal with single inheritance!
         if (!superClasses.isEmpty()) {
-            TypeDeclaration type = superClasses.get(0);
+            final TypeDeclaration type = superClasses.get(0);
             if (type instanceof ClassDeclaration) {
-                ClassDeclaration clazz = (ClassDeclaration) type;
+                final ClassDeclaration clazz = (ClassDeclaration) type;
                 attributeIndex = clazz.getLastAttributeIndex();
                 virtualMethodTable.addAll(clazz.getVirtualMethodTable());
             }
@@ -231,16 +234,16 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         // Make room for the ctable pointer
         int vmtIndex = virtualMethodTable.size() + 1;
 
-        for (Declaration decl : node.getBlock().getDeclarations()) {
+        for (final Declaration decl : node.getBlock().getDeclarations()) {
             if (decl instanceof VariableDeclaration) {
-                VariableDeclaration varDecl = (VariableDeclaration) decl;
+                final VariableDeclaration varDecl = (VariableDeclaration) decl;
                 varDecl.setAttributeIndex(attributeIndex++);
             } else if (decl instanceof ProcedureDeclaration) {
-                ProcedureDeclaration procDecl = (ProcedureDeclaration) decl;
+                final ProcedureDeclaration procDecl = (ProcedureDeclaration) decl;
                 if (!procDecl.isInitializer()) {
                     boolean foundEntry = false;
                     for (int i = 0; !foundEntry && i < virtualMethodTable.size(); i++) {
-                        ProcedureDeclaration vmtEntry = virtualMethodTable.get(i);
+                        final ProcedureDeclaration vmtEntry = virtualMethodTable.get(i);
                         if (procDecl.overrides(vmtEntry)) {
                             virtualMethodTable.set(i, procDecl);
                             procDecl.setVMTIndex(vmtEntry.getVMTIndex());
@@ -312,27 +315,6 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         }
     }
 
-    private boolean isUsage(VariableAccess access) {
-        // is usage if occurring:
-        // * right hand to assignment
-        // * as parameter to a call
-        // * left hand to a member access
-        ASTNode parent = access.getParentNode();
-        while (parent != null) {
-
-            if (parent instanceof Assignment && ((Assignment) parent).getRight() == access) {
-                return true;
-            } else if (parent instanceof MemberAccess && ((MemberAccess) parent).getLeft() == access) {
-                return true;
-            } else if (parent instanceof FunctionCall) {
-                return true;
-            }
-
-            parent = parent.getParentNode();
-        }
-        return false;
-    }
-
     @Override
     public void visit(MemberAccess node) {
         resolveTypeOf(node.getLeft());
@@ -395,7 +377,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
             ((VariableDeclaration) left.getDeclaration()).setInitialized(true);
 
         } else if (node.getLeft() instanceof MemberAccess) {
-            MemberAccess ma = (MemberAccess) node.getLeft();
+            final MemberAccess ma = (MemberAccess) node.getLeft();
             if (ma.getRight() instanceof VariableAccess) {
                 final VariableAccess maRight = (VariableAccess) ma.getRight();
                 maRight.setLValue();

@@ -99,15 +99,29 @@ public final class TypeHelper {
         }
 
         final Iterator<Set<Type>> it = typeMap.values().iterator();
-        Set<Type> current = it.next();
+        final Set<Type> current = it.next();
         while (it.hasNext()) {
             current.retainAll(it.next());
         }
+        // reverse to yield most concrete type (farthest away from Object)
         final Comparator<Type> byDistance = Comparator
                 .comparing(Type::distanceToObject)
                 .reversed();
 
-        return current.stream().sorted(byDistance).findFirst();
+        final Iterator<Type> typeIt = current.stream().sorted(byDistance).iterator();
+        if (!typeIt.hasNext()) {
+            return Optional.empty();
+        }
+        final Type first = typeIt.next();
+        if (typeIt.hasNext()) {
+            final Type next = typeIt.next();
+            if (next.distanceToObject() == first.distanceToObject()) {
+                // we have an ambiguous result, because there are two types with
+                // identical rating.
+                return Optional.empty();
+            }
+        }
+        return Optional.of(first);
     }
 
     public static Optional<Type> findCommonTyped(TypeContext scope, Typed... typedNodes) {
@@ -220,7 +234,7 @@ public final class TypeHelper {
                 continue outer;
             }
 
-            int rating = rateSignature(unification, callType.getParameters(),
+            final int rating = rateSignature(unification, callType.getParameters(),
                     candidateType.getParameters());
 
             if (rating <= bestRating) {
@@ -262,13 +276,9 @@ public final class TypeHelper {
         assert !t2.isFunction();
         if (t1 == t2) {
             return 0;
-        } else if (t1.isClass() && t2.isClass()) {
-            return Math.abs(t1.asClass().distanceToObject()
-                - t2.asClass().distanceToObject());
-        } else if (t1.isVariable() || t2.isVariable()) {
-            // TODO: XOR instead of OR?
-            return Integer.MAX_VALUE - 1;
         }
-        return 0;
+        final int left = t1.distanceToObject();
+        final int right = t2.distanceToObject();
+        return Math.abs(left - right);
     }
 }

@@ -2,6 +2,7 @@ package de.uni.bremen.monty.typeinf;
 
 import static org.junit.Assert.assertSame;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
@@ -432,6 +433,7 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     "    +<B> test(B b):\n" +
     "        pass"
     )
+    @Ignore
     public void testSameErasureSameScope() throws Exception {
         typeCheckAndExpectFailure();
     }
@@ -445,6 +447,7 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     "class A<T>:\n" +
     "    pass"
     )
+    @Ignore
     public void testSameErasureClass() throws Exception {
         typeCheckAndExpectFailure();
     }

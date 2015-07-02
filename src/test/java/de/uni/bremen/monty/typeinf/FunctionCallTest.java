@@ -1,16 +1,39 @@
 package de.uni.bremen.monty.typeinf;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
+import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 
 public class FunctionCallTest extends AbstractTypeInferenceTest {
+
+    @Test
+    @Monty(
+    "Object c := f('c')\n" +
+    "Int i := f(5)\n" +
+    "<A> A f(A a):\n"+
+    "    return a\n" +
+    "Int f(Int i):\n" +
+    "    return i"
+    )
+    public void testBestFitTypeVarVSConcreteType() throws Exception {
+        this.compiler.compile();
+        final FunctionDeclaration declA = SearchAST.forNode(FunctionDeclaration.class).where(Predicates.hasName("f")).and(Predicates.onLine(3)).in(this.compiler.getAst()).get();
+        final FunctionDeclaration declB = SearchAST.forNode(FunctionDeclaration.class).where(Predicates.hasName("f")).and(Predicates.onLine(5)).in(this.compiler.getAst()).get();
+        final FunctionCall callA = SearchAST.forNode(FunctionCall.class).where(Predicates.hasName("f")).and(Predicates.onLine(1)).in(this.compiler.getAst()).get();
+        final FunctionCall callB = SearchAST.forNode(FunctionCall.class).where(Predicates.hasName("f")).and(Predicates.onLine(2)).in(this.compiler.getAst()).get();
+
+        assertSame(callA.getDeclaration(), declA);
+        assertSame(callB.getDeclaration(), declB);
+    }
 
     @Test
     @Monty(
@@ -183,5 +206,25 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
 
         assertEquals(CoreClasses.voidType().getType(),
                 decl.getType().asFunction().getReturnType());
+    }
+
+    @Test
+    @Monty(
+    "Int i := foo()\n" +
+    "<A> Int foo():\n" +
+    "    return 1"
+    )
+    public void testCanNotInferFromCall() throws Exception {
+        typeCheckAndExpectFailure("Could not recover all type parameters from call of <foo>");
+    }
+
+    @Test
+    @Monty(
+    "Int i := foo<Int>()\n" +
+    "<A,B> Int foo():\n" +
+    "    return 1"
+    )
+    public void testCanNotInferAllFromCall() throws Exception {
+        typeCheckAndExpectFailure("Found no matching overload of <foo>");
     }
 }

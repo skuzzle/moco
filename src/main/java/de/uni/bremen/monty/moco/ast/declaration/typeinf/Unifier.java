@@ -43,7 +43,6 @@ final class Unifier {
     }
 
     private void union(Type m, Type n) {
-
         final Type rep_m = find(m);
         final Type rep_n = find(n);
 
@@ -89,7 +88,7 @@ final class Unifier {
         this.typeToClass.put(other, equivClass);
     }
 
-    public Unification unify(Type first, Type second) {
+    Unification unify(Type first, Type second) {
         final boolean success = unifyInternal(first, second, true);
         if (success) {
             final Map<TypeVariable, Type> subst = buildSubstitutions();

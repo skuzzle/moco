@@ -57,6 +57,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "class A:\n" +
     "    +? attr"
     )
+    @Ignore
     public void testImplicitAttributeDeclarationUsageBeforeAssignment() throws Exception {
         typeCheckAndExpectFailure();
     }
@@ -108,7 +109,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "    ? a\n" +
     "    ? b := a"
     )
-    @Debug
+    @Ignore
     public void testLocalVariableUsageBeforeAssignment() throws Exception {
         typeCheckAndExpectFailure();
     }
