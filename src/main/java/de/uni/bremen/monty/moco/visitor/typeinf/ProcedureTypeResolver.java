@@ -240,29 +240,6 @@ class ProcedureTypeResolver extends TypeResolverFragment {
         final ResolvableIdentifier name = ResolvableIdentifier.of(decl.getIdentifier());
         final List<ProcedureDeclaration> overloads = scope.resolveProcedure(decl, name);
 
-        /*ProcedureDeclaration override = null;
-        for (final ProcedureDeclaration overload : overloads) {
-            if (overload == decl) {
-                // do not compare with self
-                continue;
-            }
-            resolveTypeOf(overload);
-
-            final Unification test = Unification
-                .given(overload.getScope())
-                .and(UnificationOption.PARAMETER_TYPE_INVARIANCE)
-                .testIf(decl.getType())
-                .isA(overload.getType());
-
-            if (test.isSuccessful()) {
-                if (override == null) {
-                    override = decl;
-                } else {
-                    reportError(decl, "Procedure redeclaration: %s", name);
-                }
-            }
-        }*/
-
         final Optional<ProcedureDeclaration> overridden = scope.getOverridden(this, decl);
         if (overridden.isPresent()) {
             final Unification test = Unification

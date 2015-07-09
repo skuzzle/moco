@@ -12,7 +12,6 @@ import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration.DeclarationType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
-import de.uni.bremen.monty.moco.util.ASTUtil;
 
 public class Predicates {
 
@@ -37,7 +36,7 @@ public class Predicates {
 
     public static <C extends ASTNode> Predicate<C> hasParent(
             Class<? extends ASTNode> parentType) {
-        return c -> ASTUtil.findAncestor(c, parentType) != null;
+        return c -> SearchAST.forParent(parentType).in(c).isPresent();
     }
 
     public static <C extends NamedNode> Predicate<C> hasName(String name) {

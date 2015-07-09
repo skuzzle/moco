@@ -37,14 +37,16 @@ public final class TypeHelper {
         // hidden
     }
 
-    public static void testIsPossibleCast(TypeResolver resolver, Location location,
-            Typed from, Typed to) {
+    public static void testIsPossibleCast(TypeResolver resolver, TypeContext scope,
+            Location location, Typed from, Typed to) {
         final Unification u1 = Unification
+                .given(scope)
                 .testIf(from)
                 .isA(to);
 
         if (!u1.isSuccessful()) {
             final Unification u2 = Unification
+                    .given(scope)
                     .testIf(to)
                     .isA(from);
 
@@ -54,6 +56,10 @@ public final class TypeHelper {
                         to.getType());
             }
         }
+    }
+
+    public static Optional<Type> findCommonType(TypeContext context, Type...types) {
+        return findCommonType(new HashSet<>(Arrays.asList(types)), context);
     }
 
     public static Optional<Type> findCommonType(Set<Type> types,
@@ -83,13 +89,19 @@ public final class TypeHelper {
                     continue;
                 }
 
-                final Unification u1 = Unification.given(scope).testIf(outer).isA(inner);
+                final Unification u1 = Unification
+                        .given(scope)
+                        .testIf(outer)
+                        .isA(inner);
 
                 Type commonInner = outer;
                 if (u1.isSuccessful()) {
                     commonInner = inner;
                 } else {
-                    final Unification u2 = Unification.given(scope).testIf(inner).isA(outer);
+                    final Unification u2 = Unification
+                            .given(scope)
+                            .testIf(inner)
+                            .isA(outer);
                     if (u2.isSuccessful()) {
                         commonInner = outer;
                     }

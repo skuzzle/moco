@@ -1,13 +1,16 @@
 package de.uni.bremen.monty.typeinf;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
+import de.uni.bremen.monty.moco.util.Debug;
 import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
+il.astsearch.Predicates;
 
 public class RecursionTest extends AbstractTypeInferenceTest {
 
@@ -31,5 +34,21 @@ public class RecursionTest extends AbstractTypeInferenceTest {
                 .createType();
 
         assertUniqueTypeIs(expected, decl);
+    }
+
+    @Test
+    @Monty(
+    "? fib(Int n):\n" +
+    "    if (n < 3):\n" +
+    "        return n\n" +
+    "    else:\n"+
+    "        ? res1 := fib(n - 1)\n" +
+    "        ? res2 := fib(n - 2)\n" +
+    "        return res1 + res2"
+    )
+    @Debug
+    @Ignore
+    public void testInferReturnTypeSimpleRecursion() throws Exception {
+        this.compiler.compile();
     }
 }

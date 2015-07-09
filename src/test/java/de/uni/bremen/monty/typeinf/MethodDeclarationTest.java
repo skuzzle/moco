@@ -53,4 +53,16 @@ public class MethodDeclarationTest extends AbstractTypeInferenceTest {
     public void testReturnTypeMismatch() throws Exception {
         typeCheckAndExpectFailure("Body type <Char> not compatible with return type <Int>");
     }
+
+    @Test
+    @Monty(
+    "<A> ? foo(A a):\n" +
+    "    if true:\n" +
+    "        return a\n" +
+    "    else:\n" +
+    "        return 'c' as Object\n"
+    )
+    public void testInferTypeVarReturnType() throws Exception {
+        this.compiler.compile();
+    }
 }

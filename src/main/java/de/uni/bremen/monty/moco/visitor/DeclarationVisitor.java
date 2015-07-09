@@ -65,8 +65,6 @@ import de.uni.bremen.monty.moco.ast.expression.SelfExpression;
 import de.uni.bremen.monty.moco.ast.statement.ReturnStatement;
 import de.uni.bremen.monty.moco.ast.statement.Statement;
 import de.uni.bremen.monty.moco.exception.InvalidPlaceToDeclareException;
-import de.uni.bremen.monty.moco.exception.MontyBaseException;
-import de.uni.bremen.monty.moco.util.ASTUtil;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 
 /** This visitor must traverse the entire AST, set up scopes and define declarations.
@@ -105,13 +103,13 @@ public class DeclarationVisitor extends BaseVisitor {
 		if (!(node.getParentNode().getParentNode() instanceof ModuleDeclaration)) {
 			throw new InvalidPlaceToDeclareException(node, "A class may only be declared in a module.");
 		}
-		Block classBlock = node.getBlock();
+		final Block classBlock = node.getBlock();
 
 		this.currentScope.define(node);
         this.currentScope = this.currentScope.enterClass(node.getIdentifier().getSymbol());
 
 		// These are not boxed yet. So they cant inherit from object and cant have initializers.
-		List<ClassDeclaration> treatSpecial =
+		final List<ClassDeclaration> treatSpecial =
 		        Arrays.asList(CoreClasses.stringType(), CoreClasses.arrayType(), CoreClasses.voidType());
 
 		if (!treatSpecial.contains(node)) {
@@ -120,7 +118,7 @@ public class DeclarationVisitor extends BaseVisitor {
                 node.getSuperClassIdentifiers().add(obj);
 			}
 
-			ProcedureDeclaration defaultInitializer = buildDefaultInitializer(node);
+			final ProcedureDeclaration defaultInitializer = buildDefaultInitializer(node);
 			node.setDefaultInitializer(defaultInitializer);
 			classBlock.addDeclaration(defaultInitializer);
 			// The default initializer contains these statements so they should no longer be inside the class-block.
@@ -160,8 +158,10 @@ public class DeclarationVisitor extends BaseVisitor {
         node.setScope(node.getBody().getScope());
 
         if (node.isMethod() && node.getIdentifier().getSymbol().equals("initializer")) {
-            final ClassDeclaration enclosingClass = ASTUtil.findAncestor(node, ClassDeclaration.class);
-            if (enclosingClass != null) {
+            final Optional<ClassDeclaration> enclosingClass = SearchAST
+                    .forParent(ClassDeclaration.class)
+                    .in(node);
+            if (enclosingClass.isPresent()) {
                 node.setDeclarationType(DeclarationType.INITIALIZER);
             }
         }
@@ -229,17 +229,17 @@ public class DeclarationVisitor extends BaseVisitor {
                 ProcedureDeclaration.DeclarationType.INITIALIZER);
 
 		initializer.setParentNode(node.getBlock());
-		Block initializerBlock = initializer.getBody();
+		final Block initializerBlock = initializer.getBody();
 		initializerBlock.setParentNode(initializer);
 
-        for (TypeInstantiation superclass : node.getSuperClassIdentifiers()) {
-			SelfExpression self = new SelfExpression(node.getPosition());
-			FunctionCall call =
+        for (final TypeInstantiation superclass : node.getSuperClassIdentifiers()) {
+			final SelfExpression self = new SelfExpression(node.getPosition());
+			final FunctionCall call =
                     new FunctionCall(node.getPosition(), new ResolvableIdentifier(superclass.getIdentifier().getSymbol()
                             + "_definit"),
                             new ArrayList<Expression>(),
 			                new ArrayList<TypeInstantiation>());
-			MemberAccess defaultInitializerCall = new MemberAccess(node.getPosition(), self, call);
+			final MemberAccess defaultInitializerCall = new MemberAccess(node.getPosition(), self, call);
 
 			self.setParentNode(defaultInitializerCall);
 			call.setParentNode(defaultInitializerCall);
@@ -247,7 +247,7 @@ public class DeclarationVisitor extends BaseVisitor {
 			initializerBlock.addStatement(defaultInitializerCall);
 		}
 
-		for (Statement stm : node.getBlock().getStatements()) {
+		for (final Statement stm : node.getBlock().getStatements()) {
 			initializerBlock.addStatement(stm);
 		}
 

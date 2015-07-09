@@ -2,9 +2,32 @@ package de.uni.bremen.monty.typeinf;
 
 import org.junit.Test;
 
+import de.uni.bremen.monty.moco.util.ExpectOutput;
 import de.uni.bremen.monty.moco.util.Monty;
 
 public class ClassTest extends AbstractTypeInferenceTest {
+
+    @Test
+    @Monty(
+    "print(foo('a'))\n" +
+    "<A> Bool foo(A a):\n" +
+    "    return a is String"
+    )
+    @ExpectOutput("1")
+    public void testTypeVarIsAString() throws Exception {
+        typeCheckAndExpectFailure("Impossible cast");
+    }
+
+    @Test
+    @Monty(
+    "print(foo('a'))\n" +
+    "<A> Bool foo(A a):\n" +
+    "    return a is Object"
+    )
+    @ExpectOutput("1")
+    public void testTypeVarIsAObject() throws Exception {
+        this.compiler.compile();
+    }
 
     @Test
     @Monty(

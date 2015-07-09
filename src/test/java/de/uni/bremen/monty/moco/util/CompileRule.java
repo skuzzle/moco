@@ -247,10 +247,10 @@ public class CompileRule implements TestRule {
             try {
                 bv.setStopOnFirstError(true);
                 bv.visitDoubleDispatched(root);
-            } catch (MontyBaseException e) {
+            } catch (final MontyBaseException e) {
                 error = e;
                 break;
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 final Position pos = AbstractTypedASTNode.UNKNOWN_POSITION;
                 final String message = pos + " :\n"
                     + e.getMessage();
@@ -283,8 +283,8 @@ public class CompileRule implements TestRule {
         final ProcessBuilder pb = new ProcessBuilder("lli", llvmFile);
         final Process p = pb.start();
 
-        String in = IOUtils.toString(p.getInputStream());
-        String err = IOUtils.toString(p.getErrorStream());
+        final String in = IOUtils.toString(p.getInputStream());
+        final String err = IOUtils.toString(p.getErrorStream());
 
         assertEquals(expectedOutput, in);
         assertEquals(expectedError, err);
@@ -354,14 +354,19 @@ public class CompileRule implements TestRule {
             throws IOException, InterruptedException {
         final File targetFile = getNewFile(testFileName, PDF_OUTPUT, ".pdf");
         final String dotExec = getDotExecutable();
-        new ProcessBuilder(
-                dotExec,
-                "-Tpdf",
-                "-o " + targetFile.getName(),
-                dotFile.getAbsolutePath())
-                .directory(targetFile.getParentFile())
-                .inheritIO()
-                .start();
+
+        try {
+            new ProcessBuilder(
+                    dotExec,
+                    "-Tpdf",
+                    "-o " + targetFile.getName(),
+                    dotFile.getAbsolutePath())
+                    .directory(targetFile.getParentFile())
+                    .inheritIO()
+                    .start();
+        } catch (final IOException e) {
+            System.err.println("Error while excuting dot");
+        }
     }
 
     private boolean skipGenerateResources() {

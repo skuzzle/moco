@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.CoreTypes;
 
 final class Unifier {
@@ -178,7 +179,9 @@ final class Unifier {
             result = !this.context.isFree(s.asVariable()) ||
                 !this.context.isFree(t.asVariable());
         } else if (s.isVariable()) {
-            result = !this.context.isFree(s.asVariable());
+            // every typeVar also 'isA' Object
+            result = !this.context.isFree(s.asVariable())
+                    || t.equals(CoreClasses.objectType().getType());
         } else if (t.isVariable()) {
             result = !this.context.isFree(t.asVariable());
         } else {
