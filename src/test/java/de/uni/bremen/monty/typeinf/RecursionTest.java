@@ -10,7 +10,6 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.util.Debug;
 import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
-il.astsearch.Predicates;
 
 public class RecursionTest extends AbstractTypeInferenceTest {
 
