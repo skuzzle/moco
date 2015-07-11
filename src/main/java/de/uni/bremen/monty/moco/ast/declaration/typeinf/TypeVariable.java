@@ -30,17 +30,6 @@ public class TypeVariable extends Type {
         }
     }
 
-    @Deprecated
-    public static TypeVariable createType(String name, Position position) {
-        return new TypeVariable(new Identifier(name), position);
-    }
-
-    @Deprecated
-    public static TypeVariable createAnonymous(Position position) {
-        return new TypeVariable(new Identifier(PREFIX + String.valueOf(counter++)),
-                position);
-    }
-
     public static Named named(String name) {
         if (name == null) {
             throw new IllegalArgumentException("name is null");

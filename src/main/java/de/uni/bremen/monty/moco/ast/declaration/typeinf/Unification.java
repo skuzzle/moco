@@ -10,8 +10,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import de.uni.bremen.monty.moco.ast.CoreClasses;
-
 /**
  * Unification is the process of determining structural equality of two
  * {@link Type type expressions}. This class represents the result of unifying
@@ -105,14 +103,6 @@ public class Unification {
             return simultaneousFor(types.iterator());
         }
 
-        public Unification simultaneousForFresh() {
-            final Map<TypeVariable, Type> subst = new HashMap<>();
-            while (this.typeVars.hasNext()) {
-                subst.put(this.typeVars.next(), TypeVariable.anonymous().createType());
-            }
-            return Unification.successful(subst);
-        }
-
         public Unification simultaneousFor(Iterator<? extends Type> types) {
             if (types == null) {
                 throw new IllegalArgumentException("types is null");
@@ -159,25 +149,6 @@ public class Unification {
      */
     public static Unification failed() {
         return FAILED;
-    }
-
-    /**
-     * Creates an Unification which substitutes every TypeVariable with the
-     * Object type.
-     *
-     * @return The substitution.
-     */
-    public static Unification eraseTypes() {
-        return new Unification(true, null) {
-            @Override
-            Type getSubstitute(TypeVariable other) {
-                return CoreClasses.objectType().getType();
-            }
-        };
-    }
-
-    public static SimultaneousBuilder substitute(Iterable<TypeVariable> typeVars) {
-        return new SimultaneousBuilder(typeVars.iterator());
     }
 
     public static SimultaneousBuilder substitute(Collection<? extends Type> typeVars) {
@@ -228,47 +199,6 @@ public class Unification {
      */
     public boolean isSuccessful() {
         return this.success;
-    }
-
-    /**
-     * Builds the composition of this Unification with the given {@code other}.
-     * Applying the resulting Unification to a {@link Type} {@code S} yields the
-     * same result as if first applying {@code other} to {@code S}, and then
-     * applying {@code this} to the resulting term. If
-     *
-     * <pre>
-     * Unification delta = ...
-     * Unification gamma = ...
-     * Type S = ...
-     * </pre>
-     *
-     * then
-     *
-     * <pre>
-     * delta.apply(gamma).apply(S) = delta.apply(gamma.apply(S))
-     * </pre>
-     *
-     * @param other The Unification to compose with.
-     * @return A new Unification representing the composition.
-     */
-    public Unification apply(Unification other) {
-        if (other == null) {
-            throw new IllegalArgumentException("other is null");
-        } else if (!other.isSuccessful()) {
-            throw new IllegalStateException("can not apply unsuccesful unification");
-        } else if (!isSuccessful()) {
-            throw new IllegalStateException("can not apply on unsuccessful unification");
-        }
-        final Map<TypeVariable, Type> resultMap = new HashMap<>(this.subst.size());
-        for (final Entry<TypeVariable, Type> e : other.subst.entrySet()) {
-            resultMap.put(e.getKey(), e.getKey().apply(this));
-        }
-        for (final Entry<TypeVariable, Type> e : this.subst.entrySet()) {
-            if (!other.subst.containsKey(e.getKey())) {
-                resultMap.put(e.getKey(), e.getValue());
-            }
-        }
-        return successful(resultMap);
     }
 
     /**
