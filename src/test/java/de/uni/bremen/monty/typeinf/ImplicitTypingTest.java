@@ -17,7 +17,6 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
-import de.uni.bremen.monty.moco.util.Debug;
 import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
@@ -45,7 +44,6 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "        self.attr := \"Bernd\"\n" +
     "    + String attr := \"Hallo\""
     )
-    @Debug
     public void testFoo() throws Exception {
         this.compiler.compile();
     }
