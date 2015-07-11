@@ -13,6 +13,7 @@ import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
@@ -55,6 +56,12 @@ class CallTypeResolver extends TypeResolverFragment {
         match.addUsage(node);
         if (isRecursive(node, match)) {
             match.addRecursiveCall(node);
+
+            final Function matchType = match.getType().asFunction();
+            final Type retType = matchType.getReturnType();
+            if (retType.isVariable() && retType.asVariable().isIntermediate()) {
+                reportError(node, "Functions with inferred return type can not be called recursively");
+            }
         }
         node.setTypeDeclarationIfResolved(match);
     }

@@ -143,7 +143,7 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    return foo(n - 1)"
     )
     public void testRecursiveCall() throws Exception {
-        typeCheckAndExpectFailure("Could not infer return type of <foo>");
+        typeCheckAndExpectFailure("Functions with inferred return type can not be called recursively");
     }
 
     @Test
@@ -155,12 +155,7 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "        return n * factorial(n - 1)"
     )
     public void testRecursiveFactorial() throws Exception {
-        this.compiler.compile();
-        final FunctionCall call = this.compiler.searchFor(FunctionCall.class,
-                Predicates.hasName("factorial"));
-
-        assertEquals(CoreClasses.intType().getType(), call.getType());
-        assertEquals(CoreClasses.intType(), call.getTypeDeclaration());
+        typeCheckAndExpectFailure("Functions with inferred return type can not be called recursively");
     }
 
     @Test

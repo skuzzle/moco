@@ -140,12 +140,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "        return n * factorial<A>(n - 1, a)"
     )
     public void testStaticGenericRecursiveFunction() throws Exception {
-        this.compiler.compile();
-        final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
-                Predicates.hasName("x"));
-
-        assertUniqueTypeIs(CoreClasses.intType().getType(), x);
-        this.compiler.assertAllTypesResolved();
+        typeCheckAndExpectFailure("Functions with inferred return type can not be called recursively");
     }
 
     @Test

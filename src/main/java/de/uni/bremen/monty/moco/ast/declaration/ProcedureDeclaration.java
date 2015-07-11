@@ -84,8 +84,6 @@ public class ProcedureDeclaration extends TypeDeclaration implements
 
     private Collection<FunctionCall> recursiveCallers;
 
-    private boolean againFlag;
-
     /**
      * Constructor.
      *
@@ -220,20 +218,6 @@ public class ProcedureDeclaration extends TypeDeclaration implements
         return this.recursiveCallers;
     }
 
-    /**
-     * Will return true if this node is processed a second time for resolving
-     * recursive calls.
-     *
-     * @return Whether the node is visited a second time.
-     */
-    public boolean isRechecking() {
-        return this.againFlag;
-    }
-
-    public void setRecheckRecursive(boolean againFlag) {
-        this.againFlag = againFlag;
-    }
-
     /** Get the vmtIndex. */
     public int getVMTIndex() {
         return this.vmtIndex;
@@ -256,7 +240,7 @@ public class ProcedureDeclaration extends TypeDeclaration implements
         for (final TypeVariableDeclaration typeVar : this.typeParameters) {
             visitor.visitDoubleDispatched(typeVar);
         }
-        for (VariableDeclaration variableDeclaration : this.parameter) {
+        for (final VariableDeclaration variableDeclaration : this.parameter) {
             visitor.visitDoubleDispatched(variableDeclaration);
         }
         visitor.visitDoubleDispatched(this.body);

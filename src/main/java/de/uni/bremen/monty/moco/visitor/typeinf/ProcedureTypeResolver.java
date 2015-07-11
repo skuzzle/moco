@@ -132,11 +132,10 @@ class ProcedureTypeResolver extends TypeResolverFragment {
                 .quantifiedBy(typeArgs)
                 .createType();
 
-        if (!node.isRechecking()) {
-            // set intermediate type in case there is a recursive call
-            node.setType(declared);
-            node.setTypeDeclaration(node.getReturnTypeIdentifier().getTypeDeclaration());
-        }
+        // set intermediate type in case there is a recursive call
+        node.setType(declared);
+        node.setTypeDeclaration(node.getReturnTypeIdentifier().getTypeDeclaration());
+
         final Optional<Type> bodyType = getBodyType(node, declaredReturnType);
         if (!bodyType.isPresent()) {
             reportError(node, "Could not uniquely determine type of function's body");
@@ -171,13 +170,6 @@ class ProcedureTypeResolver extends TypeResolverFragment {
                 nodeType.getReturnType());
         node.setTypeDeclaration(typeDecl);
 
-        // If node is called recursively and this is the first pass on this
-        // node, recheck
-        // the procedure declaration again with latest return type information.
-        if (node.isRecursive() && !node.isRechecking()) {
-            node.setRecheckRecursive(true);
-            resolveTypeAgain(node);
-        }
         if (node.getReturnTypeIdentifier().getIdentifier().isTypeVariableIdentifier() &&
             node.getType().asFunction().getReturnType().isVariable() &&
             node.getType().asFunction().getReturnType().asVariable().isIntermediate()) {

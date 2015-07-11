@@ -3,7 +3,7 @@ class Foo:
         ? x := self.fak(2)
         Int y := self.fak(2)
 
-    + ? fak(Int n):
+    + Int fak(Int n):
         if n > 1:
             return n * self.fak(n - 1)
         else:
