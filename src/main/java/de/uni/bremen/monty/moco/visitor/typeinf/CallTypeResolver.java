@@ -29,19 +29,18 @@ class CallTypeResolver extends TypeResolverFragment {
     }
 
     public void resolveCallType(FunctionCall node) {
+        final List<ProcedureDeclaration> overloads;
         if (checkIsConstructorCall(node)) {
-            resolveCall(node, this::getConstructorOverloads);
+            overloads = getConstructorOverloads(node);
         } else {
-            resolveCall(node, this::getOverloads);
+            overloads = getOverloads(node);
         }
+        resolveCall(node, overloads);
     }
 
-    private void resolveCall(
-            FunctionCall node,
-            java.util.function.Function<FunctionCall, List<ProcedureDeclaration>> overloadSupplier) {
+    private void resolveCall(FunctionCall node, List<ProcedureDeclaration> candidates) {
         resolveTypesOf(node.getTypeArguments());
 
-        final List<ProcedureDeclaration> candidates = overloadSupplier.apply(node);
         final BestFit bestFit = TypeHelper.bestFit(candidates, node, this);
         checkIsUnique(bestFit, node);
 
