@@ -121,6 +121,9 @@ public abstract class Type implements Location {
     @Override
     public abstract boolean equals(Object obj);
 
+    @Override
+    public abstract int hashCode();
+
     public abstract boolean isA(Type other);
 
     @Override

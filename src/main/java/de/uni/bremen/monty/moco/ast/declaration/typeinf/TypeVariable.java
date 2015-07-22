@@ -5,7 +5,7 @@ import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 
-public class TypeVariable extends Type {
+public class TypeVariable extends IdentityType {
 
     public static final class Named {
         private final String name;
@@ -25,7 +25,7 @@ public class TypeVariable extends Type {
         }
 
         public TypeVariable createType() {
-            return new TypeVariable(new Identifier(this.name),
+            return new TypeVariable(this.name,
                     this.location.getPosition());
         }
     }
@@ -51,8 +51,9 @@ public class TypeVariable extends Type {
     private static int counter;
     private static final String PREFIX = "$VAR_";
 
-    private TypeVariable(Identifier name, Position positionHint) {
+    private TypeVariable(String name, Position positionHint) {
         super(name, positionHint);
+
     }
 
     @Override
@@ -77,15 +78,5 @@ public class TypeVariable extends Type {
     @Override
     Type apply(Unification unification) {
         return unification.getSubstitute(this);
-    }
-
-    @Override
-    public boolean isA(Type other) {
-        return this == other;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return this == obj;
     }
 }

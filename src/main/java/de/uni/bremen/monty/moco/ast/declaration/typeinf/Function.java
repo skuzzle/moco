@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.Identifier;
@@ -201,6 +202,11 @@ public class Function extends Type {
         final Function fun = other.asFunction();
         return getParameters().isA(fun.getParameters()) &&
                 getReturnType().isA(fun.getReturnType());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.returnType, this.parameterTypes);
     }
 
     @Override
