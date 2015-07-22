@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 
 import de.uni.bremen.monty.moco.ast.AbstractTypedASTNode;
-import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.NamedNode;
 import de.uni.bremen.monty.moco.ast.Position;
@@ -63,13 +62,6 @@ public class TypeInstantiation extends AbstractTypedASTNode implements NamedNode
             throw new IllegalArgumentException("typeName is null");
         }
         return new Builder(ResolvableIdentifier.of(typeName));
-    }
-
-    public static Builder forTypeName(Identifier typeName) {
-        if (typeName == null) {
-            throw new IllegalArgumentException("typeName is null");
-        }
-        return forTypeName(typeName.getSymbol());
     }
 
     private final ResolvableIdentifier typeName;

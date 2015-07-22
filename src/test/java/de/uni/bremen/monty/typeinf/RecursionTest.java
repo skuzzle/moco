@@ -50,4 +50,34 @@ public class RecursionTest extends AbstractTypeInferenceTest {
     public void testInferReturnTypeSimpleRecursion() throws Exception {
         this.compiler.compile();
     }
+
+
+    @Test
+    @Monty(
+    "? factorial(Int n):\n" +
+    "    if n < 2:\n" +
+    "        return 1\n" +
+    "    else:\n" +
+    "        return doFactorial(n-1)*n\n" +
+    "Int doFactorial(Int n):\n" +
+    "    return factorial(n)"
+    )
+    public void testIndirectRecursion() throws Exception {
+        typeCheckAndExpectFailure("Encountered unresolved return type");
+    }
+
+    @Test
+    @Monty(
+    "Int a := doFactorial(2)\n" +
+    "? factorial(Int n):\n" +
+    "    if n < 2:\n" +
+    "        return 1\n" +
+    "    else:\n" +
+    "        return doFactorial(n-1)*n\n" +
+    "Int doFactorial(Int n):\n" +
+    "    return factorial(n)"
+    )
+    public void testIndirectRecursion2() throws Exception {
+        typeCheckAndExpectFailure("Encountered unresolved return type");
+    }
 }

@@ -50,13 +50,6 @@ public class ResolvableIdentifier extends Identifier {
 		return new ResolvableIdentifier(symbol);
 	}
 
-	public static ResolvableIdentifier of(NamedNode namedNode) {
-		if (namedNode == null) {
-			throw new IllegalArgumentException("namedNode is null");
-		}
-		return of(namedNode.getIdentifier());
-	}
-
 	public static ResolvableIdentifier of(Identifier identifier) {
 		if (identifier == null) {
 			throw new IllegalArgumentException("identifier is null");
@@ -65,7 +58,7 @@ public class ResolvableIdentifier extends Identifier {
 	}
 
 	/** Constructor.
-	 * 
+	 *
 	 * @param symbol
 	 *            the name of the declaration */
 	public ResolvableIdentifier(String symbol) {

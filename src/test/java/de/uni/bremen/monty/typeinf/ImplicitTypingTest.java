@@ -138,7 +138,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "        return n * factorial<A>(n - 1, a)"
     )
     public void testStaticGenericRecursiveFunction() throws Exception {
-        typeCheckAndExpectFailure("Functions with inferred return type can not be called recursively");
+        typeCheckAndExpectFailure("Encountered unresolved return type");
     }
 
     @Test

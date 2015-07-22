@@ -17,11 +17,6 @@ abstract class TypeResolverFragment implements TypeResolver {
     }
 
     @Override
-    public void resolveTypeAgain(ASTNode node) {
-        this.resolver.resolveTypeAgain(node);
-    }
-
-    @Override
     public void reportError(Location location, String message, Object... format) {
         throw new TypeInferenceException(location, String.format(message, format));
     }

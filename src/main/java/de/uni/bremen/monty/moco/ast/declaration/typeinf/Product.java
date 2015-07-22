@@ -52,13 +52,6 @@ public class Product extends Type {
         }
     }
 
-    public static ProductBuilder of(Type... types) {
-        if (types == null) {
-            throw new IllegalArgumentException("types is null");
-        }
-        return of(Arrays.asList(types));
-    }
-
     public static ProductBuilder of(Collection<? extends Type> types) {
         if (types == null) {
             throw new IllegalArgumentException("types is null");

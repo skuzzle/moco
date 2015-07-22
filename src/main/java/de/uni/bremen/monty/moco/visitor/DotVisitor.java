@@ -308,10 +308,16 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
     @Override
     public void visit(Package node) {
         if (this.printNatives || !node.isNativePackage()) {
-            this.dotBuilder.printNode(node, "Package", node.getPosition().toString());
-            super.visit(node);
-            for (final ModuleDeclaration module : node.getModules()) {
-                this.dotBuilder.printEdge(node, module, "");
+            if (!node.getModules().isEmpty()) {
+                this.dotBuilder.printNode(node, "Package", node.getPosition().toString());
+
+                super.visit(node);
+
+                for (final ModuleDeclaration module : node.getModules()) {
+                    this.dotBuilder.printEdge(node, module, "");
+                }
+            } else {
+                super.visit(node);
             }
         }
     }

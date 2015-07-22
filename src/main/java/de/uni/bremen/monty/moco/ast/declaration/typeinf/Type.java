@@ -1,24 +1,10 @@
 package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
 
 public abstract class Type implements Location {
-
-    public static List<Type> convert(List<? extends Typed> types) {
-        final List<Type> result = new ArrayList<>(types.size());
-        for (final Typed typed : types) {
-            if (typed.getType() == null) {
-                throw new IllegalStateException("encountered null type");
-            }
-            result.add(typed.getType());
-        }
-        return result;
-    }
 
     private final Identifier name;
     private final Position positionHint;

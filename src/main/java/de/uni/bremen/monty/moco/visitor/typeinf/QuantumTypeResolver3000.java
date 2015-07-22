@@ -63,18 +63,6 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
     }
 
     @Override
-    public void resolveTypeAgain(ASTNode node) {
-        new BaseVisitor() {
-            @Override
-            protected void onEnterEachNode(ASTNode node) {
-                QuantumTypeResolver3000.this.visited.remove(node);
-            }
-        }.visitDoubleDispatched(node);
-        this.visited.remove(node);
-        resolveTypeOf(node);
-    }
-
-    @Override
     public void visit(TypeInstantiation node) {
         // this is either of:
         // ? [ special case ]
@@ -431,16 +419,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
 
     @Override
     public void visit(ConditionalStatement node) {
-        resolveTypeOf(node.getCondition());
-        final Unification condition = Unification
-                .testIf(node.getCondition())
-                .isA(CoreClasses.boolType());
-
-        if (!condition.isSuccessful()) {
-            reportError(node.getCondition(), "%s is not a bool",
-                    node.getCondition().getType());
-        }
-
+        handleCondition(node.getCondition());
         resolveTypeOf(node.getThenBlock());
         resolveTypeOf(node.getElseBlock());
     }

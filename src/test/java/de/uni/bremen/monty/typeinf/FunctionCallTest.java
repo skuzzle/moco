@@ -9,6 +9,7 @@ import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
+import de.uni.bremen.monty.moco.util.Debug;
 import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
@@ -142,8 +143,9 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "? foo(Int n):\n" +
     "    return foo(n - 1)"
     )
+    @Debug
     public void testRecursiveCall() throws Exception {
-        typeCheckAndExpectFailure("Functions with inferred return type can not be called recursively");
+        typeCheckAndExpectFailure("Encountered unresolved return type");
     }
 
     @Test
@@ -155,22 +157,7 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "        return n * factorial(n - 1)"
     )
     public void testRecursiveFactorial() throws Exception {
-        typeCheckAndExpectFailure("Functions with inferred return type can not be called recursively");
-    }
-
-    @Test
-    @Monty(
-    "? factorial(Int n):\n" +
-    "    if n < 2:\n" +
-    "        return 1\n" +
-    "    else:\n" +
-    "        return n * doFactorial(n-1)\n" +
-    "Int doFactorial(Int n):\n" +
-    "    return factorial(n)"
-    )
-    public void testIndirectRecursion() throws Exception {
-        // XXX: TODO: handle this
-        typeCheckAndExpectFailure();
+        typeCheckAndExpectFailure("Encountered unresolved return type");
     }
 
     @Test
@@ -220,6 +207,28 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    return 1"
     )
     public void testCanNotInferAllFromCall() throws Exception {
+        typeCheckAndExpectFailure("Found no matching overload of <foo>");
+    }
+
+    @Test
+    @Monty(
+    "Int a := 10\n"+
+    "Int b := a()"
+    )
+    public void testCallNonCallable() throws Exception {
+        this.exception.expectMessage("Identifier is not defined: a");
+        this.compiler.typeCheck();
+    }
+
+    @Test
+    @Monty(
+    "foo('c')\n" +
+    "Int foo(Int i):\n" +
+    "    return i\n" +
+    "foo():\n"+
+    "    pass"
+    )
+    public void testOverloadNoMatches() throws Exception {
         typeCheckAndExpectFailure("Found no matching overload of <foo>");
     }
 }

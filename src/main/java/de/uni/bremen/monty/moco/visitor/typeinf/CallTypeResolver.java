@@ -49,6 +49,7 @@ class CallTypeResolver extends TypeResolverFragment {
         final Unification unification = bestFit.getUnification();
         final Function callType = bestFit.getCallType();
 
+        checkResultTypeForRecursion(node, match);
         checkValidTypeParameterDecls(node, bestFit);
         final Function unified = unification.apply(callType);
         node.setType(unified.getReturnType());
@@ -64,6 +65,14 @@ class CallTypeResolver extends TypeResolverFragment {
             }
         }
         node.setTypeDeclarationIfResolved(match);
+    }
+
+    private void checkResultTypeForRecursion(FunctionCall call,
+            ProcedureDeclaration match) {
+        final Type ret = match.getType().asFunction().getReturnType();
+        if (ret.isVariable() && ret.asVariable().isIntermediate()) {
+            reportError(call, "Encountered unresolved return type");
+        }
     }
 
     private boolean isRecursive(FunctionCall call, ProcedureDeclaration callDecl) {

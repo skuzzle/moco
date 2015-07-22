@@ -58,10 +58,6 @@ public final class TypeHelper {
         }
     }
 
-    public static Optional<Type> findCommonType(TypeContext context, Type...types) {
-        return findCommonType(new HashSet<>(Arrays.asList(types)), context);
-    }
-
     public static Optional<Type> findCommonType(Set<Type> types,
             TypeContext scope) {
         if (types.size() == 1) {

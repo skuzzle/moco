@@ -2,6 +2,7 @@ package de.uni.bremen.monty.typeinf;
 
 import org.junit.Test;
 
+import de.uni.bremen.monty.moco.util.Debug;
 import de.uni.bremen.monty.moco.util.ExpectOutput;
 import de.uni.bremen.monty.moco.util.Monty;
 
@@ -89,5 +90,28 @@ public class ClassTest extends AbstractTypeInferenceTest {
     )
     public void testParent() throws Exception {
         this.compiler.compile();
+    }
+
+    @Test
+    @Monty(
+    "class Bar inherits Foo<?>:\n"+
+    "    pass\n" +
+    "class Foo<A>:\n"+
+    "    pass"
+    )
+    @Debug
+    public void testQuantifyAnonymously() throws Exception {
+        typeCheckAndExpectFailure("Type can not be quantified with anonymous type variable");
+    }
+
+    @Test
+    @Monty(
+    "class Bar inherits Foo<Int>:\n"+
+    "    pass\n" +
+    "class Foo<A, B>:\n"+
+    "    pass"
+    )
+    public void testTypeParameterCountMismatch() throws Exception {
+        typeCheckAndExpectFailure("Type parameter count mismatch");
     }
 }

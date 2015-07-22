@@ -6,8 +6,6 @@ import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Scope;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
-import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
@@ -36,21 +34,5 @@ public class QuantumTypeErasor9k extends BaseVisitor {
         } else if (decl instanceof TypeVariableDeclaration) {
             node.setTypeDeclaration(CoreClasses.objectType());
         }
-    }
-
-    @Override
-    public void visit(FunctionDeclaration node) {
-        super.visit(node);
-        //checkRedeclaration(node);
-    }
-
-    @Override
-    public void visit(ProcedureDeclaration node) {
-        super.visit(node);
-        //checkRedeclaration(node);
-    }
-
-    private void checkRedeclaration(ProcedureDeclaration node) {
-
     }
 }
