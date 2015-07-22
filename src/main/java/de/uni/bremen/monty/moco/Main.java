@@ -66,21 +66,21 @@ import de.uni.bremen.monty.moco.visitor.typeinf.QuantumTypeResolver3000;
 public class Main {
 
 	public static void main(String[] args) throws IOException {
-		Params params = new Params(args);
+		final Params params = new Params(args);
 		new Main().start(params);
 	}
 
 	private void start(Params params) throws IOException {
 
-		String inputFile = params.getInputFile();
+		final String inputFile = params.getInputFile();
 
 		if (params.isDebugParseTree()) {
 			debugParseTree(params, inputFile);
 			return;
 		}
 
-		PackageBuilder packageBuilder = new PackageBuilder(params);
-		Package mainPackage = packageBuilder.buildPackage();
+		final PackageBuilder packageBuilder = new PackageBuilder(params);
+		final Package mainPackage = packageBuilder.buildPackage();
 
 		visitVisitors(params, mainPackage);
 	}
@@ -98,12 +98,12 @@ public class Main {
 
 		boolean everyThingIsAwesome = true;
 
-		for (BaseVisitor visitor : visitors) {
+		for (final BaseVisitor visitor : visitors) {
 			visitor.setStopOnFirstError(params.isStopOnFirstError());
 
 			try {
 				visitor.visitDoubleDispatched(ast);
-			} catch (RuntimeException exception) {
+			} catch (final RuntimeException exception) {
 				visitor.logError(exception);
 				everyThingIsAwesome = false;
 				break;
@@ -116,10 +116,9 @@ public class Main {
 		}
 
 		if (params.usePrintVisitor()) {
-			//(new PrintVisitor()).visitDoubleDispatched(ast);
             try (final DotVisitor v = DotVisitor.toFile(new File("ast.dot"), false)) {
 			    v.visitDoubleDispatched(ast);
-			} catch (IOException e) {
+			} catch (final IOException e) {
 			    System.out.println(e.getMessage());
 			}
 		} else if (everyThingIsAwesome) {
@@ -129,18 +128,18 @@ public class Main {
 	}
 
 	private void debugParseTree(Params params, String inputFile) throws IOException {
-		AntlrAdapter antlrAdapter = new AntlrAdapter();
+		final AntlrAdapter antlrAdapter = new AntlrAdapter();
 
-		File file = new File(inputFile);
-		MontyParser parser = antlrAdapter.createParser(new FileInputStream(file));
-		ParseTreePrinter parseTreePrinter = new ParseTreePrinter(parser);
+		final File file = new File(inputFile);
+		final MontyParser parser = antlrAdapter.createParser(new FileInputStream(file));
+		final ParseTreePrinter parseTreePrinter = new ParseTreePrinter(parser);
 		parser.addParseListener(parseTreePrinter);
 		parser.compilationUnit();
 		System.out.print(parseTreePrinter.toString());
 		try {
 			new TestRig(new String[] { "de.uni.bremen.monty.moco.antlr.Monty", "compilationUnit", "-gui",
 			        params.getInputFile() }).process();
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -154,12 +153,12 @@ public class Main {
 		}
 
 		if (!params.isGenerateOnlyLLVM()) {
-			String llFile = params.getLlFile();
-			ProcessBuilder processBuilder = new ProcessBuilder("lli", llFile);
-			Process start = processBuilder.start();
+			final String llFile = params.getLlFile();
+			final ProcessBuilder processBuilder = new ProcessBuilder("lli", llFile);
+			final Process start = processBuilder.start();
 
-			String in = IOUtils.toString(start.getInputStream());
-			String err = IOUtils.toString(start.getErrorStream());
+			final String in = IOUtils.toString(start.getInputStream());
+			final String err = IOUtils.toString(start.getErrorStream());
 
 			System.err.print(err);
 			resultStream.print(in);
