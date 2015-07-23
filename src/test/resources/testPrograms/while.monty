@@ -1,0 +1,7 @@
+print(foo(true))
+print(foo(false))
+
+String foo(Bool cond):
+    while cond:
+        return "a"
+    return "b"
