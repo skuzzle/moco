@@ -71,7 +71,7 @@ public class CompileTestProgramsTest extends CompileFilesBaseTest {
 
 	@Parameters(name = "Program: {1}")
 	public static Collection<Object[]> data() throws Exception {
-		Collection<File> programFiles = getAllMontyFiles("testPrograms/");
+		final Collection<File> programFiles = getAllMontyFiles("testPrograms/");
 
 		return buildParameterObject(programFiles);
 	}

@@ -2,6 +2,7 @@ package de.uni.bremen.monty.typeinf;
 
 import org.junit.Test;
 
+import de.uni.bremen.monty.moco.util.ExpectOutput;
 import de.uni.bremen.monty.moco.util.Monty;
 
 public class ConditionalTest extends AbstractTypeInferenceTest {
@@ -14,7 +15,6 @@ public class ConditionalTest extends AbstractTypeInferenceTest {
     )
     public void testConditionalExpressionSuccess() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -33,7 +33,15 @@ public class ConditionalTest extends AbstractTypeInferenceTest {
     )
     public void testMatchingGenericBranches() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
+    }
+
+    @Test
+    @Monty(
+    "<X, Y> X conditionalIdentity(X a, Y b):\n" +
+    "    return a if true else b"
+    )
+    public void testConditionalNoCommonTypeVariable() throws Exception {
+        typeCheckAndExpectFailure("Conditional branches type mismatch");
     }
 
     @Test
@@ -42,6 +50,7 @@ public class ConditionalTest extends AbstractTypeInferenceTest {
     "if b is Bool:\n" +
     "    print(\"Ok\")"
     )
+    @ExpectOutput("Ok")
     public void testIsAWithIf() throws Exception {
         this.compiler.compile();
     }
@@ -73,5 +82,17 @@ public class ConditionalTest extends AbstractTypeInferenceTest {
     )
     public void testConditionIsNoBooleanWhile() throws Exception {
         typeCheckAndExpectFailure("Int is not a bool");
+    }
+
+    @Test
+    @Monty(
+    "? i := 0\n" +
+    "while i < 5:\n"+
+    "    print(\"i\")\n"+
+    "    i += 1\n"
+    )
+    @ExpectOutput("iiiii")
+    public void testWhileLoop() throws Exception {
+        this.compiler.compile();
     }
 }

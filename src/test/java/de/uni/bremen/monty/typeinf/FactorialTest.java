@@ -20,7 +20,6 @@ public class FactorialTest extends AbstractTypeInferenceTest {
         final VariableDeclaration decl = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("x"));
         assertUniqueTypeIs(CoreClasses.intType().getType(), decl);
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -30,7 +29,6 @@ public class FactorialTest extends AbstractTypeInferenceTest {
         final VariableDeclaration decl = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("y"));
         assertUniqueTypeIs(CoreClasses.intType().getType(), decl);
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test

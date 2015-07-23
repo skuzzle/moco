@@ -61,6 +61,10 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
         this.printNatives = printNatives;
     }
 
+    public void finish() {
+        this.dotBuilder.finish();
+    }
+
     @Override
     public void visit(TypeVariableDeclaration node) {
         this.dotBuilder.printNode(node, String.format("TypeParam '%s'",

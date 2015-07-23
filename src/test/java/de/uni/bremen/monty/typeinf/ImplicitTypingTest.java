@@ -17,6 +17,7 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
+import de.uni.bremen.monty.moco.util.ExpectOutput;
 import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
@@ -115,17 +116,33 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     @Test
     @Monty(
     "? x := identity<>(\"5\")\n" +
+    "print(x)\n" +
     "<A> ? identity(A a):\n" +
     "    return a"
     )
+    @ExpectOutput("5")
     public void testStaticGenericFunction() throws Exception {
         this.compiler.compile();
         final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("x"));
 
         assertUniqueTypeIs(CoreClasses.stringType().getType(), x);
-        this.compiler.assertAllTypesErased();
-        this.compiler.assertAllTypesResolved();
+    }
+
+    @Test
+    @Monty(
+    "? x := identity(identity(identity(\"5\")))\n" +
+    "print(x)\n" +
+    "<A> A identity(A a):\n" +
+    "    return a"
+    )
+    @ExpectOutput("5")
+    public void testStaticNestedGenericFunctionCall() throws Exception {
+        this.compiler.compile();
+        final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("x"));
+
+        assertUniqueTypeIs(CoreClasses.stringType().getType(), x);
     }
 
     @Test
@@ -175,7 +192,6 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     )
     public void testAssignmentWithInheritedRecursiveInstantiation() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -203,8 +219,6 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
 
         assertUniqueTypeIs(expected, var);
         assertUniqueTypeIs(expected, child);
-        this.compiler.assertAllTypesResolved();
-        this.compiler.assertAllTypesErased();
     }
 
     @Test
@@ -253,7 +267,6 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
 
         assertEquals(expected, ctor.getType());
         assertEquals(expected, decl.getType());
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -280,7 +293,6 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
 
         assertUniqueTypeIs(expected, a);
         assertUniqueTypeIs(expected, temp);
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -312,7 +324,6 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
 
         assertUniqueTypeIs(expected, call);
         assertUniqueTypeIs(expected, p);
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -338,7 +349,6 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
 
         assertNotSame(y.getType(), x.getType());
         assertSame(x.getType(), identity.getType().asFunction().getReturnType());
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -385,7 +395,6 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
         assertUniqueTypeIs(y, fooAcces);
         assertUniqueTypeIs(fooY, fooAcces.getLeft());
         assertUniqueTypeIs(fooInt, fooCall);
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -444,7 +453,6 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
         assertUniqueTypeIs(classX, x);
         assertUniqueTypeIs(classY, y);
         assertUniqueTypeIs(pair, p);
-        this.compiler.assertAllTypesResolved();
     }
 
 }

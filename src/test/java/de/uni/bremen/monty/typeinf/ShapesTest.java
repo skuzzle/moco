@@ -39,7 +39,6 @@ public class ShapesTest extends AbstractTypeInferenceTest {
 
         assertUniqueTypeIs(this.circle, s1);
         assertUniqueTypeIs(this.rectangle, s2);
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -56,7 +55,6 @@ public class ShapesTest extends AbstractTypeInferenceTest {
 
         assertUniqueTypeIs(expected, decl);
         assertEquals(expected.getReturnType(), decl.getType().asFunction().getReturnType());
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test

@@ -23,7 +23,6 @@ public class ExplicitTypingTest extends AbstractTypeInferenceTest {
         final VariableDeclaration decl = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("bar"));
         assertUniqueTypeIs(CoreClasses.stringType().getType(), decl);
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -40,7 +39,6 @@ public class ExplicitTypingTest extends AbstractTypeInferenceTest {
                 .createType();
         assertUniqueTypeIs(expected, decl);
         assertEquals(expected.getReturnType(), decl.getType().asFunction().getReturnType());
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -53,7 +51,6 @@ public class ExplicitTypingTest extends AbstractTypeInferenceTest {
                 .where(Predicates.hasName("add")))
                 .in(this.compiler.getAst()).get();
         assertUniqueTypeIs(CoreClasses.intType().getType(), decl);
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -69,7 +66,6 @@ public class ExplicitTypingTest extends AbstractTypeInferenceTest {
                 .createType();
         assertUniqueTypeIs(expected, decl);
         assertEquals(expected.getReturnType(), CoreClasses.voidType().getType());
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -79,7 +75,6 @@ public class ExplicitTypingTest extends AbstractTypeInferenceTest {
         final VariableDeclaration decl = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("a"));
         assertUniqueTypeIs(CoreClasses.stringType().getType(), decl);
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test

@@ -1,0 +1,45 @@
+<T> ? empty():
+    return Optional<T>()
+
+<T> ? of(T val):
+    return Optional(val)
+
+class Optional<T>:
+    -Common val
+
+    +initializer():
+        self.val := Empty()
+
+    +initializer(T value):
+        self.val := Holder(value)
+
+    +T orElse(T o):
+        ? cond := (self.val) is Holder
+        ? result := o
+        if cond:
+            ? holder := (self.val) as Holder<T>
+            result := holder.get()
+        return result
+
+class Common:
+    pass
+
+class Holder<T> inherits Common:
+    -T value
+
+    +initializer(T value):
+        self.value := value
+
+    +? get():
+        return self.value
+
+class Empty inherits Common:
+    pass
+
+
+? emptyString := empty<String>()
+? elseString := emptyString.orElse("foo")
+print(elseString)
+
+? presentString := of("bar")
+print(presentString.orElse("xyz"))

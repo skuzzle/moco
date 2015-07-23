@@ -29,7 +29,6 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     )
     public void testOverrideProcedureDirectSubClass() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
 
         final ProcedureDeclaration testA = SearchAST.forNode(ProcedureDeclaration.class)
                 .where(Predicates.hasName("test"))
@@ -77,7 +76,6 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     )
     public void testOverrideProcedureNotDirectSubClass() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
 
         final ProcedureDeclaration testA = SearchAST.forNode(ProcedureDeclaration.class)
                 .where(Predicates.hasName("test"))
@@ -132,7 +130,6 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     )
     public void testOverrideProcedureMultipleInheritance() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
 
         final ProcedureDeclaration testA = SearchAST.forNode(ProcedureDeclaration.class)
                 .where(Predicates.hasName("test"))
@@ -190,7 +187,6 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     )
     public void testOverrideMultipleInheritanceChooseFirst() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
 
         final ProcedureDeclaration testB = SearchAST.forNode(ProcedureDeclaration.class)
                 .where(Predicates.hasName("test"))
@@ -238,7 +234,6 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     )
     public void testOverrideFunctionReturnType() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -285,7 +280,6 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     )
     public void testOverrideExtendParameter() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
 
         final ProcedureDeclaration testA = SearchAST.forNode(ProcedureDeclaration.class)
                 .where(Predicates.hasName("test"))
@@ -337,7 +331,6 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     )
     public void testOverrideGenericClassParameter() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
 
         final ProcedureDeclaration testA = SearchAST.forNode(ProcedureDeclaration.class)
                 .where(Predicates.hasName("test"))
@@ -395,7 +388,6 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     )
     public void testOverrideGenericMethodParameter() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
 
         final ProcedureDeclaration testA = SearchAST.forNode(ProcedureDeclaration.class)
                 .where(Predicates.hasName("test"))

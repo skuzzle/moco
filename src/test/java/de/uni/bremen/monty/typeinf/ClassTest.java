@@ -2,9 +2,15 @@ package de.uni.bremen.monty.typeinf;
 
 import org.junit.Test;
 
+import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
+import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
+import de.uni.bremen.monty.moco.ast.expression.ParentExpression;
 import de.uni.bremen.monty.moco.util.Debug;
 import de.uni.bremen.monty.moco.util.ExpectOutput;
 import de.uni.bremen.monty.moco.util.Monty;
+import de.uni.bremen.monty.moco.util.astsearch.Predicates;
+import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 
 public class ClassTest extends AbstractTypeInferenceTest {
 
@@ -14,7 +20,6 @@ public class ClassTest extends AbstractTypeInferenceTest {
     "<A> Bool foo(A a):\n" +
     "    return a is String"
     )
-    @ExpectOutput("1")
     public void testTypeVarIsAString() throws Exception {
         typeCheckAndExpectFailure("Impossible cast");
     }
@@ -90,6 +95,20 @@ public class ClassTest extends AbstractTypeInferenceTest {
     )
     public void testParent() throws Exception {
         this.compiler.compile();
+
+        final ClassType expected = ClassType.classNamed("Foo")
+                .withSuperClass(CoreClasses.objectType().getType().asClass())
+                .createType();
+
+        final ParentExpression parent = SearchAST.forNode(ParentExpression.class)
+                .where(Predicates.onLine(6))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionCall call = this.compiler.searchFor(FunctionCall.class, Predicates.hasName("bar"));
+
+        assertUniqueTypeIs(CoreClasses.intType().getType(), call);
+        assertUniqueTypeIs(expected, parent);
     }
 
     @Test

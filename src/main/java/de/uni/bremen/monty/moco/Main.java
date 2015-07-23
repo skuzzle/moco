@@ -118,6 +118,7 @@ public class Main {
 		if (params.usePrintVisitor()) {
             try (final DotVisitor v = DotVisitor.toFile(new File("ast.dot"), false)) {
 			    v.visitDoubleDispatched(ast);
+			    v.finish();
 			} catch (final IOException e) {
 			    System.out.println(e.getMessage());
 			}

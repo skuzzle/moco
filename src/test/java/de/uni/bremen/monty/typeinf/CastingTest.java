@@ -23,7 +23,6 @@ public class CastingTest extends AbstractTypeInferenceTest {
     )
     public void testCastToGeneric() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test

@@ -146,7 +146,7 @@ public class CompileRule implements TestRule {
         return this.ast;
     }
 
-    public void assertAllTypesResolved() {
+    private void assertAllTypesResolved() {
         getAst().visit(new BaseVisitor() {
             {
                 setStopOnFirstError(true);
@@ -171,7 +171,7 @@ public class CompileRule implements TestRule {
         });
     }
 
-    public void assertAllTypesErased() {
+    private void assertAllTypesErased() {
         getAst().visit(new BaseVisitor() {
             {
                 setStopOnFirstError(true);
@@ -325,6 +325,7 @@ public class CompileRule implements TestRule {
 
         try (final DotVisitor dotVisitor = DotVisitor.toFile(targetDotFile, false)) {
             dotVisitor.visitDoubleDispatched(root);
+            dotVisitor.finish();
         }
 
         createASTasPdf(getTestFileName(), targetDotFile);

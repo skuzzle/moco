@@ -1,6 +1,7 @@
 package de.uni.bremen.monty.typeinf;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -12,6 +13,7 @@ import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeInstantiation;
+import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
@@ -20,6 +22,7 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
+import de.uni.bremen.monty.moco.util.ExpectOutput;
 import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
@@ -48,6 +51,28 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 Predicates.hasName("a"));
 
         assertTrue(a.getType().isVariable());
+    }
+
+    @Test
+    @Monty(
+    "class B<A>:\n" +
+    "    +<A> test(A a):\n" +
+    "        pass"
+    )
+    public void testHidingTypeVar() throws Exception {
+        this.compiler.compile();
+        final TypeVariableDeclaration tvd = this.compiler.searchFor(
+                TypeVariableDeclaration.class, Predicates.onLine(1));
+
+        final TypeVariableDeclaration tvd2 = this.compiler.searchFor(
+                TypeVariableDeclaration.class, Predicates.onLine(2));
+
+        final VariableDeclaration a = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("a"));
+
+        assertTrue(a.getType().isVariable());
+        assertNotEquals(tvd.getType(), a.getType());
+        assertEquals(a.getType(), tvd2.getType());
     }
 
     @Test
@@ -99,23 +124,38 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 .addTypeParameter(TypeVariable.anonymous().createType())
                 .createType();
         assertTrue(Unification.testIf(decl.getType()).isA(expected).isSuccessful());
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
     @Monty(
     "? x := identity<String>(\"5\")\n" +
+    "print(x)\n" +
     "<A> A identity(A a):\n" +
     "    return a"
     )
+    @ExpectOutput("5")
     public void testStaticGenericFunction() throws Exception {
         this.compiler.compile();
         final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("x"));
 
         assertUniqueTypeIs(CoreClasses.stringType().getType(), x);
-        this.compiler.assertAllTypesErased();
-        this.compiler.assertAllTypesResolved();
+    }
+
+    @Test
+    @Monty(
+    "? x := identity<String>(identity<String>(identity<String>(\"5\")))\n" +
+    "print(x)\n" +
+    "<A> A identity(A a):\n" +
+    "    return a"
+    )
+    @ExpectOutput("5")
+    public void testStaticNestedGenericFunctionCall() throws Exception {
+        this.compiler.compile();
+        final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
+                Predicates.hasName("x"));
+
+        assertUniqueTypeIs(CoreClasses.stringType().getType(), x);
     }
 
     @Test
@@ -133,7 +173,6 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 Predicates.hasName("x"));
 
         assertUniqueTypeIs(CoreClasses.intType().getType(), x);
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -162,7 +201,6 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
         assertTrue(Unification.testIf(decl.getType()).isA(expected1).isSuccessful());
         assertTrue(Unification.testIf(decl.getType()).isA(expected2).isSuccessful());
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -175,7 +213,6 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     )
     public void testAssignmentWithInheritedInstantiation() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -199,7 +236,6 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     )
     public void testAssignmentWithInheritedRecursiveInstantiation() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -234,7 +270,6 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 .createType();
 
         assertTrue(Unification.testIf(superClassDecl.getType()).isA(expectedTypeInst).isSuccessful());
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -262,8 +297,6 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
         assertUniqueTypeIs(expected, var);
         assertUniqueTypeIs(expected, child);
-        this.compiler.assertAllTypesResolved();
-        this.compiler.assertAllTypesErased();
     }
 
     @Test
@@ -335,7 +368,6 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
         assertEquals(expected, ctor.getType());
         assertEquals(expected, decl.getType());
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -362,7 +394,6 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
         assertUniqueTypeIs(expected, a);
         assertUniqueTypeIs(expected, temp);
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -390,7 +421,6 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
                 .createType();
 
         assertUniqueTypeIs(expected, call);
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -412,7 +442,6 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     )
     public void testGenericConstructor() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -477,7 +506,6 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
 
         assertNotSame(y.getType(), x.getType());
         assertSame(x.getType(), identity.getType().asFunction().getReturnType());
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -525,7 +553,6 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
         assertUniqueTypeIs(classX, x);
         assertUniqueTypeIs(classY, y);
         assertUniqueTypeIs(pair, p);
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -572,7 +599,6 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
         assertUniqueTypeIs(y, fooAcces);
         assertUniqueTypeIs(fooY, fooAcces.getLeft());
         assertUniqueTypeIs(fooInt, fooCall);
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test

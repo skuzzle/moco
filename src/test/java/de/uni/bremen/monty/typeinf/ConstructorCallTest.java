@@ -56,7 +56,7 @@ public class ConstructorCallTest extends AbstractTypeInferenceTest {
     "A b := B()"
     )
     public void testAssignSubTypeConstructor() throws Exception {
-        this.compiler.typeCheck();
+        this.compiler.compile();
     }
 
     @Test

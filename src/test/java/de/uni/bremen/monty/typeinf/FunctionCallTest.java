@@ -47,7 +47,6 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     )
     public void testOverloadWithPrimitives() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -76,7 +75,6 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     )
     public void testBestFit() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -93,7 +91,6 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     )
     public void testBestFitGenerics() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -110,7 +107,6 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     )
     public void testBestFitExplicitGenerics() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
@@ -135,7 +131,6 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     )
     public void testRecursiveProcedure() throws Exception {
         this.compiler.compile();
-        this.compiler.assertAllTypesResolved();
     }
 
     @Test
