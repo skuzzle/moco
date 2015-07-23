@@ -1,0 +1,8 @@
+print(foo(true))
+print(foo(false))
+
+String foo(Bool cond):
+    if cond:
+        return "a"
+    else:
+        return "b"
