@@ -6,11 +6,14 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.Position;
 
 public class TypeTest {
 
@@ -25,7 +28,37 @@ public class TypeTest {
 
     @Before
     public void setUp() throws Exception {}
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testClassNamedNull() throws Exception {
+        ClassType.classNamed((String) null);
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testClassNamedNull2() throws Exception {
+        ClassType.classNamed((Identifier) null);
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testClassNullLocation() throws Exception {
+        ClassType.classNamed("A").atLocation(null);
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testClassNullSuperType() throws Exception {
+        ClassType.classNamed("B").withSuperClass((ClassType) null);
+    }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testClassNullSuperType2() throws Exception {
+        ClassType.classNamed("B").withSuperClasses((List<ClassType>) null);
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testTypeParameterNull() throws Exception {
+        ClassType.classNamed("A").addTypeParameter((Type[]) null);
+    }
+    
     @Test
     public void testProductEquals() throws Exception {
         assertNotEquals(this.product1, this.product2);
@@ -34,6 +67,68 @@ public class TypeTest {
         assertEquals(this.product2, prod);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testTypeNameNull() throws Exception {
+        new Type(null, Position.UNKNOWN_POSITION) {
+            
+            @Override
+            public boolean isA(Type other) {
+                return false;
+            }
+            
+            @Override
+            public int hashCode() {
+                return 0;
+            }
+            
+            @Override
+            public boolean equals(Object obj) {
+                return false;
+            }
+            
+            @Override
+            public int distanceToObject() {
+                return 0;
+            }
+            
+            @Override
+            Type apply(Unification unification) {
+                return null;
+            }
+        };
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testTypePositionNull() throws Exception {
+        new Type(Identifier.of("A"), null) {
+            
+            @Override
+            public boolean isA(Type other) {
+                return false;
+            }
+            
+            @Override
+            public int hashCode() {
+                return 0;
+            }
+            
+            @Override
+            public boolean equals(Object obj) {
+                return false;
+            }
+            
+            @Override
+            public int distanceToObject() {
+                return 0;
+            }
+            
+            @Override
+            Type apply(Unification unification) {
+                return null;
+            }
+        };
+    }
+    
     @Test
     public void testFunctionEquals() throws Exception {
         final Function top = Function.named("top").returning(this.Object)

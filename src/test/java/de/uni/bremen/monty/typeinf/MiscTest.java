@@ -2,7 +2,6 @@ package de.uni.bremen.monty.typeinf;
 
 import org.junit.Test;
 
-import de.uni.bremen.monty.moco.util.Debug;
 import de.uni.bremen.monty.moco.util.ExpectOutput;
 import de.uni.bremen.monty.moco.util.Monty;
 
@@ -45,7 +44,6 @@ public class MiscTest extends AbstractTypeInferenceTest {
     "    return result"
     )
     @ExpectOutput("aab")
-    @Debug
     public void testIfStatement() throws Exception {
         this.compiler.compile();
     }

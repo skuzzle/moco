@@ -61,6 +61,10 @@ public final class SearchAST {
      */
     public static <C extends ASTNode> WhereClause<C> forNode(
             Class<? extends C> nodeType) {
+        if (nodeType == null) {
+            throw new IllegalArgumentException("nodeType is null");
+        }
+        
         return new SearchForNodeImpl<C>(nodeType, nodeType::isInstance);
     }
 
@@ -73,6 +77,10 @@ public final class SearchAST {
      */
     public static <C extends ASTNode> WhereClause<C> forParent(
             Class<? extends C> parentType) {
+        if (parentType == null) {
+            throw new IllegalArgumentException("parentType is null");
+        }
+        
         return new SearchForParentImpl<>(parentType, parentType::isInstance);
     }
 }

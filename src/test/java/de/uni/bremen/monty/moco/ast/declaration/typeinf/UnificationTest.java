@@ -151,4 +151,38 @@ public class UnificationTest {
         assertSame(someVar, unification.getSubstitute(inferredVar));
         assertSame(someVar, unification.getSubstitute(someVar));
     }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testMergeWithFailed() throws Exception {
+        final Unification success = Unification.EMPTY;
+        success.merge(Unification.FAILED);
+    }
+    
+    @Test(expected = IllegalStateException.class)
+    public void testMergeIntoFailedtestMergeWithFailed() throws Exception {
+        final Unification success = Unification.FAILED;
+        success.merge(Unification.EMPTY);
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testTestIfNull() throws Exception {
+        Unification.testIf((Typed)null);
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testTestIfNull2() throws Exception {
+        Unification.testIf((Type)null);
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testIsANull() throws Exception {
+        final Type t = TypeVariable.anonymous().createType();
+        Unification.testIf(t).isA((Type) null);
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testIsANull2() throws Exception {
+        final Type t = TypeVariable.anonymous().createType();
+        Unification.testIf(t).isA((Typed) null);
+    }
 }

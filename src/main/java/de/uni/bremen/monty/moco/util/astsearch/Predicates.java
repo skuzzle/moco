@@ -20,11 +20,6 @@ public class Predicates {
         return c -> c.getPosition().getLineNumber() == line;
     }
 
-    public static <C extends ASTNode> Predicate<C> hasParent(
-            Class<? extends ASTNode> parentType) {
-        return c -> SearchAST.forParent(parentType).in(c).isPresent();
-    }
-
     public static <C extends NamedNode> Predicate<C> hasName(String name) {
         return c -> c.getIdentifier().getSymbol().equals(name);
     }

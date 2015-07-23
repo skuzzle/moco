@@ -46,6 +46,10 @@ public class Unification {
         }
 
         public Unification isA(Typed typedNode) {
+            if (typedNode == null) {
+                throw new IllegalArgumentException("typedNode is null");
+            }
+            
             return isA(typedNode.getType());
         }
 
