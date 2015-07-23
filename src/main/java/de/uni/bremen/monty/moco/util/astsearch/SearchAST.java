@@ -59,23 +59,9 @@ public final class SearchAST {
      * @param nodeType The type to search for.
      * @return A {@link WhereClause} for specializing the search.
      */
-    public static <C extends ASTNode> WhereClause<C> forNode(Class<? extends C> nodeType) {
-        return new SearchForNodeImpl<C>(nodeType, nodeType::isInstance);
-    }
-
-    public static <C extends ASTNode> WhereClause<C> forExactNode(
+    public static <C extends ASTNode> WhereClause<C> forNode(
             Class<? extends C> nodeType) {
-        return new SearchForNodeImpl<>(nodeType, c -> c.getClass() == nodeType);
-    }
-
-    /**
-     * Creates a search query which does not impose any restrictions on the
-     * node's type.
-     *
-     * @return A {@link WhereClause} for specializing the search.
-     */
-    public static WhereClause<ASTNode> forAnyNode() {
-        return forNode(ASTNode.class);
+        return new SearchForNodeImpl<C>(nodeType, nodeType::isInstance);
     }
 
     /**
@@ -88,14 +74,5 @@ public final class SearchAST {
     public static <C extends ASTNode> WhereClause<C> forParent(
             Class<? extends C> parentType) {
         return new SearchForParentImpl<>(parentType, parentType::isInstance);
-    }
-
-    public static WhereClause<ASTNode> forAnyParent() {
-        return forParent(ASTNode.class);
-    }
-
-    public static <C extends ASTNode> WhereClause<C> forExactParent(
-            Class<? extends C> parentType) {
-        return new SearchForParentImpl<>(parentType, c -> c.getClass() == parentType);
     }
 }
