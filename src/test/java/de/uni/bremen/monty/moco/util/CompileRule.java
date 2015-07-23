@@ -134,6 +134,8 @@ public class CompileRule implements TestRule {
                 );
 
         this.ast = createAST(params, additional);
+        assertAllTypesErased();
+        assertAllTypesResolved();
         return this.ast;
     }
 
