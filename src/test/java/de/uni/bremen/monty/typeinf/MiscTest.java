@@ -58,14 +58,4 @@ public class MiscTest extends AbstractTypeInferenceTest {
     public void testPrint() throws Exception {
         this.compiler.compile();
     }
-
-    @Test
-    @Monty(
-    "String foo(Bool cond):\n"+
-    "    if cond:\n" +
-    "        return \"a\""
-    )
-    public void testControlFlow() throws Exception {
-        this.compiler.compile();
-    }
 }
