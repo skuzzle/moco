@@ -69,9 +69,9 @@ public class ControlFlowVisitor extends BaseVisitor {
 	/** {@inheritDoc} */
 	@Override
 	public void visit(FunctionDeclaration node) {
-		this.needsReturnStatement = true;
+		needsReturnStatement = true;
 		super.visit(node);
-		if (this.needsReturnStatement) {
+		if (needsReturnStatement) {
 			throw new InvalidControlFlowException(node, "ReturnStatement needed.");
 		}
 	}
@@ -79,12 +79,12 @@ public class ControlFlowVisitor extends BaseVisitor {
 	/** {@inheritDoc} */
 	@Override
 	public void visit(Block node) {
-		final boolean needsReturnStatementCopy = this.needsReturnStatement;
-		for (final Declaration declaration : node.getDeclarations()) {
+		boolean needsReturnStatementCopy = needsReturnStatement;
+		for (Declaration declaration : node.getDeclarations()) {
 			visitDoubleDispatched(declaration);
 		}
-		this.needsReturnStatement = needsReturnStatementCopy;
-		for (final Statement statement : node.getStatements()) {
+		needsReturnStatement = needsReturnStatementCopy;
+		for (Statement statement : node.getStatements()) {
 			visitDoubleDispatched(statement);
 		}
 	}
@@ -93,28 +93,25 @@ public class ControlFlowVisitor extends BaseVisitor {
 	@Override
 	public void visit(ConditionalStatement node) {
 		visitDoubleDispatched(node.getCondition());
-		final boolean needsReturnStatementCopy = this.needsReturnStatement;
-
+		boolean needsReturnStatementCopy = needsReturnStatement;
 		visitDoubleDispatched(node.getThenBlock());
-		final boolean needsReturnStatementCopyThen = this.needsReturnStatement;
-
-		this.needsReturnStatement = needsReturnStatementCopy;
+		boolean needsReturnStatementCopyThen = needsReturnStatement;
 		visitDoubleDispatched(node.getElseBlock());
-		final boolean needsReturnStatementCopyElse = this.needsReturnStatement;
+		boolean needsReturnStatementCopyElse = needsReturnStatement;
 
 		if (needsReturnStatementCopy && !needsReturnStatementCopyThen && !needsReturnStatementCopyElse) {
-			this.needsReturnStatement = false;
+			needsReturnStatement = false;
 		} else {
-			this.needsReturnStatement = needsReturnStatementCopy;
+			needsReturnStatement = needsReturnStatementCopy;
 		}
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public void visit(WhileLoop node) {
-		final boolean needsReturnStatementCopy = this.needsReturnStatement;
+		boolean needsReturnStatementCopy = needsReturnStatement;
 		super.visit(node);
-		this.needsReturnStatement = needsReturnStatementCopy;
+		needsReturnStatement = needsReturnStatementCopy;
 	}
 
 	/** {@inheritDoc} */
@@ -159,7 +156,7 @@ public class ControlFlowVisitor extends BaseVisitor {
 	@Override
 	public void visit(ReturnStatement node) {
 		super.visit(node);
-		this.needsReturnStatement = false;
+		needsReturnStatement = false;
 		for (ASTNode currentNode = node; currentNode != null; currentNode = currentNode.getParentNode()) {
 			if (currentNode instanceof ProcedureDeclaration) {
 				return;
