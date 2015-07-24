@@ -1,0 +1,14 @@
+// due to missing string concatenation, this prints the result in reverse
+toBin(Int i):
+    Int c := i
+    String result := ""
+    
+    while c != 0:
+        Int rest := c % 2
+        c /= 2
+        if rest = 0:
+            print("0")
+        else:
+            print("1")
+
+toBin(10)
