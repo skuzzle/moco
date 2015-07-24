@@ -533,17 +533,19 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		}
 
 		if (declaration.isMethod() && !declaration.isInitializer()) {
-			if (declaration instanceof FunctionDeclaration) {
-				this.stack.push((LLVMIdentifier<LLVMType>) this.codeGenerator.callMethod(
-				        this.contextUtils.active(),
-				        (FunctionDeclaration) declaration,
-				        arguments,
-				        expectedParameters));
+			if (CoreClasses.voidType().equals(declaration.getTypeDeclaration())) {
+			    this.codeGenerator.callVoidMethod(this.contextUtils.active(), 
+			            declaration, arguments, expectedParameters);
 			} else {
-				this.codeGenerator.callVoidMethod(this.contextUtils.active(), declaration, arguments, expectedParameters);
+			    this.stack.push((LLVMIdentifier<LLVMType>) this.codeGenerator.callMethod(
+			            this.contextUtils.active(),
+			            (FunctionDeclaration) declaration,
+			            arguments,
+			            expectedParameters));
 			}
 		} else {
-			if (declaration instanceof FunctionDeclaration) {
+			if (declaration instanceof FunctionDeclaration && 
+			        !CoreClasses.voidType().equals(node.getTypeDeclaration())) {
 			    // HINT: use type declaration of the called function's declaration to
 			    // get the correct erasure type
 				this.stack.push((LLVMIdentifier<LLVMType>) this.codeGenerator.call(

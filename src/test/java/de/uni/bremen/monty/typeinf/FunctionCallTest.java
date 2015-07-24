@@ -10,6 +10,7 @@ import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.util.Debug;
+import de.uni.bremen.monty.moco.util.ExpectOutput;
 import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
@@ -225,5 +226,16 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     )
     public void testOverloadNoMatches() throws Exception {
         typeCheckAndExpectFailure("Found no matching overload of <foo>");
+    }
+    
+    @Test
+    @Monty(
+    "foo(1234)\n"+
+    "? foo(Int e):\n" +
+    "    print(e)"
+    )
+    @ExpectOutput("1234")
+    public void testResolveToVoid() throws Exception {
+        compiler.compile();
     }
 }

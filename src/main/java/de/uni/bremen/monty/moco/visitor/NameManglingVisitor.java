@@ -171,7 +171,9 @@ public class NameManglingVisitor extends BaseVisitor {
 
 	@Override
 	public void visit(FunctionDeclaration node) {
-		if (node.getMangledIdentifier() == null) {
+	    if (CoreClasses.voidType().equals(node.getTypeDeclaration())) {
+	        visit((ProcedureDeclaration) node);
+	    } else if (node.getMangledIdentifier() == null) {
 			String funcName = this.nameManglingPrefixes.get(Mangled.FUNC) + escapeForLLVM(node.getIdentifier());
 			funcName += this.nameManglingPrefixes.get(Mangled.TYPE) + mangleTypeDeclaration(node.getTypeDeclaration());
 
