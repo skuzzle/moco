@@ -75,6 +75,22 @@ public class ControlFlowTest {
     @Monty(
     "String foo(Bool cond):\n" +
     "    if cond:\n" +
+    "        return \"a\"\n" +
+    "    else:\n" +
+    "        if not cond:\n" +
+    "            pass\n"+
+    "        else:\n" +
+    "            return \"c\"\n"
+    )
+    public void testMissingInNestedElseStatement() throws Exception {
+        exception.expect(InvalidControlFlowException.class);
+        compiler.compile();
+    }
+    
+    @Test
+    @Monty(
+    "String foo(Bool cond):\n" +
+    "    if cond:\n" +
     "        if not cond:\n" +
     "            return \"b\"\n"+
     "        else:\n" +
