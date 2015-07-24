@@ -38,16 +38,15 @@
  */
 package de.uni.bremen.monty.moco.ast;
 
+import java.util.Objects;
+
 /** An Identifier is the user defined name of a declaration.
  * <p>
  * During context-analysis the identifier with an associated declaration is stored in a scope. */
 public class Identifier {
 
     public static Identifier of(String symbol) {
-        if (symbol == null) {
-            throw new IllegalArgumentException("symbol is null");
-        }
-
+        Objects.requireNonNull(symbol);
         return new Identifier(symbol);
     }
 

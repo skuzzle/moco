@@ -29,32 +29,32 @@ public class TypeTest {
     @Before
     public void setUp() throws Exception {}
     
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testClassNamedNull() throws Exception {
         ClassType.classNamed((String) null);
     }
     
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testClassNamedNull2() throws Exception {
         ClassType.classNamed((Identifier) null);
     }
     
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testClassNullLocation() throws Exception {
         ClassType.classNamed("A").atLocation(null);
     }
     
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testClassNullSuperType() throws Exception {
         ClassType.classNamed("B").withSuperClass((ClassType) null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testClassNullSuperType2() throws Exception {
         ClassType.classNamed("B").withSuperClasses((List<ClassType>) null);
     }
     
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testTypeParameterNull() throws Exception {
         ClassType.classNamed("A").addTypeParameter((Type[]) null);
     }
@@ -67,7 +67,7 @@ public class TypeTest {
         assertEquals(this.product2, prod);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testTypeNameNull() throws Exception {
         new Type(null, Position.UNKNOWN_POSITION) {
             
@@ -98,7 +98,7 @@ public class TypeTest {
         };
     }
     
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testTypePositionNull() throws Exception {
         new Type(Identifier.of("A"), null) {
             

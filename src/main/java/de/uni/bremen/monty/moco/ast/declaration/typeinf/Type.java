@@ -1,5 +1,7 @@
 package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 
+import java.util.Objects;
+
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
@@ -10,14 +12,8 @@ public abstract class Type implements Location {
     private final Position positionHint;
 
     protected Type(Identifier name, Position positionHint) {
-        if (name == null) {
-            throw new IllegalArgumentException("name is null");
-        } else if (positionHint == null) {
-            throw new IllegalArgumentException("positionHint is null");
-        }
-
-        this.name = name;
-        this.positionHint = positionHint;
+        this.name = Objects.requireNonNull(name);
+        this.positionHint = Objects.requireNonNull(positionHint);
     }
 
     public Identifier getName() {

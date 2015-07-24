@@ -38,6 +38,7 @@ package de.uni.bremen.monty.moco.ast.declaration;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 import de.uni.bremen.monty.moco.ast.AbstractTypedASTNode;
 import de.uni.bremen.monty.moco.ast.AccessModifier;
@@ -110,15 +111,13 @@ public abstract class Declaration extends AbstractTypedASTNode implements NamedN
      * @param usage The occurrence of this node.
      */
     public void addUsage(NamedNode usage) {
-        if (usage == null) {
-            throw new IllegalArgumentException("usage is null");
-        } else if (usage == this) {
+        Objects.requireNonNull(usage);
+        if (usage == this) {
             throw new IllegalArgumentException("add self reference");
         } else if (this.usage == null) {
             this.usage = new ArrayList<>();
         }
         this.usage.add(usage);
-
     }
 
     /**

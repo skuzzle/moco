@@ -1,6 +1,7 @@
 package de.uni.bremen.monty.moco.util.astsearch;
 
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
@@ -23,9 +24,7 @@ public final class SearchAST {
      * @return A Stream of nodes.
      */
     public static Stream<ASTNode> stream(ASTNode root) {
-        if (root == null) {
-            throw new IllegalArgumentException("root is null");
-        }
+        Objects.requireNonNull(root);
 
         final Iterator<ASTNode> nodeIterator = SteppingVisitor.depthFirst(root);
         final Spliterator<ASTNode> splitIt = Spliterators.spliterator(nodeIterator,
@@ -42,9 +41,7 @@ public final class SearchAST {
      * @return A Stream of nodes.
      */
     public static Stream<ASTNode> parentStream(ASTNode root) {
-        if (root == null) {
-            throw new IllegalArgumentException("root is null");
-        }
+        Objects.requireNonNull(root);
 
         final Iterator<ASTNode> nodeIterator = new ParentIterator(root);
         final Spliterator<ASTNode> splitIt = Spliterators.spliterator(nodeIterator,
@@ -61,10 +58,7 @@ public final class SearchAST {
      */
     public static <C extends ASTNode> WhereClause<C> forNode(
             Class<? extends C> nodeType) {
-        if (nodeType == null) {
-            throw new IllegalArgumentException("nodeType is null");
-        }
-        
+        Objects.requireNonNull(nodeType);
         return new SearchForNodeImpl<C>(nodeType, nodeType::isInstance);
     }
 
@@ -77,10 +71,7 @@ public final class SearchAST {
      */
     public static <C extends ASTNode> WhereClause<C> forParent(
             Class<? extends C> parentType) {
-        if (parentType == null) {
-            throw new IllegalArgumentException("parentType is null");
-        }
-        
+        Objects.requireNonNull(parentType);
         return new SearchForParentImpl<>(parentType, parentType::isInstance);
     }
 }

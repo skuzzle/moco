@@ -1,5 +1,7 @@
 package de.uni.bremen.monty.moco.visitor.typeinf;
 
+import java.util.Objects;
+
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
@@ -18,17 +20,13 @@ final class PushDown {
         }
 
         public void into(ASTNode root) {
-            if (root == null) {
-                throw new IllegalArgumentException("root is null");
-            }
+            Objects.requireNonNull(root);
             root.visit(new PushDownVisitor(this.unification));
         }
     }
 
     public static IntoClause unification(Unification unification) {
-        if (unification == null) {
-            throw new IllegalArgumentException("unification is null");
-        }
+        Objects.requireNonNull(unification);
         return new IntoClause(unification);
     }
 

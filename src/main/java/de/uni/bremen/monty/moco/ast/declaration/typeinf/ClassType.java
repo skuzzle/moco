@@ -30,48 +30,35 @@ public class ClassType extends Type {
         }
 
         public ClassNamed atLocation(Location location) {
-            if (location == null) {
-                throw new IllegalArgumentException("location is null");
-            }
+            Objects.requireNonNull(location);
             this.location = location;
             return this;
         }
 
         public ClassNamed addTypeParameter(Type... var) {
-            if (var == null) {
-                throw new IllegalArgumentException("var is null");
-            }
+            Objects.requireNonNull(var);
             this.typeParameters.addAll(Arrays.asList(var));
             return this;
         }
 
         public ClassNamed addTypeParameters(Collection<Type> vars) {
-            if (vars == null) {
-                throw new IllegalArgumentException("vars is null");
-            }
+            Objects.requireNonNull(vars);
             this.typeParameters.addAll(vars);
             return this;
         }
 
         public ClassNamed withSuperClass(ClassType superClass) {
-            if (superClass == null) {
-                throw new IllegalArgumentException("superClass is null");
-            }
+            Objects.requireNonNull(superClass);
             return withSuperClasses(superClass);
         }
 
         public ClassNamed withSuperClasses(ClassType... classes) {
-            if (classes == null) {
-                throw new IllegalArgumentException("classes is null");
-            }
-
+            Objects.requireNonNull(classes);
             return withSuperClasses(Arrays.asList(classes));
         }
 
         public ClassNamed withSuperClasses(List<ClassType> classes) {
-            if (classes == null) {
-                throw new IllegalArgumentException("classes is null");
-            }
+            Objects.requireNonNull(classes);
             this.superClasses.addAll(classes);
             return this;
         }
@@ -83,24 +70,17 @@ public class ClassType extends Type {
     }
 
     public static ClassNamed classNamed(String name) {
-        if (name == null) {
-            throw new IllegalArgumentException("name is null");
-        }
+        Objects.requireNonNull(name);
         return new ClassNamed(name);
     }
 
     public static ClassNamed classNamed(Identifier identifier) {
-        if (identifier == null) {
-            throw new IllegalArgumentException("identifier is null");
-        }
+        Objects.requireNonNull(identifier);
         return classNamed(identifier.getSymbol());
     }
 
     public static ClassNamed from(ClassType other) {
-        if (other == null) {
-            throw new IllegalArgumentException("other is null");
-        }
-
+        Objects.requireNonNull(other);
         return classNamed(other.getName()).atLocation(other);
     }
 
@@ -111,12 +91,6 @@ public class ClassType extends Type {
     ClassType(Identifier name, Position positionHint,
             Set<ClassType> superClasses, List<Type> typeParameters) {
         super(name, positionHint);
-        if (superClasses == null) {
-            throw new IllegalArgumentException("superClasses is null");
-        } else if (typeParameters == null) {
-            throw new IllegalArgumentException("typeParameters is null");
-        }
-
         this.superClasses = Collections.unmodifiableSet(superClasses);
         this.typeParameters = Collections.unmodifiableList(typeParameters);
         this.distanceToObject = calcDistanceToObject(this);

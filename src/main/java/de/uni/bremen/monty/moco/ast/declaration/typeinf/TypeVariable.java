@@ -1,5 +1,7 @@
 package de.uni.bremen.monty.moco.ast.declaration.typeinf;
 
+import java.util.Objects;
+
 import de.uni.bremen.monty.moco.ast.Identifier;
 import de.uni.bremen.monty.moco.ast.Location;
 import de.uni.bremen.monty.moco.ast.Position;
@@ -17,9 +19,7 @@ public class TypeVariable extends IdentityType {
         }
 
         public Named atLocation(Location location) {
-            if (location == null) {
-                throw new IllegalArgumentException("location is null");
-            }
+            Objects.requireNonNull(location);
             this.location = location;
             return this;
         }
@@ -31,16 +31,12 @@ public class TypeVariable extends IdentityType {
     }
 
     public static Named named(String name) {
-        if (name == null) {
-            throw new IllegalArgumentException("name is null");
-        }
+        Objects.requireNonNull(name);
         return new Named(name);
     }
 
     public static Named named(Identifier identifier) {
-        if (identifier == null) {
-            throw new IllegalArgumentException("identifier is null");
-        }
+        Objects.requireNonNull(identifier);
         return named(identifier.getSymbol());
     }
 

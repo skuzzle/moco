@@ -54,14 +54,4 @@ public abstract class TypeDeclaration extends Declaration {
 	public TypeDeclaration(Position position, Identifier identifier) {
 		super(position, identifier);
 	}
-
-	/** Check equality of two types taking into account the AST object hierachy.
-	 * <p>
-	 * 
-	 * @param other
-	 *            the other TypeDeclaration to check against
-	 * @return if equal */
-	public boolean matchesType(TypeDeclaration other) {
-		return getIdentifier().equals(other.getIdentifier());
-	}
 }

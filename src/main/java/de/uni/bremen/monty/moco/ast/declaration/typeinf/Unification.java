@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -46,18 +47,12 @@ public class Unification {
         }
 
         public Unification isA(Typed typedNode) {
-            if (typedNode == null) {
-                throw new IllegalArgumentException("typedNode is null");
-            }
-            
+            Objects.requireNonNull(typedNode);
             return isA(typedNode.getType());
         }
 
         public Unification isA(Type second) {
-            if (second == null) {
-                throw new IllegalArgumentException("second is null");
-            }
-
+            Objects.requireNonNull(second);
             final Unifier unifier = new Unifier(this.context, this.options);
             return unifier.unify(this.first, second).deep();
         }
@@ -94,23 +89,18 @@ public class Unification {
         }
 
         public Unification simultaneousFor(Collection<? extends Typed> typedNodes) {
-            if (typedNodes == null) {
-                throw new IllegalArgumentException("typedNodes is null");
-            }
+            Objects.requireNonNull(typedNodes);
             return simultaneousFor(typedNodes.stream().map(Typed::getType).iterator());
         }
 
         public Unification simultaneousFor(Iterable<? extends Type> types) {
-            if (types == null) {
-                throw new IllegalArgumentException("types is null");
-            }
+            Objects.requireNonNull(types);
             return simultaneousFor(types.iterator());
         }
 
         public Unification simultaneousFor(Iterator<? extends Type> types) {
-            if (types == null) {
-                throw new IllegalArgumentException("types is null");
-            }
+            Objects.requireNonNull(types);
+            
             final Map<TypeVariable, Type> subst = new HashMap<>();
             while (this.typeVars.hasNext()) {
                 if (!types.hasNext()) {
@@ -130,17 +120,12 @@ public class Unification {
     }
 
     public static TestIfBuilder testIf(Type first) {
-        if (first == null) {
-            throw new IllegalArgumentException("first is null");
-        }
+        Objects.requireNonNull(first);
         return new TestIfBuilder(first);
     }
 
     public static TestIfBuilder testIf(Typed typedNode) {
-        if (typedNode == null) {
-            throw new IllegalArgumentException("typedNode is null");
-        }
-
+        Objects.requireNonNull(typedNode);
         return new TestIfBuilder(typedNode.getType());
     }
 
@@ -173,9 +158,7 @@ public class Unification {
      * @return The new successful unification.
      */
     public static Unification successful(Map<TypeVariable, Type> subst) {
-        if (subst == null) {
-            throw new IllegalArgumentException("subst is null");
-        }
+        Objects.requireNonNull(subst);
         return new Unification(true, subst);
     }
 
@@ -216,9 +199,8 @@ public class Unification {
      */
     @SuppressWarnings("unchecked")
     public <T extends Type> T apply(T term) {
-        if (term == null) {
-            throw new IllegalArgumentException("term is null");
-        } else if (!isSuccessful()) {
+        Objects.requireNonNull(term);
+        if (!isSuccessful()) {
             throw new IllegalStateException("can not apply non-successful unification");
         }
 
@@ -234,9 +216,7 @@ public class Unification {
      * @see #apply(Type)
      */
     public Type apply(Typed typedNode) {
-        if (typedNode == null) {
-            throw new IllegalArgumentException("typedNode is null");
-        }
+        Objects.requireNonNull(typedNode);
         return apply(typedNode.getType());
     }
 
@@ -249,11 +229,10 @@ public class Unification {
      * @return The substitute type of {@code other} if no substitute was found.
      */
     Type getSubstitute(TypeVariable other) {
+        Objects.requireNonNull(other);
         if (!isSuccessful()) {
             throw new IllegalStateException(
                     "Can't obtain substitute from unsuccessful unification");
-        } else if (other == null) {
-            throw new IllegalArgumentException("other is null");
         }
 
         final Type substitute = this.subst.get(other);
@@ -278,9 +257,8 @@ public class Unification {
      *         this and {@code other}
      */
     public Unification merge(Unification other) {
-        if (other == null) {
-            throw new IllegalArgumentException("other is null");
-        } else if (!isSuccessful()) {
+        Objects.requireNonNull(other);
+        if (!isSuccessful()) {
             throw new IllegalStateException(
                     "Can not merge into unsuccessful unification");
         } else if (!other.isSuccessful()) {
@@ -312,9 +290,7 @@ public class Unification {
      *         this and {@code other}
      */
     public Unification mergeIfSuccessful(Unification other) {
-        if (other == null) {
-            throw new IllegalArgumentException("other is null");
-        }
+        Objects.requireNonNull(other);
         if (!isSuccessful() || !other.isSuccessful()) {
             return this;
         }

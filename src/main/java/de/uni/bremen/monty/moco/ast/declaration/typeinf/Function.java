@@ -24,7 +24,6 @@ public class Function extends Type {
         private final List<Type> quantification;
 
         private FunctionReturning(String name, Location location, Type returnType) {
-            super();
             this.name = name;
             this.location = location;
             this.returnType = returnType;
@@ -33,16 +32,12 @@ public class Function extends Type {
         }
 
         public FunctionReturning quantifiedBy(Type... types) {
-            if (types == null) {
-                throw new IllegalArgumentException("types is null");
-            }
+            Objects.requireNonNull(types);
             return quantifiedBy(Arrays.asList(types));
         }
 
         public FunctionReturning quantifiedBy(List<Type> types) {
-            if (types == null) {
-                throw new IllegalArgumentException("types is null");
-            }
+            Objects.requireNonNull(types);
             this.quantification.addAll(types);
             return this;
         }
@@ -52,26 +47,20 @@ public class Function extends Type {
         }
 
         public FunctionReturning andParameters(Product product) {
-            if (product == null) {
-                throw new IllegalArgumentException("product is null");
-            } else if (!this.parameters.isEmpty()) {
+            Objects.requireNonNull(location);
+            if (!this.parameters.isEmpty()) {
                 throw new IllegalArgumentException("other types than product present");
             }
             return andParameters(product.getComponents());
         }
 
         public FunctionReturning andParameters(Type... types) {
-            if (types == null) {
-                throw new IllegalArgumentException("types is null");
-            }
-
+            Objects.requireNonNull(types);
             return andParameters(Arrays.asList(types));
         }
 
         public FunctionReturning andParameters(List<Type> types) {
-            if (types == null) {
-                throw new IllegalArgumentException("types is null");
-            }
+            Objects.requireNonNull(types);
             for (final Type type : types) {
                 if (type instanceof Product) {
                     throw new IllegalArgumentException("can not add nested product type");
@@ -98,18 +87,13 @@ public class Function extends Type {
         }
 
         public FunctionNamed atLocation(Location location) {
-            if (location == null) {
-                throw new IllegalArgumentException("location is null");
-            }
-
+            Objects.requireNonNull(location);
             this.location = location;
             return this;
         }
 
         public FunctionReturning returning(Type returnType) {
-            if (returnType == null) {
-                throw new IllegalArgumentException("returnType is null");
-            }
+            Objects.requireNonNull(returnType);
             return new FunctionReturning(this.name, this.location, returnType);
         }
 
@@ -123,17 +107,12 @@ public class Function extends Type {
     }
 
     public static FunctionNamed named(String name) {
-        if (name == null) {
-            throw new IllegalArgumentException("name is null");
-        }
-
+        Objects.requireNonNull(name);
         return new FunctionNamed(name);
     }
 
     public static FunctionNamed named(Identifier identifier) {
-        if (identifier == null) {
-            throw new IllegalArgumentException("identifier is null");
-        }
+        Objects.requireNonNull(identifier);
         return new FunctionNamed(identifier.getSymbol());
     }
 

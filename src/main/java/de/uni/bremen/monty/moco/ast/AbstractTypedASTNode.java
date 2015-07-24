@@ -1,5 +1,7 @@
 package de.uni.bremen.monty.moco.ast;
 
+import java.util.Objects;
+
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
@@ -30,9 +32,7 @@ public abstract class AbstractTypedASTNode extends BasicASTNode implements Typed
 
     @Override
     public void setType(Type type) {
-        if (type == null) {
-            throw new IllegalArgumentException("type is null");
-        }
+        Objects.requireNonNull(type);
         this.type = type;
     }
 
@@ -48,9 +48,7 @@ public abstract class AbstractTypedASTNode extends BasicASTNode implements Typed
 
     @Override
     public void setTypeDeclaration(TypeDeclaration typeDecl) {
-        if (typeDecl == null) {
-            throw new IllegalArgumentException("typeDecl is null");
-        }
+        Objects.requireNonNull(typeDecl);
         this.typeDecl = typeDecl;
     }
 

@@ -3,6 +3,7 @@ package de.uni.bremen.monty.moco.ast.declaration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import de.uni.bremen.monty.moco.ast.AbstractTypedASTNode;
 import de.uni.bremen.monty.moco.ast.Location;
@@ -20,34 +21,26 @@ public class TypeInstantiation extends AbstractTypedASTNode implements NamedNode
         private Position position;
 
         private Builder(ResolvableIdentifier typeName) {
-            if (typeName == null) {
-                throw new IllegalArgumentException("typeName is null");
-            }
+            Objects.requireNonNull(typeName);
             this.typeName = typeName;
             this.typeArguments = new ArrayList<>();
             this.position = UNKNOWN_POSITION;
         }
 
         public Builder atLocation(Location location) {
-            if (location == null) {
-                throw new IllegalArgumentException("location is null");
-            }
+            Objects.requireNonNull(location);
             this.position = location.getPosition();
             return this;
         }
 
         public Builder atPosition(Position position) {
-            if (position == null) {
-                throw new IllegalArgumentException("position is null");
-            }
+            Objects.requireNonNull(position);
             this.position = position;
             return this;
         }
 
         public Builder addTypeArgument(TypeInstantiation type) {
-            if (type == null) {
-                throw new IllegalArgumentException("type is null");
-            }
+            Objects.requireNonNull(type);
             this.typeArguments.add(type);
             return this;
         }
@@ -58,9 +51,7 @@ public class TypeInstantiation extends AbstractTypedASTNode implements NamedNode
     }
 
     public static Builder forTypeName(String typeName) {
-        if (typeName == null) {
-            throw new IllegalArgumentException("typeName is null");
-        }
+        Objects.requireNonNull(typeName);
         return new Builder(ResolvableIdentifier.of(typeName));
     }
 
@@ -85,9 +76,7 @@ public class TypeInstantiation extends AbstractTypedASTNode implements NamedNode
     }
 
     public void setUnification(Unification unification) {
-        if (unification == null) {
-            throw new IllegalArgumentException("unification is null");
-        }
+        Objects.requireNonNull(unification);
         this.unification = unification;
     }
 

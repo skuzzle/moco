@@ -24,25 +24,19 @@ public class Product extends Type {
         }
 
         public ProductBuilder and(Type... types) {
-            if (types == null) {
-                throw new IllegalArgumentException("types is null");
-            }
+            Objects.requireNonNull(types);
             this.components.addAll(Arrays.asList(types));
             return this;
         }
 
         public ProductBuilder and(Collection<? extends Type> types) {
-            if (types == null) {
-                throw new IllegalArgumentException("types is null");
-            }
+            Objects.requireNonNull(types);
             this.components.addAll(types);
             return this;
         }
 
         public ProductBuilder atLocation(Location location) {
-            if (location == null) {
-                throw new IllegalArgumentException("location is null");
-            }
+            Objects.requireNonNull(location);
             this.location = location;
             return this;
         }
@@ -54,9 +48,7 @@ public class Product extends Type {
     }
 
     public static ProductBuilder of(Collection<? extends Type> types) {
-        if (types == null) {
-            throw new IllegalArgumentException("types is null");
-        }
+        Objects.requireNonNull(types);
         return new ProductBuilder(types);
     }
 

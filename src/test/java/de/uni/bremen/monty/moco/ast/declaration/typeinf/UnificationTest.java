@@ -164,23 +164,23 @@ public class UnificationTest {
         success.merge(Unification.EMPTY);
     }
     
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testTestIfNull() throws Exception {
         Unification.testIf((Typed)null);
     }
     
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testTestIfNull2() throws Exception {
         Unification.testIf((Type)null);
     }
     
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testIsANull() throws Exception {
         final Type t = TypeVariable.anonymous().createType();
         Unification.testIf(t).isA((Type) null);
     }
     
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testIsANull2() throws Exception {
         final Type t = TypeVariable.anonymous().createType();
         Unification.testIf(t).isA((Typed) null);

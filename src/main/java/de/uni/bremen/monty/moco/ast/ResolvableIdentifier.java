@@ -38,22 +38,20 @@
  */
 package de.uni.bremen.monty.moco.ast;
 
+import java.util.Objects;
+
 /** A ResolvableIdentifier is similar to the Identifier a name of a declaration.
  * <p>
  * During context-analysis this is resolved to a declaration using a scope. */
 public class ResolvableIdentifier extends Identifier {
 
 	public static ResolvableIdentifier of(String symbol) {
-		if (symbol == null) {
-			throw new IllegalArgumentException("symbol is null");
-		}
+	    Objects.requireNonNull(symbol);
 		return new ResolvableIdentifier(symbol);
 	}
 
 	public static ResolvableIdentifier of(Identifier identifier) {
-		if (identifier == null) {
-			throw new IllegalArgumentException("identifier is null");
-		}
+	    Objects.requireNonNull(identifier);
 		return new ResolvableIdentifier(identifier.getSymbol());
 	}
 

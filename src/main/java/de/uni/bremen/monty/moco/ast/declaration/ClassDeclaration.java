@@ -226,20 +226,4 @@ public class ClassDeclaration extends TypeDeclaration implements QuantifiedDecla
         }
         visitor.visitDoubleDispatched(this.block);
 	}
-
-	/** {@inheritDoc} */
-	@Override
-	public boolean matchesType(TypeDeclaration other) {
-		if (super.matchesType(other)) {
-			return true;
-		}
-		if (other instanceof ClassDeclaration) {
-			for (TypeDeclaration parentClass : this.superClassDeclarations) {
-				if (parentClass.matchesType(other)) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
 }
