@@ -37,6 +37,16 @@ public class ClassTest extends AbstractTypeInferenceTest {
 
     @Test
     @Monty(
+    "print(foo('a'))\n" +
+    "<A> Bool foo(A a):\n" +
+    "    return ('c' as Object) is A"
+    )
+    public void testObjectIsNotATypeVar() throws Exception {
+        typeCheckAndExpectFailure("Can not use type variable <A> as target of 'is' expression");
+    }
+    
+    @Test
+    @Monty(
     "class A<B> inherits B:\n" +
     "    pass"
     )
@@ -132,5 +142,19 @@ public class ClassTest extends AbstractTypeInferenceTest {
     )
     public void testTypeParameterCountMismatch() throws Exception {
         typeCheckAndExpectFailure("Type parameter count mismatch");
+    }
+    
+    @Test
+    @Monty(
+    "Object o := A<>(\"a\")\n" +
+    "print((o as A<String>).b)\n" +
+    "class A<B>:\n" +
+    "    +B b\n" +
+    "    +initializer(B b):\n" +
+    "        self.b := b"
+    )
+    @ExpectOutput("a")
+    public void testCastToGeneric() throws Exception {
+        compiler.compile();
     }
 }

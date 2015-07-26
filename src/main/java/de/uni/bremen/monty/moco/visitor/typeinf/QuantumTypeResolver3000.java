@@ -488,6 +488,12 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
 
         TypeHelper.testIsPossibleCast(this, node.getScope(), node,
                 node.getExpression(), decl);
+        
+        if (decl.getType().isVariable()) {
+            reportError(node, 
+                    "Can not use type variable <%s> as target of 'is' expression", 
+                    decl.getIdentifier());
+        }
 
         node.setToType(decl);
         node.setType(CoreClasses.boolType().getType());

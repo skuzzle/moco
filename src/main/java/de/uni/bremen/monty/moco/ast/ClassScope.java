@@ -39,6 +39,7 @@ package de.uni.bremen.monty.moco.ast;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import de.uni.bremen.monty.moco.ast.declaration.Declaration;
@@ -89,11 +90,9 @@ public class ClassScope extends Scope {
     }
 
     public void addParentClassScope(ClassScope scope, Unification substitutions) {
-        if (scope == null) {
-            throw new IllegalArgumentException("scope is null");
-        } else if (substitutions == null) {
-            throw new IllegalArgumentException("substitutions is null");
-        } else if (scope == this) {
+        Objects.requireNonNull(scope);
+        Objects.requireNonNull(substitutions);
+        if (scope == this) {
             throw new IllegalArgumentException("scope can not be its own parent");
         }
 
@@ -142,7 +141,8 @@ public class ClassScope extends Scope {
                     scope.resolveProcedureMember(positionHint, identifier);
 
             // Only add parent declarations which are not overridden.
-            outer: for (Iterator<ProcedureDeclaration> it = parentProcs.iterator(); it.hasNext();) {
+            outer: for (Iterator<ProcedureDeclaration> it = parentProcs.iterator(); 
+                    it.hasNext();) {
                 final ProcedureDeclaration parentDecl = it.next();
                 for (final ProcedureDeclaration decl : result) {
                     if (decl.overrides(parentDecl)) {

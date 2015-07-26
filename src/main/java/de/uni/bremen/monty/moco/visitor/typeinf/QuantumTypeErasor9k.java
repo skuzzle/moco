@@ -9,12 +9,20 @@ import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
+import de.uni.bremen.monty.moco.ast.expression.IsExpression;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 public class QuantumTypeErasor9k extends BaseVisitor {
 
     public QuantumTypeErasor9k() {
         setStopOnFirstError(true);
+    }
+    
+    @Override
+    public void visit(IsExpression node) {
+        super.visit(node);
+        final TypeDeclaration erasure = getErasure(node.getToType());
+        node.setToType(erasure);
     }
 
     @Override
@@ -28,11 +36,17 @@ public class QuantumTypeErasor9k extends BaseVisitor {
         if (!node.isTypeDeclarationResolved()) {
             return;
         }
+        final TypeDeclaration erasure = getErasure(node);
+        node.setTypeDeclaration(erasure);
+    }
+    
+    private TypeDeclaration getErasure(Typed node) {
         final Declaration decl = node.getTypeDeclaration();
         if (decl instanceof ClassDeclaration) {
-            node.setTypeDeclaration((TypeDeclaration) decl);
+            return (TypeDeclaration) decl;
         } else if (decl instanceof TypeVariableDeclaration) {
-            node.setTypeDeclaration(CoreClasses.objectType());
+            return CoreClasses.objectType();
         }
+        return null;
     }
 }
