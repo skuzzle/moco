@@ -46,7 +46,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     "        pass"
     )
     public void testHidingType() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final VariableDeclaration a = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("a"));
 
@@ -60,7 +60,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     "        pass"
     )
     public void testHidingTypeVar() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final TypeVariableDeclaration tvd = this.compiler.searchFor(
                 TypeVariableDeclaration.class, Predicates.onLine(1));
 
@@ -114,7 +114,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     "    pass"
     )
     public void testClassWithSimpleGenerics() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final ClassDeclaration decl = this.compiler.searchFor(
                 ClassDeclaration.class, Predicates.hasName("Pair"));
 
@@ -135,7 +135,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     )
     @ExpectOutput("5")
     public void testStaticGenericFunction() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("x"));
 
@@ -151,7 +151,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     )
     @ExpectOutput("5")
     public void testStaticNestedGenericFunctionCall() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("x"));
 
@@ -168,7 +168,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     "        return n * factorial<A>(n - 1, a)"
     )
     public void testStaticGenericRecursiveFunction() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("x"));
 
@@ -183,7 +183,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     "    pass"
     )
     public void testClassWithInheritedInstantiation() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final ClassDeclaration decl = this.compiler.searchFor(ClassDeclaration.class,
                 Predicates.hasName("B"));
 
@@ -212,7 +212,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     "    pass"
     )
     public void testAssignmentWithInheritedInstantiation() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 
     @Test
@@ -235,7 +235,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     "    pass"
     )
     public void testAssignmentWithInheritedRecursiveInstantiation() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 
     @Test
@@ -258,7 +258,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     "    pass"
     )
     public void testClassWithInheritedRecursiveInstantiation() throws Exception {
-        this.compiler.compile();
+        this.compile();
 
         final TypeInstantiation superClassDecl = this.compiler.searchFor(
                 TypeInstantiation.class, Predicates.hasName("Pair"));
@@ -284,7 +284,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     "        self.data := data"
     )
     public void testRecursiveType() throws Exception {
-        this.compiler.compile();
+        this.compile();
 
         final VariableDeclaration child = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("child"));
@@ -353,7 +353,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     "    Pair<Int, String> pair := Pair<Int, String>(2, \"5\")"
     )
     public void testGenericDeclarationWithAssignment() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final VariableDeclaration decl = this.compiler.searchFor(
                 VariableDeclaration.class, Predicates.hasName("pair"));
 
@@ -380,7 +380,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     "    +X x"
     )
     public void testAssignAttribute() throws Exception {
-        this.compiler.compile();
+        this.compile();
 
         final VariableDeclaration a = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("a"));
@@ -410,7 +410,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     "    Pair<Int, Int> p := foo(1, 2)"
     )
     public void testReturnGeneric() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final FunctionCall call = this.compiler.searchFor(FunctionCall.class,
                 Predicates.hasName("foo"));
 
@@ -441,7 +441,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     "        self.x := x"
     )
     public void testGenericConstructor() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 
     @Test
@@ -493,7 +493,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     "        return x"
     )
     public void testShadowing() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final VariableDeclaration y = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("y"));
 
@@ -528,7 +528,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     "        pass"
     )
     public void testAssignMultipleInheritance() throws Exception {
-        this.compiler.compile();
+        this.compile();
 
         final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("x"));
@@ -568,7 +568,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     "Int a := callFoo(Foo<Int>(1337))"
     )
     public void testCallGenericArgument() throws Exception {
-        this.compiler.compile();
+        this.compile();
 
         final MemberAccess fooAcces = SearchAST.forNode(VariableAccess.class)
                 .where(Predicates.hasName("foo"))

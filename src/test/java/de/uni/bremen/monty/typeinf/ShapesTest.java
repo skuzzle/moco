@@ -31,7 +31,7 @@ public class ShapesTest extends AbstractTypeInferenceTest {
     @Test
     @TestResource("shapes.monty")
     public void testConstructorAssignments() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final VariableDeclaration s1 = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("s1"));
         final VariableDeclaration s2 = this.compiler.searchFor(VariableDeclaration.class,
@@ -44,7 +44,7 @@ public class ShapesTest extends AbstractTypeInferenceTest {
     @Test
     @TestResource("shapes.monty")
     public void testInferEnclosingRect1() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final FunctionDeclaration decl = this.compiler.searchFor(FunctionDeclaration.class,
                 Predicates.hasParameters(this.shape, this.shape));
 
@@ -60,7 +60,7 @@ public class ShapesTest extends AbstractTypeInferenceTest {
     @Test
     @TestResource("shapes.monty")
     public void testInferEnclosingRect2() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final FunctionDeclaration decl = this.compiler.searchFor(
                 FunctionDeclaration.class,
                 Predicates.hasParameters(this.circle, this.shape));

@@ -19,7 +19,7 @@ public class ExplicitTypingTest extends AbstractTypeInferenceTest {
     @Test
     @TestResource("explicit.monty")
     public void testExplicitAttribute() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final VariableDeclaration decl = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("bar"));
         assertUniqueTypeIs(CoreClasses.stringType().getType(), decl);
@@ -28,7 +28,7 @@ public class ExplicitTypingTest extends AbstractTypeInferenceTest {
     @Test
     @TestResource("explicit.monty")
     public void testExplicitFunction() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final FunctionDeclaration decl = this.compiler.searchFor(FunctionDeclaration.class,
                 Predicates.hasName("add"));
 
@@ -44,7 +44,7 @@ public class ExplicitTypingTest extends AbstractTypeInferenceTest {
     @Test
     @TestResource("explicit.monty")
     public void testExplicitFunctionParameter() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final VariableDeclaration decl = SearchAST.forNode(VariableDeclaration.class)
                 .where(Predicates.hasName("a"))
                 .and(SearchAST.forParent(ProcedureDeclaration.class)
@@ -56,7 +56,7 @@ public class ExplicitTypingTest extends AbstractTypeInferenceTest {
     @Test
     @TestResource("explicit.monty")
     public void testVoidMethod() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final ProcedureDeclaration decl = this.compiler.searchFor(ProcedureDeclaration.class,
                 Predicates.hasName("noop"));
 
@@ -71,7 +71,7 @@ public class ExplicitTypingTest extends AbstractTypeInferenceTest {
     @Test
     @TestResource("explicit.monty")
     public void testExplicitProcedureParameter() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final VariableDeclaration decl = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("a"));
         assertUniqueTypeIs(CoreClasses.stringType().getType(), decl);

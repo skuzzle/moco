@@ -42,6 +42,7 @@ public class AbstractTypeInferenceTest {
             {
                 setStopOnFirstError(true);
             }
+
             @Override
             protected void onEnterEachNode(ASTNode node) {
                 if (node instanceof ModuleDeclaration) {
@@ -60,6 +61,7 @@ public class AbstractTypeInferenceTest {
             }
         });
     }
+
     protected final CompileRule compiler = new CompileRule();
     protected final ExpectedException exception = ExpectedException.none();
 
@@ -67,6 +69,11 @@ public class AbstractTypeInferenceTest {
     public RuleChain rules = RuleChain.emptyRuleChain()
             .around(this.compiler)
             .around(this.exception);
+
+    protected CompileRule compile() throws Exception {
+        compiler.compile();
+        return compiler;
+    }
 
     protected void typeCheckAndExpectFailure() throws Exception {
         this.exception.expect(TypeInferenceException.class);

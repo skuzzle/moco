@@ -58,7 +58,7 @@ public class LiteralTest extends AbstractTypeInferenceTest {
     private <L extends LiteralExpression<?>> void testLiteral(Class<L> cls,
             ClassDeclaration coreClass) throws Exception {
 
-        this.compiler.compile();
+        this.compile();
         final L lit = this.compiler.searchFor(cls, Predicates.onLine(1));
 
         assertUniqueTypeIs(coreClass.getType(), lit);

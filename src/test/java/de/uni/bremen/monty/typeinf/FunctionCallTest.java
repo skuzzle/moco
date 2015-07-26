@@ -27,7 +27,7 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    return i"
     )
     public void testBestFitTypeVarVSConcreteType() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final FunctionDeclaration declA = SearchAST.forNode(FunctionDeclaration.class).where(Predicates.hasName("f")).and(Predicates.onLine(3)).in(this.compiler.getAst()).get();
         final FunctionDeclaration declB = SearchAST.forNode(FunctionDeclaration.class).where(Predicates.hasName("f")).and(Predicates.onLine(5)).in(this.compiler.getAst()).get();
         final FunctionCall callA = SearchAST.forNode(FunctionCall.class).where(Predicates.hasName("f")).and(Predicates.onLine(1)).in(this.compiler.getAst()).get();
@@ -47,7 +47,7 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    pass"
     )
     public void testOverloadWithPrimitives() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 
     @Test
@@ -75,7 +75,7 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    return b"
     )
     public void testBestFit() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 
     @Test
@@ -91,7 +91,7 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    return 5"
     )
     public void testBestFitGenerics() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 
     @Test
@@ -107,7 +107,7 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    return 5"
     )
     public void testBestFitExplicitGenerics() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 
     @Test
@@ -131,7 +131,7 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    method()"
     )
     public void testRecursiveProcedure() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 
     @Test
@@ -164,7 +164,7 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    return"
     )
     public void testInferVoidResultTypeMultipleReturns() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final ProcedureDeclaration decl = this.compiler.searchFor(
                 ProcedureDeclaration.class, Predicates.hasName("foo"));
 
@@ -178,7 +178,7 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    pass"
     )
     public void testInferVoidResultTypeNoReturn() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final ProcedureDeclaration decl = this.compiler.searchFor(
                 ProcedureDeclaration.class, Predicates.hasName("foo"));
 
@@ -236,6 +236,6 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     )
     @ExpectOutput("1234")
     public void testResolveToVoid() throws Exception {
-        compiler.compile();
+        compile();
     }
 }

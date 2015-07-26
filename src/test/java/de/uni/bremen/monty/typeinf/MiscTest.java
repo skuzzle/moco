@@ -2,12 +2,66 @@ package de.uni.bremen.monty.typeinf;
 
 import org.junit.Test;
 
+import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
+import de.uni.bremen.monty.moco.util.Debug;
 import de.uni.bremen.monty.moco.util.ExpectOutput;
 import de.uni.bremen.monty.moco.util.Monty;
+import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 
 
 public class MiscTest extends AbstractTypeInferenceTest {
 
+    @Test
+    @Monty(
+    "class A:\n" +
+    "    +? attribute := 'c'"
+    )
+    public void testInferAttribute() throws Exception {
+        final VariableDeclaration attr = compile().searchFor(VariableDeclaration.class, 
+                Predicates.hasName("attribute"));
+        
+        assertUniqueTypeIs(CoreClasses.charType().getType(), attr);
+    }
+    
+    @Test
+    @Monty(
+    "class A:\n" +
+    "    +? attribute\n" +
+    "    +initializer():\n" +
+    "        if true:\n"+
+    "            self.attribute := 10\n" +
+    "        else:\n"+
+    "            self.attribute := 'c'"
+    )
+    @Debug
+    public void testUninitializedAttribute() throws Exception {
+        typeCheckAndExpectFailure("Can not assign <Char> to <Int>");
+    }
+    
+    @Test
+    @Monty(
+    "class A:\n" +
+    "    +? attribute\n" +
+    "    +initializer():\n" +
+    "            self.attribute := 10\n"
+    )
+    @Debug
+    public void testUninitializedAttribute2() throws Exception {
+        compile();
+    }
+    
+    @Test
+    @Monty(
+    "class A:\n" +
+            "    +String attribute\n" +
+            "    +initializer():\n" +
+            "            attribute := \"10\"\n"
+    )
+    public void testUnqualifiedMemberAccess() throws Exception {
+        typeCheckAndExpectFailure("Unqualified member access: <attribute>");
+    }
+    
     @Test
     @Monty(
     "Int a := foo\n" +
@@ -45,7 +99,7 @@ public class MiscTest extends AbstractTypeInferenceTest {
     )
     @ExpectOutput("aab")
     public void testIfStatement() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 
     @Test
@@ -54,6 +108,6 @@ public class MiscTest extends AbstractTypeInferenceTest {
     )
     @ExpectOutput("a")
     public void testPrint() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 }

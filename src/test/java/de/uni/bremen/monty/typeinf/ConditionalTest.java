@@ -14,7 +14,7 @@ public class ConditionalTest extends AbstractTypeInferenceTest {
     "print(c)"
     )
     public void testConditionalExpressionSuccess() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 
     @Test
@@ -32,7 +32,7 @@ public class ConditionalTest extends AbstractTypeInferenceTest {
     "    return a if true else b"
     )
     public void testMatchingGenericBranches() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 
     @Test
@@ -52,7 +52,7 @@ public class ConditionalTest extends AbstractTypeInferenceTest {
     )
     @ExpectOutput("Ok")
     public void testIsAWithIf() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 
     @Test
@@ -93,6 +93,6 @@ public class ConditionalTest extends AbstractTypeInferenceTest {
     )
     @ExpectOutput("iiiii")
     public void testWhileLoop() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 }

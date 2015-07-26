@@ -32,7 +32,7 @@ public class ClassTest extends AbstractTypeInferenceTest {
     )
     @ExpectOutput("1")
     public void testTypeVarIsAObject() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 
     @Test
@@ -104,7 +104,7 @@ public class ClassTest extends AbstractTypeInferenceTest {
     "        Object a := parent(Foo).bar()"
     )
     public void testParent() throws Exception {
-        this.compiler.compile();
+        this.compile();
 
         final ClassType expected = ClassType.classNamed("Foo")
                 .withSuperClass(CoreClasses.objectType().getType().asClass())
@@ -155,6 +155,6 @@ public class ClassTest extends AbstractTypeInferenceTest {
     )
     @ExpectOutput("a")
     public void testCastToGeneric() throws Exception {
-        compiler.compile();
+        compile();
     }
 }

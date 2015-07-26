@@ -22,7 +22,7 @@ public class RecursionTest extends AbstractTypeInferenceTest {
     "        return fak(n - 1)"
     )
     public void testRecursionExplicitReturnType() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final FunctionDeclaration decl = this.compiler.searchFor(FunctionDeclaration.class,
                 Predicates.hasName("fak"));
 
@@ -48,7 +48,7 @@ public class RecursionTest extends AbstractTypeInferenceTest {
     @Debug
     @Ignore
     public void testInferReturnTypeSimpleRecursion() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 
 

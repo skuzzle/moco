@@ -24,7 +24,7 @@ public class ConstructorCallTest extends AbstractTypeInferenceTest {
     "    ? var := Circle()"
     )
     public void testAssignCtorCallToDeclaration() throws Exception {
-        this.compiler.compile();
+        this.compile();
 
         final VariableDeclaration decl = this.compiler.searchFor(
                 VariableDeclaration.class, Predicates.hasName("var"));
@@ -56,7 +56,7 @@ public class ConstructorCallTest extends AbstractTypeInferenceTest {
     "A b := B()"
     )
     public void testAssignSubTypeConstructor() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 
     @Test

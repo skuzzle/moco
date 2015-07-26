@@ -15,7 +15,7 @@ public class FactorialTest extends AbstractTypeInferenceTest {
     @Test
     @TestResource("factorial.monty")
     public void testInferCallType() throws Exception {
-        this.compiler.compile();
+        this.compile();
 
         final VariableDeclaration decl = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("x"));
@@ -25,7 +25,7 @@ public class FactorialTest extends AbstractTypeInferenceTest {
     @Test
     @TestResource("factorial.monty")
     public void testExplicitTargetType() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final VariableDeclaration decl = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("y"));
         assertUniqueTypeIs(CoreClasses.intType().getType(), decl);
@@ -34,7 +34,7 @@ public class FactorialTest extends AbstractTypeInferenceTest {
     @Test
     @TestResource("factorial.monty")
     public void testInferReturnType() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final FunctionDeclaration decl = this.compiler.searchFor(FunctionDeclaration.class,
                 Predicates.hasName("fak"));
 

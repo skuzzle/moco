@@ -22,7 +22,7 @@ public class CastingTest extends AbstractTypeInferenceTest {
     "Foo<String> b := a as Foo<String>"
     )
     public void testCastToGeneric() throws Exception {
-        this.compiler.compile();
+        compile();
     }
 
     @Test
@@ -49,7 +49,7 @@ public class CastingTest extends AbstractTypeInferenceTest {
     "? xyz := a as Foo<String>"
     )
     public void testInferCastToGeneric() throws Exception {
-        this.compiler.compile();
+        this.compile();
         final VariableDeclaration xyz = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("xyz"));
 

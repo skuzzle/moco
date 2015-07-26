@@ -300,6 +300,8 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
             varDecl.getPosition().getLineNumber() > node.getPosition().getLineNumber()) {
 
             reportError(node, "Variable not initialized: <%s>", varDecl.getIdentifier());
+        } else if (varDecl.isAttribute() && !(node.getParentNode() instanceof MemberAccess)) {
+            reportError(node, "Unqualified member access: <%s>", varDecl.getIdentifier());
         }
     }
 

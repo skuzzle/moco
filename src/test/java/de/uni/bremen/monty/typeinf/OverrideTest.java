@@ -28,7 +28,7 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     "        print(\"b\")"
     )
     public void testOverrideProcedureDirectSubClass() throws Exception {
-        this.compiler.compile();
+        this.compile();
 
         final ProcedureDeclaration testA = SearchAST.forNode(ProcedureDeclaration.class)
                 .where(Predicates.hasName("test"))
@@ -75,7 +75,7 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     "        print(\"c\")"
     )
     public void testOverrideProcedureNotDirectSubClass() throws Exception {
-        this.compiler.compile();
+        this.compile();
 
         final ProcedureDeclaration testA = SearchAST.forNode(ProcedureDeclaration.class)
                 .where(Predicates.hasName("test"))
@@ -129,7 +129,7 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     "        print(\"c\")"
     )
     public void testOverrideProcedureMultipleInheritance() throws Exception {
-        this.compiler.compile();
+        this.compile();
 
         final ProcedureDeclaration testA = SearchAST.forNode(ProcedureDeclaration.class)
                 .where(Predicates.hasName("test"))
@@ -186,7 +186,7 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     "        print(\"c\")"
     )
     public void testOverrideMultipleInheritanceChooseFirst() throws Exception {
-        this.compiler.compile();
+        this.compile();
 
         final ProcedureDeclaration testB = SearchAST.forNode(ProcedureDeclaration.class)
                 .where(Predicates.hasName("test"))
@@ -233,7 +233,7 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     "        return self"
     )
     public void testOverrideFunctionReturnType() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 
     @Test
@@ -279,7 +279,7 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     "        print(2)"
     )
     public void testOverrideExtendParameter() throws Exception {
-        this.compiler.compile();
+        this.compile();
 
         final ProcedureDeclaration testA = SearchAST.forNode(ProcedureDeclaration.class)
                 .where(Predicates.hasName("test"))
@@ -330,7 +330,7 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     "        pass"
     )
     public void testOverrideGenericClassParameter() throws Exception {
-        this.compiler.compile();
+        this.compile();
 
         final ProcedureDeclaration testA = SearchAST.forNode(ProcedureDeclaration.class)
                 .where(Predicates.hasName("test"))
@@ -387,7 +387,7 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     "        return y"
     )
     public void testOverrideGenericMethodParameter() throws Exception {
-        this.compiler.compile();
+        this.compile();
 
         final ProcedureDeclaration testA = SearchAST.forNode(ProcedureDeclaration.class)
                 .where(Predicates.hasName("test"))
@@ -461,7 +461,7 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     @ExpectOutput("aba")
     public void testOverrideInvariance() throws Exception {
         // no override, because of parameter invariance
-        this.compiler.compile();
+        this.compile();
     }
 
     @Test
@@ -478,6 +478,6 @@ public class OverrideTest extends AbstractTypeInferenceTest {
     "        print(\"b\")"
     )
     public void testOverrideTypeParameter() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 }

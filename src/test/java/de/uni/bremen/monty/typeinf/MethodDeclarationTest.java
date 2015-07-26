@@ -63,6 +63,6 @@ public class MethodDeclarationTest extends AbstractTypeInferenceTest {
     "        return 'c' as Object\n"
     )
     public void testInferTypeVarReturnType() throws Exception {
-        this.compiler.compile();
+        this.compile();
     }
 }
