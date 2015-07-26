@@ -52,6 +52,11 @@
                         <artifactId>pitest-maven</artifactId>
                         <version>1.1.5</version>
                         <configuration>
+                            <excludedClasses>
+                                <param>de.uni.bremen.monty.moco.Main</param>
+                                <param>de.uni.bremen.monty.moco.util*</param>
+                                <param>de.uni.bremen.monty.moco.astsearch*</param>
+                            </excludedClasses>
                             <targetClasses>
                                 <param>de.uni.bremen.monty.moco*</param>
                             </targetClasses>
