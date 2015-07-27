@@ -27,6 +27,24 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
 
     @Test
     @Monty(
+    "? p2 := Pair2<>(1, 3)\n" +
+    "class Pair2<C> inherits Pair<Pair<C, C>, C>:\n" +
+    "    +initializer(C a, C b):\n"+
+    "        parent(Pair).initializer(a, b)\n"+
+    "class Pair<A, B>:\n"+
+    "    +? a\n" +
+    "    +? b\n" +
+    "    +initializer(A a, B b):\n"+
+    "        self.a := a\n" +
+    "        self.b := b"
+    )
+    @Debug
+    public void testNestedTypeParamsTypeMismatch() throws Exception {
+        typeCheckAndExpectFailure("Found no matching overload of <initializer>");
+    }
+
+    @Test
+    @Monty(
     "? p2 := Pair2<>(Pair<>(1,2), 3)\n" +
     "class Pair2<A> inherits Pair<Pair<A, A>, A>:\n" +
     "    +initializer(Pair<A,A> a, A b):\n"+
