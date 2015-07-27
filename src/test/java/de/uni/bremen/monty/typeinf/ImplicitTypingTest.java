@@ -27,6 +27,43 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
 
     @Test
     @Monty(
+    "? p2 := Pair2<>(Pair<>(1,2), 3)\n" +
+    "class Pair2<A> inherits Pair<Pair<A, A>, A>:\n" +
+    "    +initializer(Pair<A,A> a, A b):\n"+
+    "        parent(Pair).initializer(a, b)\n"+
+    "class Pair<A, B>:\n"+
+    "    +A a\n" +
+    "    +B b\n" +
+    "    +initializer(A a, B b):\n"+
+    "        self.a := a\n" +
+    "        self.b := b"
+    )
+    public void testNestedTypeParamsInheritance() throws Exception {
+        compile();
+        final Type pairA = ClassType.classNamed("Pair")
+                .withSuperClass(CoreClasses.objectType().getType().asClass())
+                .addTypeParameter(CoreClasses.intType().getType().asClass())
+                .addTypeParameter(CoreClasses.intType().getType().asClass())
+                .createType();
+        
+        final Type pairPair = ClassType.classNamed("Pair")
+                .withSuperClass(CoreClasses.objectType().getType().asClass())
+                .addTypeParameter(pairA)
+                .addTypeParameter(CoreClasses.intType().getType().asClass())
+                .createType();
+        
+        final Type expected = ClassType.classNamed("Pair2")
+                .withSuperClass(pairPair.asClass())
+                .addTypeParameter(CoreClasses.intType().getType().asClass())
+                .createType();
+        
+        final VariableDeclaration decl = compiler.searchFor(VariableDeclaration.class, 
+                Predicates.hasName("p2"));
+        assertUniqueTypeIs(expected, decl);
+    }
+    
+    @Test
+    @Monty(
     "? p1 := Pair(Pair(1,2), 3)\n" +
     "class Pair<A, B>:\n"+
     "    +A a\n" +

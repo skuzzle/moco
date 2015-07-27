@@ -104,7 +104,13 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         } else if (isTypeVariable) {
             // case: single variable
 
-            final TypeVariable target = nodeDecl.getType().asVariable();
+            TypeVariable target = nodeDecl.getType().asVariable();
+//            if (!scope.isFree(target)) {
+//                target = TypeVariable.named(target.getName())
+//                        .atLocation(target)
+//                        .withOrigin(target)
+//                        .createType();
+//            }
             node.setTypeDeclaration(nodeDecl);
             node.getTypeDeclaration().addUsage(node);
             node.setType(target);
@@ -120,8 +126,12 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         final Unification fresh = Unification.given(scope).substituteForFresh();
         final ClassType classBinding = nodeDecl.getType().asClass();
         final ClassType freshClass = fresh.apply(classBinding);
+        assert freshClass.getTypeParameters().size() == classBinding.getTypeParameters().size();
+        
         if (node.getTypeArguments().size() != classBinding.getTypeParameters().size()) {
-            reportError(node, "Type parameter count mismatch");
+            reportError(node, "Type parameter count mismatch.%nExpected: %d,%nActual: %d", 
+                    classBinding.getTypeParameters().size(), 
+                    node.getTypeArguments().size());
         }
 
         Unification merged = Unification.EMPTY;
@@ -320,7 +330,10 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
             instanceType = node.getLeft().getType().asClass();
         }
         final TypeDeclaration raw = node.getScope().resolveRawType(node, instanceType);
-        final Unification subst = Unification.testIf(raw.getType()).isA(instanceType);
+        final Unification subst = Unification
+                .given(node.getScope())
+                .testIf(raw.getType())
+                .isA(instanceType);
         // Resolve type of the right hand node in the scope of the left hand
         // node. This will yield the raw (declared type) of the right hand node.
         // It must therefore be run through the substitution which binds type
@@ -328,7 +341,13 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
 
         // Create a sub scope in which type variables of the LHS are defined
         final Scope memberScope = new Scope("$member" + raw.getIdentifier(),
-                raw.getScope());
+                raw.getScope()) {
+            
+            @Override
+            public boolean isFree(TypeVariable variable) {
+                return node.getScope().isFree(variable);
+            }
+        };
         memberScope.defineSubstitutions(subst);
         node.getRight().setScope(memberScope);
         resolveTypeOf(node.getRight());
