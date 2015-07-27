@@ -104,9 +104,10 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         } else if (isTypeVariable) {
             // case: single variable
 
+            final TypeVariable target = nodeDecl.getType().asVariable();
             node.setTypeDeclaration(nodeDecl);
             node.getTypeDeclaration().addUsage(node);
-            node.setType(nodeDecl.getType());
+            node.setType(target);
             node.setUnification(Unification.EMPTY);
             return;
         }
@@ -116,7 +117,9 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         // resolve nested quantifications
         super.visit(node);
 
+        final Unification fresh = Unification.given(scope).substituteForFresh();
         final ClassType classBinding = nodeDecl.getType().asClass();
+        final ClassType freshClass = fresh.apply(classBinding);
         if (node.getTypeArguments().size() != classBinding.getTypeParameters().size()) {
             reportError(node, "Type parameter count mismatch");
         }
@@ -129,11 +132,11 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         }
 
         final Unification unification = Unification
-                .substitute(classBinding.getTypeParameters())
+                .substitute(freshClass.getTypeParameters())
                 .simultaneousFor(typeArgs)
                 .merge(merged);
 
-        final Type instance = unification.apply(nodeDecl.getType());
+        final Type instance = unification.apply(freshClass);
         node.setType(instance);
         node.setUnification(unification);
         node.setTypeDeclaration(nodeDecl);

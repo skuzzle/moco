@@ -160,6 +160,9 @@ class CallTypeResolver extends TypeResolverFragment {
         }
         final Unification unification = bestFit.getUnification()
                 .merge(node.getScope().getSubstitutions());
+        if (bestFit.getBestMatch().isDefaultInitializer()) {
+            return;
+        }
         if (!unification.substitutesAll(match.getTypeParameters())) {
             reportError(node, "Could not recover all type parameters from call of <%s>",
                     node.getIdentifier());

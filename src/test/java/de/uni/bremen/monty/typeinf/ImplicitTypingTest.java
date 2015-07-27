@@ -17,6 +17,7 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.TypeVariable;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.ast.expression.MemberAccess;
 import de.uni.bremen.monty.moco.ast.expression.VariableAccess;
+import de.uni.bremen.monty.moco.util.Debug;
 import de.uni.bremen.monty.moco.util.ExpectOutput;
 import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
@@ -24,6 +25,38 @@ import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 
 public class ImplicitTypingTest extends AbstractTypeInferenceTest {
 
+    @Test
+    @Monty(
+    "? p1 := Pair(Pair(1,2), 3)\n" +
+    "class Pair<A, B>:\n"+
+    "    +A a\n" +
+    "    +B b\n" +
+    "    +initializer(A a, B b):\n"+
+    "        self.a := a\n" +
+    "        self.b := b"
+    )
+    @Debug
+    public void testNestedTypeParams() throws Exception {
+        compile();
+        
+        final Type intPair = ClassType.classNamed("Pair")
+                .withSuperClass(CoreClasses.objectType().getType().asClass())
+                .addTypeParameter(CoreClasses.intType().getType())
+                .addTypeParameter(CoreClasses.intType().getType())
+                .createType();
+        
+        final Type expected = ClassType.classNamed("Pair")
+                .withSuperClass(CoreClasses.objectType().getType().asClass())
+                .addTypeParameter(intPair)
+                .addTypeParameter(CoreClasses.intType().getType())
+                .createType();
+        
+        final VariableDeclaration decl = compiler.searchFor(VariableDeclaration.class, 
+                Predicates.hasName("p1"));
+        assertUniqueTypeIs(expected, decl);
+                
+    }
+    
     @Test
     @Monty(
     "? isEmpty():\n" +

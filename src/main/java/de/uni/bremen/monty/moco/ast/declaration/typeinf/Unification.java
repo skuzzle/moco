@@ -66,6 +66,26 @@ public class Unification {
             this.context = context;
             this.options = new HashSet<>();
         }
+        
+        public Unification substituteForFresh() {
+            final Map<TypeVariable, Type> types = new HashMap<>();
+            return new Unification(true, types) {
+                @Override
+                Type getSubstitute(TypeVariable other) {
+                    if (types.containsKey(other)) {
+                        return types.get(other);
+                    } else if (!context.isFree(other)) {
+                        final TypeVariable fresh = TypeVariable.named(other.getName() + "$F")
+                                .atLocation(other)
+                                .withOrigin(other)
+                                .createType();
+                        types.put(other, fresh);
+                        return fresh;
+                    }
+                    return other;
+                }
+            };
+        }
 
         public GivenBuilder and(UnificationOption option) {
             this.options.add(option);
@@ -97,7 +117,7 @@ public class Unification {
             Objects.requireNonNull(types);
             return simultaneousFor(types.iterator());
         }
-
+        
         public Unification simultaneousFor(Iterator<? extends Type> types) {
             Objects.requireNonNull(types);
             

@@ -12,6 +12,7 @@ public class TypeVariable extends IdentityType {
     public static final class Named {
         private final String name;
         private Location location;
+        private TypeVariable origin;
 
         private Named(String name) {
             this.name = name;
@@ -23,10 +24,16 @@ public class TypeVariable extends IdentityType {
             this.location = location;
             return this;
         }
+        
+        public Named withOrigin(TypeVariable origin) {
+            Objects.requireNonNull(origin);
+            this.origin = origin;
+            return this;
+        }
 
         public TypeVariable createType() {
             return new TypeVariable(this.name,
-                    this.location.getPosition());
+                    this.location.getPosition(), origin);
         }
     }
 
@@ -46,12 +53,18 @@ public class TypeVariable extends IdentityType {
 
     private static int counter;
     private static final String PREFIX = "$VAR_";
+    private final TypeVariable origin;
 
-    private TypeVariable(String name, Position positionHint) {
+    private TypeVariable(String name, Position positionHint, TypeVariable origin) {
         super(name, positionHint);
+        this.origin = origin;
 
     }
 
+    public TypeVariable getOrigin() {
+        return this.origin;
+    }
+    
     @Override
     public int distanceToObject() {
         // Type variables count as object itself (as long as we have no bounded
@@ -74,5 +87,11 @@ public class TypeVariable extends IdentityType {
     @Override
     Type apply(Unification unification) {
         return unification.getSubstitute(this);
+    }
+    
+    @Override
+    public String toString() {
+        final int id = System.identityHashCode(this) % 100;
+        return super.toString();
     }
 }

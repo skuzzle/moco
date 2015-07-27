@@ -250,7 +250,7 @@ public class Scope implements TypeContext {
         while (current != null) {
             try {
                 Declaration decl = current.resolve(expected, name);
-                if (decl.isTypeResolved() && decl.getType() == expected
+                if (decl.isTypeResolved() && expected == decl.getType()
                         && decl instanceof TypeVariableDeclaration) {
                     return (TypeVariableDeclaration) decl;
                 }

@@ -84,6 +84,8 @@ public class ProcedureDeclaration extends TypeDeclaration implements
 
     private Collection<FunctionCall> recursiveCallers;
 
+    private boolean defaultInitializer;
+
     /**
      * Constructor.
      *
@@ -244,5 +246,13 @@ public class ProcedureDeclaration extends TypeDeclaration implements
             visitor.visitDoubleDispatched(variableDeclaration);
         }
         visitor.visitDoubleDispatched(this.body);
+    }
+
+    public void setDefaultInitializer(boolean b) {
+        this.defaultInitializer = b;
+    }
+    
+    public boolean isDefaultInitializer() {
+        return this.defaultInitializer;
     }
 }

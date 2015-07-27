@@ -247,6 +247,7 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
 
         this.dotBuilder.printNode(node,
                 String.format("Call '%s' (c'tor: %b)", node.getIdentifier(), node.isConstructorCall()),
+                "Declaration's type: " + node.getDeclaration().getType().toString(),
                 node.getPosition().toString());
 
         super.visit(node);
