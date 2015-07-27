@@ -45,7 +45,7 @@ public class ExplicitGenericsTest extends AbstractTypeInferenceTest {
     )
     @Debug
     public void testNestedTypeParamsTypeMismatch() throws Exception {
-        compile();
+        typeCheckAndExpectFailure("Found no matching overload of <initializer>");
     }
     
     @Test
