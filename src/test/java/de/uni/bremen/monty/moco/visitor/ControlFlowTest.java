@@ -101,4 +101,41 @@ public class ControlFlowTest {
     public void testNestedIfStatementsCorrectFlow() throws Exception {
         compiler.compile();
     }
+    
+    @Test
+    @Monty(
+    "Int foo():\n" +
+    "    while true:\n"+
+    "        return 1"
+    )
+    public void testWhileMissingReturn() throws Exception {
+        exception.expect(InvalidControlFlowException.class);
+        compiler.compile();
+    }
+    
+    @Test
+    @Monty(
+    "Int foo():\n" +
+    "    while true:\n"+
+    "        while false:\n" +
+    "            return 2\n"+
+    "        return 1"
+    )
+    public void testNestedWhileMissingReturn() throws Exception {
+        exception.expect(InvalidControlFlowException.class);
+        compiler.compile();
+    }
+    
+    @Test
+    @Monty(
+    "Int foo():\n" +
+    "    while true:\n"+
+    "        if false:\n" +
+    "            return 2\n"+
+    "        return 1"
+    )
+    public void testWhileIfNestedMissingReturn() throws Exception {
+        exception.expect(InvalidControlFlowException.class);
+        compiler.compile();
+    }
 }
