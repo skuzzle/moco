@@ -11,6 +11,7 @@ import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
+import de.uni.bremen.monty.moco.util.Debug;
 import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 
@@ -77,5 +78,20 @@ public class ConstructorCallTest extends AbstractTypeInferenceTest {
     )
     public void testConstructorWithExplicitTypeArg() throws Exception {
         typeCheckAndExpectFailure("can not redeclare generic");
+    }
+    
+    @Test
+    @Monty(
+    "Pojo<Int> p := Pojo(1, 2)\n" +
+    "class Pojo<T>:\n" +
+    "    +T t\n" +
+    "    +Int i\n" +
+    "    +initializer(? t, ? i):\n" +
+    "        self.t := t\n"+
+    "        self.i := i"
+    )
+    @Debug
+    public void testInferConstructorArgs() throws Exception {
+        compile();
     }
 }
