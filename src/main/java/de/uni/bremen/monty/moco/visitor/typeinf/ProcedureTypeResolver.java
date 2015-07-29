@@ -73,7 +73,7 @@ class ProcedureTypeResolver extends TypeResolverFragment {
 
         final Type returnType = classDecl.getType();
 
-        final List<Type> signature = resolveTypesOf(node.getParameter());
+        resolveTypesOf(node.getParameter());
         final Optional<Type> bodyType = getBodyType(node, returnType);
 
         if (!bodyType.isPresent()) {
@@ -81,11 +81,13 @@ class ProcedureTypeResolver extends TypeResolverFragment {
         } else if (bodyType.get() != CoreClasses.voidType().getType()) {
             reportError(node, "Constructors must not return a value");
         }
+        
+        final List<Type> newSignature = resolveTypesOf(node.getParameter());
         final Function nodeType = Function.named(classDecl.getIdentifier())
                 .atLocation(node)
                 .returning(returnType)
                 .quantifiedBy(fresh)
-                .andParameters(signature)
+                .andParameters(newSignature)
                 .createType();
         final Function unified = nodeType;
         node.setType(unified);

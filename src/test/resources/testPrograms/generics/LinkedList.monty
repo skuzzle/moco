@@ -13,7 +13,7 @@ class LinkedList<T>:
     +? size():
         return self.size
         
-    +? get(Int index):
+    +? get(? index):
         ? i := 0
         ? current := self.head
         while (i < index) and (current is Node):
@@ -21,7 +21,7 @@ class LinkedList<T>:
             i += 1
         return (current as Node<T>).data
 
-    +add(T element):
+    +add(? element):
         ? node := Node(element, EmptyNode<T>())
         if self.isEmpty():
             self.tail := node
@@ -30,7 +30,7 @@ class LinkedList<T>:
             (self.tail as Node<T>).next := node
         self.size += 1
 
-    +? contains(T element):
+    +? contains(? element):
         ? current := self.head
         while (current is Node):
             ? c := current as Node<T>
@@ -55,7 +55,7 @@ class Node<T> inherits BaseNode<T>:
     -T data
     +BaseNode<T> next
     
-    +initializer(T data, BaseNode<T> next):
+    +initializer(? data, ? next):
         self.data := data
         self.next := next
         
