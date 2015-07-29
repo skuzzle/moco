@@ -11,7 +11,37 @@ import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 
 
 public class MiscTest extends AbstractTypeInferenceTest {
+    
+    @Test
+    @Monty(
+    "? a\n" +
+    "a.foo()"
+    )
+    public void testMemberAccessOnUnknown() throws Exception {
+        typeCheckAndExpectFailure("Uninitialized variable");
+    }
+    
+    @Test
+    @Monty(
+    "? a\n" +
+    "? b\n" +
+    "foo(a, b)\n" +
+    "foo(String c, Int d):\n"+
+    "    pass"
+    )
+    public void testUseNonInitializedAsParameter() throws Exception {
+        typeCheckAndExpectFailure("Uninitialized variable");
+    }
 
+    @Test
+    @Monty(
+    "? a\n"+
+    "? b := a"
+    )
+    public void testAssignNonInitialized() throws Exception {
+        typeCheckAndExpectFailure("Assignment of uninitialized variable");
+    }
+    
     @Test
     @Monty(
     "class A:\n" +
@@ -49,6 +79,10 @@ public class MiscTest extends AbstractTypeInferenceTest {
     @Debug
     public void testUninitializedAttribute2() throws Exception {
         compile();
+        final VariableDeclaration decl = compiler.searchFor(VariableDeclaration.class, 
+                Predicates.hasName("attribute"));
+        
+        assertUniqueTypeIs(CoreClasses.intType().getType(), decl);
     }
     
     @Test

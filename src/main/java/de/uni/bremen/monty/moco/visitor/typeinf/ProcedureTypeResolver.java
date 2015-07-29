@@ -94,9 +94,8 @@ class ProcedureTypeResolver extends TypeResolverFragment {
 
     private void resolveProcedureType(ProcedureDeclaration node) {
         final List<Type> typeArgs = resolveTypesOf(node.getTypeParameters());
-
-        final Type returnType = CoreClasses.voidType().getType();
         final List<Type> signature = resolveTypesOf(node.getParameter());
+        final Type returnType = CoreClasses.voidType().getType();
 
         // set type before checking body
         final Function intermediate = Function.named(node.getIdentifier())
@@ -109,11 +108,23 @@ class ProcedureTypeResolver extends TypeResolverFragment {
         node.setTypeDeclaration(CoreClasses.voidType());
 
         final Optional<Type> bodyType = getBodyType(node, returnType);
+
         if (!bodyType.isPresent()) {
             reportError(node, "Could not uniquely determine type of function's body");
         } else if (bodyType.get() != returnType) {
             reportError(node, "Procedures must not return a value");
         }
+        
+        // resolve again to obey resolved parameter types
+        final List<Type> newSignature = resolveTypesOf(node.getParameter());
+        final Function type = Function.named(node.getIdentifier())
+                .atLocation(node)
+                .returningVoid()
+                .andParameters(newSignature)
+                .quantifiedBy(typeArgs)
+                .createType();
+        node.setType(type);
+        
         validateOverride(node);
     }
 
@@ -158,11 +169,14 @@ class ProcedureTypeResolver extends TypeResolverFragment {
             reportError(node, "Body type <%s> not compatible with return type <%s>",
                     bodyType.get(), returnType);
         }
+        
+        // do again to obey resolved parameter types
+        final List<Type> newSignature = resolveTypesOf(node.getParameter());
 
         final Function nodeType = Function.named(node.getIdentifier())
                 .atLocation(node)
                 .returning(returnType)
-                .andParameters(signature)
+                .andParameters(newSignature)
                 .createType();
         node.setType(nodeType);
         final TypeDeclaration typeDecl = node.getScope().resolveRawType(node,

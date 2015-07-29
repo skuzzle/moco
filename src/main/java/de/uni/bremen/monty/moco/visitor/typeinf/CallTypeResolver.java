@@ -40,7 +40,7 @@ class CallTypeResolver extends TypeResolverFragment {
     }
 
     private void resolveCall(FunctionCall node, List<ProcedureDeclaration> candidates) {
-        resolveTypesOf(node.getTypeArguments());
+        resolveTypesOf(node.getTypeArguments(), true);
 
         final BestFit bestFit = TypeHelper.bestFit(candidates, node, this);
         checkIsUnique(bestFit, node);
@@ -65,6 +65,7 @@ class CallTypeResolver extends TypeResolverFragment {
             }
         }
         node.setTypeDeclarationIfResolved(match);
+        PushDown.unification(unification).into(node.getArguments());
     }
 
     private void checkResultTypeForRecursion(FunctionCall call,

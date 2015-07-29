@@ -186,9 +186,9 @@ public class Scope implements TypeContext {
             if (declaration instanceof TypeDeclaration) {
                 return (TypeDeclaration) declaration;
             }
-            throw new UnknownTypeException(positionHint, identifier);
+            throw new UnknownTypeException(positionHint, identifier, this);
         } catch (UnknownIdentifierException e) {
-            throw new UnknownTypeException(positionHint, identifier);
+            throw new UnknownTypeException(positionHint, identifier, this);
         }
     }
 

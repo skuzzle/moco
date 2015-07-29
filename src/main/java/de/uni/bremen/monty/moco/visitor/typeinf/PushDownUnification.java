@@ -1,9 +1,11 @@
 package de.uni.bremen.monty.moco.visitor.typeinf;
 
+import java.util.Collection;
 import java.util.Objects;
 
 import de.uni.bremen.monty.moco.ast.ASTNode;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.TypeVariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Typed;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
@@ -23,13 +25,20 @@ final class PushDown {
             Objects.requireNonNull(root);
             root.visit(new PushDownVisitor(this.unification));
         }
+        
+        public void into(Collection<? extends ASTNode> nodes) {
+            Objects.requireNonNull(nodes);
+            final PushDownVisitor visitor = new PushDownVisitor(unification);
+            for (final ASTNode root : nodes) {
+                root.visit(visitor);
+            }
+        }
     }
 
     public static IntoClause unification(Unification unification) {
         Objects.requireNonNull(unification);
         return new IntoClause(unification);
     }
-
 
     private static final class PushDownVisitor extends BaseVisitor {
         private final Unification unification;
@@ -45,8 +54,17 @@ final class PushDown {
                 final Type unified = this.unification.apply(typedNode);
                 typedNode.setType(unified);
 
+                // update type declaration only
                 final TypeDeclaration raw = node.getScope().resolveRawType(node, unified);
-                typedNode.setTypeDeclaration(raw);
+                
+                boolean updateRaw = true;
+                if (typedNode.isTypeResolved() && typedNode.getTypeDeclaration() instanceof TypeVariableDeclaration) {
+                    final TypeVariableDeclaration tvd = (TypeVariableDeclaration) typedNode.getTypeDeclaration();
+                    updateRaw = tvd.isArtificial();
+                }
+                if (updateRaw) {
+                    typedNode.setTypeDeclaration(raw);
+                }
             }
         }
 

@@ -146,15 +146,31 @@ public class ClassTest extends AbstractTypeInferenceTest {
     
     @Test
     @Monty(
-    "Object o := A<>(\"a\")\n" +
-    "print((o as A<String>).b)\n" +
+    "Object o := A<>(1)\n" +
+    "print((o as A<Int>).b)\n" +
     "class A<B>:\n" +
     "    +B b\n" +
     "    +initializer(B b):\n" +
     "        self.b := b"
     )
-    @ExpectOutput("a")
+    @ExpectOutput("1")
+    @Debug
     public void testCastToGeneric() throws Exception {
+        compile();
+    }
+    
+    @Test
+    @Monty(
+    "Object o := A(1)\n" +
+    "print((o as A).b)\n" +
+    "class A:\n" +
+    "    +Int b\n" +
+    "    +initializer(Int b):\n" +
+    "        self.b := b"
+    )
+    @ExpectOutput("1")
+    @Debug
+    public void testCastToNonGeneric() throws Exception {
         compile();
     }
 }

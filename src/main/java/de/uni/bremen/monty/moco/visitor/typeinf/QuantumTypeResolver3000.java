@@ -321,7 +321,9 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
     @Override
     public void visit(MemberAccess node) {
         resolveTypeOf(node.getLeft());
-        assert node.getLeft().isTypeResolved();
+        if (isNotResolved(node.getLeft().getType())) {
+            reportError(node, "Uninitialized variable");
+        }
 
         final ClassType instanceType;
         if (node.getLeft().getType().isVariable()) {
@@ -368,10 +370,20 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         }
         node.setTypeDeclaration(node.getRight().getTypeDeclaration());
     }
+    
+    private boolean isNotResolved(Type type) {
+        return type.isVariable() && type.asVariable().isIntermediate();
+    }
 
     @Override
     public void visit(Assignment node) {
         super.visit(node);
+        
+        if (isNotResolved(node.getLeft().getType()) && 
+                isNotResolved(node.getRight().getType())) {
+            
+            reportError(node, "Assignment of uninitialized variable");
+        }
 
         final Unification unification = Unification
                 .given(node.getScope())
@@ -488,6 +500,7 @@ public class QuantumTypeResolver3000 extends BaseVisitor implements TypeResolver
         if (!unification.isSuccessful()) {
             reportError(condition, "%s is not a bool", condition.getType());
         }
+        PushDown.unification(unification).into(condition);
     }
 
     @Override

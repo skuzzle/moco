@@ -9,6 +9,8 @@ import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.ClassType;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
+import de.uni.bremen.monty.moco.util.Debug;
+import de.uni.bremen.monty.moco.util.ExpectOutput;
 import de.uni.bremen.monty.moco.util.Monty;
 import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 
@@ -63,5 +65,22 @@ public class CastingTest extends AbstractTypeInferenceTest {
 
         assertUniqueTypeIs(expected, xyz);
         assertEquals(decl, xyz.getTypeDeclaration());
+    }
+    
+    @Test
+    @Monty(
+    "? b := B()\n" +
+    "b.a := Test<Int>()\n" +
+    "? cond := b.a is Test\n" +
+    "print(cond)\n" +
+    "class B:\n" +
+    "    +Object a\n"+ 
+    "class Test<A>:\n" + 
+    "    pass"
+    )
+    @ExpectOutput("1")
+    @Debug
+    public void testIs() throws Exception {
+        compile();
     }
 }

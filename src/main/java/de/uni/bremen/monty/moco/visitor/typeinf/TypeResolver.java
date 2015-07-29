@@ -21,7 +21,7 @@ public interface TypeResolver {
      * @param node The root node.
      */
     void resolveTypeOf(ASTNode node);
-
+    
     /**
      * Resolves the types of each of the given nodes. 
      * 
@@ -29,11 +29,29 @@ public interface TypeResolver {
      * @return A list containing the types of the resolved nodes.
      */
     default List<Type> resolveTypesOf(Iterable<? extends ASTNode> nodes) {
+        return resolveTypesOf(nodes, true);
+    }
+
+    /**
+     * Resolves the types of each of the given nodes. 
+     * 
+     * @param nodes The list of nodes.
+     * @param allowUnitialized 
+     * @return A list containing the types of the resolved nodes.
+     */
+    default List<Type> resolveTypesOf(Iterable<? extends ASTNode> nodes, 
+            boolean allowUnitialized) {
         final List<Type> result = new ArrayList<>();
         for (final ASTNode node : nodes) {
             resolveTypeOf(node);
             if (node instanceof Typed) {
-                result.add(((Typed) node).getType());
+                final Type type = ((Typed) node).getType();
+                if (!allowUnitialized && type.isVariable() 
+                        && type.asVariable().isIntermediate()) {
+                    reportError(node, "Uninitialized variable");
+                }
+                result.add(type);
+                
             }
         }
         return result;
