@@ -86,7 +86,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "class Pair<A, B>:\n"+
     "    +A a\n" +
     "    +B b\n" +
-    "    +initializer(A a, B b):\n"+
+    "    +initializer(? a, ? b):\n"+
     "        self.a := a\n" +
     "        self.b := b"
     )
@@ -290,7 +290,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "class Node<A>:\n"+
     "    -A data\n"+
     "    +Node<A> next\n"+
-    "    +initializer(A data):\n"+
+    "    +initializer(? data):\n"+
     "        self.data := data"
     )
     public void testRecursiveType() throws Exception {
@@ -315,7 +315,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "? child := Node<>(4)\n" +
     "root.next := child\n" +
     "class Node<A>:\n" +
-    "    -A data\n" +
+    "    -? data\n" +
     "    +Node<A> next\n" +
     "    +initializer(A data):\n" +
     "        self.data := data"
@@ -329,7 +329,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "class Pair<A, B>:\n" +
     "    -A t1\n" +
     "    -B t2\n" +
-    "    +initializer(A f, B s):\n" +
+    "    +initializer(? f, ? s):\n" +
     "        self.t1 := f\n" +
     "        self.t2 := s\n" +
     "    +A get1():\n" +
@@ -388,7 +388,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "class Pair<A, B>:\n" +
     "    -A t1\n" +
     "    -B t2\n" +
-    "    +initializer(A f, B s):\n" +
+    "    +initializer(? f, ? s):\n" +
     "        self.t1 := f\n" +
     "        self.t2 := s\n" +
     "? foo(Int a, Int b):\n" +
@@ -418,7 +418,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     @Monty(
     "class Foo<X>:\n" +
     "    +X y\n" +
-    "    +initializer(X x):\n" +
+    "    +initializer(? x):\n" +
     "        self.y := self.identity<X>(x)\n" +
     "    +<X> ? identity(X x):\n" +
     "        return x"
