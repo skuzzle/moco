@@ -1,5 +1,6 @@
 package de.uni.bremen.monty.typeinf;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.CoreClasses;
@@ -29,6 +30,7 @@ public class MiscTest extends AbstractTypeInferenceTest {
     "foo(String c, Int d):\n"+
     "    pass"
     )
+    @Ignore
     public void testUseNonInitializedAsParameter() throws Exception {
         typeCheckAndExpectFailure("Uninitialized variable");
     }
