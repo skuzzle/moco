@@ -43,6 +43,7 @@ import java.util.Objects;
 import de.uni.bremen.monty.moco.ast.AbstractTypedASTNode;
 import de.uni.bremen.monty.moco.ast.AccessModifier;
 import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.NameMangled;
 import de.uni.bremen.monty.moco.ast.NamedNode;
 import de.uni.bremen.monty.moco.ast.Position;
 
@@ -52,7 +53,8 @@ import de.uni.bremen.monty.moco.ast.Position;
  * A declaration has an identifier, the name under which this declaration is
  * known.
  */
-public abstract class Declaration extends AbstractTypedASTNode implements NamedNode {
+public abstract class Declaration extends AbstractTypedASTNode implements NamedNode, 
+        NameMangled {
 
     /** The identifier. */
     private final Identifier identifier;
@@ -87,11 +89,7 @@ public abstract class Declaration extends AbstractTypedASTNode implements NamedN
         this.access = access;
     }
 
-    /**
-     * Get the mangled Identifier.
-     *
-     * @return mangled Identifier
-     */
+    @Override
     public Identifier getMangledIdentifier() {
         return this.mangledIdentifier;
     }
