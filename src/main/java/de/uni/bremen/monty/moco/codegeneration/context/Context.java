@@ -38,10 +38,10 @@
  */
 package de.uni.bremen.monty.moco.codegeneration.context;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
 
 /** An .ll File is composed by a Tree of Context. This Tree is realized in this class with a recursive Structure that is
  * created with the attribute {@link #innerContexts}
@@ -67,7 +67,7 @@ public class Context implements ContextData {
 	 * @param data */
 	public void append(String data) {
 		data = StringUtils.repeat(" ", indentation * 4) + data;
-		// data = commentAppender.addComment(data);
+		data = commentAppender.addComment(data);
 		innerContexts.add(new StringData(data + "\n"));
 	}
 
