@@ -15,10 +15,14 @@ public class MiscTest extends AbstractTypeInferenceTest {
     
     @Test
     @Monty(
-    "? h := Holder(Holder2(1))\n"+
+    "? h := hold(hold2(1))\n"+
     "? outer := h.value\n" +
-    "? inner := outer.value\n" +
+    "? inner := outer.get()\n" +
     "print(inner)\n" +
+    "<T> ? hold(T value):\n" +
+    "    return Holder(value)\n"+
+    "<T> ? hold2(T value):\n" +
+    "    return Holder2(value)\n" +
     "class Holder2<T>:\n" +
     "    +T value\n" +
     "    +initializer(? value):\n" +
@@ -32,8 +36,33 @@ public class MiscTest extends AbstractTypeInferenceTest {
     "    +T get():\n" +
     "        return self.value"
     )
-    @ExpectOutput("1")
-    @Debug
+    public void testAccessErasedMember2() throws Exception {
+        compile();
+    }
+    
+    @Test
+    @Monty(
+    "? h := Holder(Holder2(1))\n"+
+    "? outer := h.get()\n" +
+    "? outer2 := h.value\n" +
+    "? inner := outer.value\n" +
+    "? inner2 := outer2.get()\n" +
+    "print(inner)\n" +
+    "print(inner2)\n" +
+    "class Holder2<T>:\n" +
+    "    +T value\n" +
+    "    +initializer(? value):\n" +
+    "        self.value := value\n"+
+    "    +T get():\n" +
+    "        return self.value\n" +
+    "class Holder<T>:\n" +
+    "    +T value\n" +
+    "    +initializer(? value):\n" +
+    "        self.value := value\n"+
+    "    +T get():\n" +
+    "        return self.value"
+    )
+    @ExpectOutput("11")
     public void testAccessErasedMember() throws Exception {
         compile();
     }

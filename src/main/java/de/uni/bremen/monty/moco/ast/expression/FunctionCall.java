@@ -56,7 +56,6 @@ public class FunctionCall extends Expression implements Statement, NamedNode, Na
     private final List<Expression> arguments;
     private final List<TypeInstantiation> typeArguments;
     private ProcedureDeclaration declaration;
-    private Identifier mangledIdentifier;
 
     /** Type declaration of the type of which this is a constructor call */
     private ClassDeclaration constructorType;
@@ -160,10 +159,6 @@ public class FunctionCall extends Expression implements Statement, NamedNode, Na
 
     @Override
     public Identifier getMangledIdentifier() {
-        return this.mangledIdentifier;
-    }
-    
-    public void setMangledIdentifier(Identifier mangledIdentifier) {
-        this.mangledIdentifier = mangledIdentifier;
+        return this.declaration.getMangledIdentifier();
     }
 }

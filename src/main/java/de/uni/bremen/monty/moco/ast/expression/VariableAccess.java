@@ -39,6 +39,7 @@
 package de.uni.bremen.monty.moco.ast.expression;
 
 import de.uni.bremen.monty.moco.ast.Identifier;
+import de.uni.bremen.monty.moco.ast.NameMangled;
 import de.uni.bremen.monty.moco.ast.NamedNode;
 import de.uni.bremen.monty.moco.ast.Position;
 import de.uni.bremen.monty.moco.ast.ResolvableIdentifier;
@@ -46,7 +47,7 @@ import de.uni.bremen.monty.moco.ast.declaration.Declaration;
 import de.uni.bremen.monty.moco.visitor.BaseVisitor;
 
 /** VariableAccess is an expression that references a local variable or a member of an object. */
-public class VariableAccess extends Expression implements NamedNode {
+public class VariableAccess extends Expression implements NamedNode, NameMangled {
 
 	/** Identifier of the variable to access. */
 	private final ResolvableIdentifier identifier;
