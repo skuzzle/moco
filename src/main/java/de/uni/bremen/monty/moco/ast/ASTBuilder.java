@@ -177,7 +177,9 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
 	@Override
 	public ASTNode visitVariableDeclaration(@NotNull VariableDeclarationContext ctx) {
         final String typeName = getTypeName(ctx.type());
-        final Builder builder = TypeInstantiation.forTypeName(typeName);
+        final Builder builder = TypeInstantiation.forTypeName(typeName)
+                .atPosition(position(ctx.start));
+        
         collectTypeArgs(builder, ctx.type().typeList());
 
         final VariableDeclaration decl = new VariableDeclaration(
@@ -202,7 +204,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
         }
         for (TypeContext type : ctx.type()) {
             final Builder builder = TypeInstantiation
-                    .forTypeName(type.ClassIdentifier().getText());
+                    .forTypeName(type.ClassIdentifier().getText())
+                    .atLocation(position(type.start));
 
             collectTypeArgs(builder, type.typeList());
             typeArgs.add(builder.create());
@@ -383,7 +386,8 @@ public class ASTBuilder extends MontyBaseVisitor<ASTNode> {
         }
         for (final TypeContext typeParam : listCtx.type()) {
             final String typeName = getTypeName(typeParam);
-            final Builder subBuilder = TypeInstantiation.forTypeName(typeName);
+            final Builder subBuilder = TypeInstantiation.forTypeName(typeName)
+                    .atPosition(position(typeParam.start));
             collectTypeArgs(subBuilder, typeParam.typeList());
             target.addTypeArgument(subBuilder.create());
         }
