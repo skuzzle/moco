@@ -57,18 +57,6 @@ public abstract class AbstractTypedASTNode extends BasicASTNode implements Typed
         return this.typeDecl != null;
     }
 
-    /**
-     * Sets the TypeDeclaration of this node to the TypeDeclaration of the
-     * given typed node, only if the given node's type is already resolved.
-     *
-     * @param other The typed node to obtain the type from.
-     */
-    public void setTypeDeclarationIfResolved(Typed other) {
-        if (other.isTypeDeclarationResolved()) {
-            setTypeDeclaration(other.getTypeDeclaration());
-        }
-    }
-
     @Override
     public String toString() {
         final StringBuilder b = new StringBuilder(super.toString());

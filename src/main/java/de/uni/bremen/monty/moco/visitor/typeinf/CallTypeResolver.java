@@ -55,6 +55,8 @@ class CallTypeResolver extends TypeResolverFragment {
         final Function unified = unification.apply(callType);
         node.setType(unified.getReturnType());
         node.setDeclaration(match);
+        updateTypeDeclaration(node);
+        
         match.addUsage(node);
         if (isRecursive(node, match)) {
             match.addRecursiveCall(node);
@@ -66,8 +68,21 @@ class CallTypeResolver extends TypeResolverFragment {
                 reportError(node, "Functions with inferred return- or parameter type can not be called recursively");
             }
         }
-        node.setTypeDeclarationIfResolved(match);
         PushDown.unification(unification).into(node.getArguments());
+    }
+    
+    private void updateTypeDeclaration(FunctionCall node) {
+        final Type retType = node.getType();
+        TypeDeclaration decl = null;
+        if (retType.isClass()) {
+            decl = node.getScope().resolveRawType(node, retType);
+        } else if (node.getDeclaration().isTypeDeclarationResolved()) {
+            decl = node.getDeclaration().getTypeDeclaration();
+        } 
+        
+        if (decl != null) {
+            node.setTypeDeclaration(decl);
+        }
     }
     
     private boolean isAnyIntermediateVariable(Product product) {
