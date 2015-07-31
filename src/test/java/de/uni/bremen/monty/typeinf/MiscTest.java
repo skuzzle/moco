@@ -15,6 +15,31 @@ public class MiscTest extends AbstractTypeInferenceTest {
     
     @Test
     @Monty(
+    "? h := Holder(Holder2(1))\n"+
+    "? outer := h.value\n" +
+    "? inner := outer.value\n" +
+    "print(inner)\n" +
+    "class Holder2<T>:\n" +
+    "    +T value\n" +
+    "    +initializer(? value):\n" +
+    "        self.value := value\n"+
+    "    +T get():\n" +
+    "        return self.value\n" +
+    "class Holder<T>:\n" +
+    "    +T value\n" +
+    "    +initializer(? value):\n" +
+    "        self.value := value\n"+
+    "    +T get():\n" +
+    "        return self.value"
+    )
+    @ExpectOutput("1")
+    @Debug
+    public void testAccessErasedMember() throws Exception {
+        compile();
+    }
+    
+    @Test
+    @Monty(
     "? a\n" +
     "a.foo()"
     )
