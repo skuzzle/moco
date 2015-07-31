@@ -13,6 +13,7 @@ import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.TypeDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Function;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Product;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.ast.declaration.typeinf.Unification;
 import de.uni.bremen.monty.moco.ast.expression.Expression;
@@ -59,13 +60,27 @@ class CallTypeResolver extends TypeResolverFragment {
             match.addRecursiveCall(node);
 
             final Function matchType = match.getType().asFunction();
+            final Product sigType = matchType.getParameters();
             final Type retType = matchType.getReturnType();
-            if (retType.isVariable() && retType.asVariable().isIntermediate()) {
-                reportError(node, "Functions with inferred return type can not be called recursively");
+            if (isIntermediateVariable(retType) || isAnyIntermediateVariable(sigType)) {
+                reportError(node, "Functions with inferred return- or parameter type can not be called recursively");
             }
         }
         node.setTypeDeclarationIfResolved(match);
         PushDown.unification(unification).into(node.getArguments());
+    }
+    
+    private boolean isAnyIntermediateVariable(Product product) {
+        for (final Type type : product.getComponents()) {
+            if (isIntermediateVariable(type)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private boolean isIntermediateVariable(Type type) {
+        return type.isVariable() && type.asVariable().isIntermediate();
     }
 
     private void checkResultTypeForRecursion(FunctionCall call,

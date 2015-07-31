@@ -16,6 +16,26 @@ import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 
 public class FunctionCallTest extends AbstractTypeInferenceTest {
+    
+    @Test
+    @Monty(
+    "Int foo(? n):\n" +
+    "    return foo(n)"
+    )
+    public void testInferParametersRecursiveCall() throws Exception {
+        typeCheckAndExpectFailure("Functions with inferred return- or parameter type can not be called recursively");
+    }
+    
+    @Test
+    @Monty(
+    "Int foo(Object o):\n" +
+    "    return 1\n" +
+    "Int foo(? n):\n" +
+    "    return foo(n)"
+    )
+    public void testInferParametersRecursiveCallWithOverload() throws Exception {
+        typeCheckAndExpectFailure("Ambiguous cal");
+    }
 
     @Test
     @Monty(
