@@ -45,6 +45,10 @@ public class QuantumTypeErasor9k extends BaseVisitor {
         if (decl instanceof ClassDeclaration) {
             return (TypeDeclaration) decl;
         } else if (decl instanceof TypeVariableDeclaration) {
+            if (node.getType().isClass()) {
+                final ASTNode asNode = (ASTNode) node;
+                return asNode.getScope().resolveRawType(asNode, node.getType());
+            }
             return CoreClasses.objectType();
         }
         return null;

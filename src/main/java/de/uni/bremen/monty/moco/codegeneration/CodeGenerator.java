@@ -142,7 +142,7 @@ public class CodeGenerator {
 		return variable;
 	}
 
-	private <T extends LLVMType> LLVMIdentifier<T> castIfNeeded(CodeContext c, LLVMIdentifier<T> variable, T toType) {
+	public <T extends LLVMType> LLVMIdentifier<T> castIfNeeded(CodeContext c, LLVMIdentifier<T> variable, T toType) {
 		if ((variable.getType() instanceof LLVMPointer) && (toType instanceof LLVMPointer)) {
 			return (LLVMIdentifier<T>) (LLVMIdentifier<?>) castIfNeeded(
 			        c,

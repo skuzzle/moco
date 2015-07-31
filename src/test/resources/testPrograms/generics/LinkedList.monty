@@ -59,6 +59,14 @@ class Node<T> inherits BaseNode<T>:
         self.data := data
         self.next := next
         
+class User<T>:
+    +T name
+    +Int age
+    
+    +initializer(? name, ? age):
+        self.name := name
+        self.age := age
+        
         
 ? list := LinkedList<String>()
 list.add("1")
@@ -66,3 +74,13 @@ list.add("2")
 print(list.size())
 print(list.get(0))
 print(list.get(1))
+
+? userList := LinkedList<User<Int>>()
+? user1 := User(13, 81)
+? user2 := User(37, 19)
+userList.add(user1)
+userList.add(user2)
+userList.add(user2)
+print(userList.size())
+print(userList.get(0).name)
+print(userList.get(1).name)

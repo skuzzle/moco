@@ -293,7 +293,8 @@ public class CodeGenerationVisitor extends BaseVisitor {
 		super.visit(node);
 
 		VariableDeclaration varDeclaration = (VariableDeclaration) node.getDeclaration();
-
+		final TypeDeclaration declaredType = varDeclaration.getTypeDeclaration();
+		
 		LLVMIdentifier<LLVMType> llvmIdentifier;
 		if (varDeclaration.getIsGlobal()) {
 			llvmIdentifier =
@@ -305,14 +306,19 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			                this.contextUtils.active(),
 			                (LLVMIdentifier<LLVMPointer<LLVMType>>) leftIdentifier,
 			                varDeclaration.getAttributeIndex(),
-			                node.getTypeDeclaration(),
+			                declaredType,
 			                !node.getLValue());
 		} else {
 			llvmIdentifier =
 			        this.codeGenerator.resolveLocalVarName(
 			                node.getMangledIdentifier().getSymbol(),
-			                node.getTypeDeclaration(),
+			                declaredType,
 			                !varDeclaration.isParameter());
+		}
+		if (node.getTypeDeclaration() != declaredType) {
+		    final LLVMType target = codeGenerator.mapToLLVMType(declaredType);
+		    llvmIdentifier = codeGenerator.castIfNeeded(contextUtils.active(), 
+		            llvmIdentifier, target);
 		}
 		this.stack.push(llvmIdentifier);
 	}
@@ -537,23 +543,31 @@ public class CodeGenerationVisitor extends BaseVisitor {
 			    this.codeGenerator.callVoidMethod(this.contextUtils.active(), 
 			            declaration, arguments, expectedParameters);
 			} else {
-			    this.stack.push((LLVMIdentifier<LLVMType>) this.codeGenerator.callMethod(
+			    final LLVMType target = codeGenerator.mapToLLVMType(node.getTypeDeclaration());
+			    final LLVMIdentifier<LLVMType> callResult = (LLVMIdentifier<LLVMType>) this.codeGenerator.callMethod(
 			            this.contextUtils.active(),
 			            (FunctionDeclaration) declaration,
 			            arguments,
-			            expectedParameters));
+			            expectedParameters);
+			    
+			    final LLVMIdentifier<LLVMType> realResult = codeGenerator.castIfNeeded(
+			            contextUtils.active(), callResult, target);
+			    stack.push(realResult);
 			}
 		} else {
 			if (declaration instanceof FunctionDeclaration && 
 			        !CoreClasses.voidType().equals(node.getTypeDeclaration())) {
-			    // HINT: use type declaration of the called function's declaration to
-			    // get the correct erasure type
-				this.stack.push((LLVMIdentifier<LLVMType>) this.codeGenerator.call(
+			    final LLVMType target = codeGenerator.mapToLLVMType(node.getTypeDeclaration());
+			    final LLVMIdentifier<LLVMType> callResult = (LLVMIdentifier<LLVMType>) this.codeGenerator.call(
 				        this.contextUtils.active(),
 				        declaration.getMangledIdentifier().getSymbol(),
 				        declaration.getTypeDeclaration(),
 				        arguments,
-				        expectedParameters));
+				        expectedParameters);
+			    
+	             final LLVMIdentifier<LLVMType> realResult = codeGenerator.castIfNeeded(
+	                        contextUtils.active(), callResult, target);
+	                stack.push(realResult);
 			} else {
 				if (declaration.isInitializer()) {
 					this.stack.push((LLVMIdentifier<LLVMType>) arguments.get(0));
