@@ -244,9 +244,17 @@ public class DotVisitor extends BaseVisitor implements AutoCloseable {
 
     @Override
     public void visit(FunctionCall node) {
+        final StringBuilder declType = new StringBuilder();
+        declType.append("Declaration's type: ");
+        if (node.getDeclaration() != null && node.getDeclaration().isTypeResolved()) {
+            declType.append(node.getDeclaration().getType().toString());
+        } else {
+            declType.append("unknown");
+        }
+            
         this.dotBuilder.printNode(node,
                 String.format("Call '%s' (c'tor: %b)", node.getIdentifier(), node.isConstructorCall()),
-                "Declaration's type: " + node.getDeclaration().getType().toString(),
+                declType.toString(),
                 node.getPosition().toString());
 
         super.visit(node);
