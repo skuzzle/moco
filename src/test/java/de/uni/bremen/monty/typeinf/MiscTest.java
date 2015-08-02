@@ -1,9 +1,12 @@
 package de.uni.bremen.monty.typeinf;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.declaration.ClassDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
 import de.uni.bremen.monty.moco.util.Debug;
 import de.uni.bremen.monty.moco.util.ExpectOutput;
@@ -12,13 +15,44 @@ import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 
 
 public class MiscTest extends AbstractTypeInferenceTest {
-    
+
+    @Test
+    @Monty(
+    "class A:\n" +
+    "    pass\n" +
+    "class X:\n" +
+    "    pass\n" +
+    "class B inherits A:\n" +
+    "    pass\n" +
+    "class C inherits B, X:\n" +
+    "    pass\n"
+    )
+    public void testTypeDistance() throws Exception {
+        compile();
+
+        final ClassDeclaration a = this.compiler.searchFor(ClassDeclaration.class,
+                Predicates.hasName("A"));
+        final ClassDeclaration x = this.compiler.searchFor(ClassDeclaration.class,
+                Predicates.hasName("X"));
+        final ClassDeclaration b = this.compiler.searchFor(ClassDeclaration.class,
+                Predicates.hasName("B"));
+        final ClassDeclaration c = this.compiler.searchFor(ClassDeclaration.class,
+                Predicates.hasName("C"));
+
+        assertEquals(1, a.getType().distanceToObject());
+        assertEquals(1, x.getType().distanceToObject());
+        assertEquals(2, b.getType().distanceToObject());
+        assertEquals(2, c.getType().distanceToObject());
+    }
+
     @Test
     @Monty(
     "? h := hold(hold2(1))\n"+
     "? outer := h.value\n" +
     "? inner := outer.get()\n" +
+    "? inner2 := h.value.get()\n" +
     "print(inner)\n" +
+    "print(inner2)\n" +
     "<T> ? hold(T value):\n" +
     "    return Holder(value)\n"+
     "<T> ? hold2(T value):\n" +
@@ -36,10 +70,11 @@ public class MiscTest extends AbstractTypeInferenceTest {
     "    +T get():\n" +
     "        return self.value"
     )
+    @ExpectOutput("11")
     public void testAccessErasedMember2() throws Exception {
         compile();
     }
-    
+
     @Test
     @Monty(
     "? h := Holder(Holder2(1))\n"+
@@ -66,7 +101,7 @@ public class MiscTest extends AbstractTypeInferenceTest {
     public void testAccessErasedMember() throws Exception {
         compile();
     }
-    
+
     @Test
     @Monty(
     "? a\n" +
@@ -75,7 +110,7 @@ public class MiscTest extends AbstractTypeInferenceTest {
     public void testMemberAccessOnUnknown() throws Exception {
         typeCheckAndExpectFailure("Uninitialized variable");
     }
-    
+
     @Test
     @Monty(
     "? a\n" +
@@ -97,19 +132,19 @@ public class MiscTest extends AbstractTypeInferenceTest {
     public void testAssignNonInitialized() throws Exception {
         typeCheckAndExpectFailure("Assignment of uninitialized variable");
     }
-    
+
     @Test
     @Monty(
     "class A:\n" +
     "    +? attribute := 'c'"
     )
     public void testInferAttribute() throws Exception {
-        final VariableDeclaration attr = compile().searchFor(VariableDeclaration.class, 
+        final VariableDeclaration attr = compile().searchFor(VariableDeclaration.class,
                 Predicates.hasName("attribute"));
-        
+
         assertUniqueTypeIs(CoreClasses.charType().getType(), attr);
     }
-    
+
     @Test
     @Monty(
     "class A:\n" +
@@ -124,7 +159,7 @@ public class MiscTest extends AbstractTypeInferenceTest {
     public void testUninitializedAttribute() throws Exception {
         typeCheckAndExpectFailure("Can not assign <Char> to <Int>");
     }
-    
+
     @Test
     @Monty(
     "class A:\n" +
@@ -135,12 +170,12 @@ public class MiscTest extends AbstractTypeInferenceTest {
     @Debug
     public void testUninitializedAttribute2() throws Exception {
         compile();
-        final VariableDeclaration decl = compiler.searchFor(VariableDeclaration.class, 
+        final VariableDeclaration decl = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("attribute"));
-        
+
         assertUniqueTypeIs(CoreClasses.intType().getType(), decl);
     }
-    
+
     @Test
     @Monty(
     "class A:\n" +
@@ -151,7 +186,7 @@ public class MiscTest extends AbstractTypeInferenceTest {
     public void testUnqualifiedMemberAccess() throws Exception {
         typeCheckAndExpectFailure("Unqualified member access: <attribute>");
     }
-    
+
     @Test
     @Monty(
     "Int a := foo\n" +
@@ -189,7 +224,7 @@ public class MiscTest extends AbstractTypeInferenceTest {
     )
     @ExpectOutput("aab")
     public void testIfStatement() throws Exception {
-        this.compile();
+        compile();
     }
 
     @Test
@@ -198,6 +233,6 @@ public class MiscTest extends AbstractTypeInferenceTest {
     )
     @ExpectOutput("a")
     public void testPrint() throws Exception {
-        this.compile();
+        compile();
     }
 }

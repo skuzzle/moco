@@ -1,13 +1,10 @@
 package de.uni.bremen.monty.typeinf;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
 import org.junit.Test;
 
-import de.uni.bremen.monty.moco.ast.CoreClasses;
 import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
-import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.expression.FunctionCall;
 import de.uni.bremen.monty.moco.util.Debug;
 import de.uni.bremen.monty.moco.util.ExpectOutput;
@@ -16,7 +13,7 @@ import de.uni.bremen.monty.moco.util.astsearch.Predicates;
 import de.uni.bremen.monty.moco.util.astsearch.SearchAST;
 
 public class FunctionCallTest extends AbstractTypeInferenceTest {
-    
+
     @Test
     @Monty(
     "Int foo(? n):\n" +
@@ -25,7 +22,7 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     public void testInferParametersRecursiveCall() throws Exception {
         typeCheckAndExpectFailure("Functions with inferred return- or parameter type can not be called recursively");
     }
-    
+
     @Test
     @Monty(
     "Int foo(Object o):\n" +
@@ -47,7 +44,7 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    return i"
     )
     public void testBestFitTypeVarVSConcreteType() throws Exception {
-        this.compile();
+        compile();
         final FunctionDeclaration declA = SearchAST.forNode(FunctionDeclaration.class).where(Predicates.hasName("f")).and(Predicates.onLine(3)).in(this.compiler.getAst()).get();
         final FunctionDeclaration declB = SearchAST.forNode(FunctionDeclaration.class).where(Predicates.hasName("f")).and(Predicates.onLine(5)).in(this.compiler.getAst()).get();
         final FunctionCall callA = SearchAST.forNode(FunctionCall.class).where(Predicates.hasName("f")).and(Predicates.onLine(1)).in(this.compiler.getAst()).get();
@@ -67,7 +64,7 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    pass"
     )
     public void testOverloadWithPrimitives() throws Exception {
-        this.compile();
+        compile();
     }
 
     @Test
@@ -95,12 +92,79 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    return b"
     )
     public void testBestFit() throws Exception {
-        this.compile();
+        compile();
+        final FunctionCall first = SearchAST.forNode(FunctionCall.class)
+                .where(Predicates.onLine(1))
+                .and(Predicates.hasName("method"))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionCall second = SearchAST.forNode(FunctionCall.class)
+                .where(Predicates.onLine(2))
+                .and(Predicates.hasName("method"))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionDeclaration decl1 = SearchAST.forNode(FunctionDeclaration.class)
+                .where(Predicates.onLine(7))
+                .and(Predicates.hasName("method"))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionDeclaration decl2 = SearchAST.forNode(FunctionDeclaration.class)
+                .where(Predicates.onLine(9))
+                .and(Predicates.hasName("method"))
+                .in(this.compiler.getAst())
+                .get();
+
+        assertSame(decl1, first.getDeclaration());
+        assertSame(decl2, second.getDeclaration());
+    }
+
+    @Test
+    @Monty(
+    "A a := method(A(), B())\n"+
+    "B b := method(B(), C())\n"+
+    "class A:\n"+
+    "    pass\n" +
+    "class B inherits A:\n" +
+    "    pass\n" +
+    "class C inherits B:\n" +
+    "    pass\n" +
+    "A method(A a, A c):\n" +
+    "    return a\n" +
+    "B method(A a, B b):\n" +
+    "    return b"
+    )
+    public void testBestFitMultiple() throws Exception {
+        compile();
+
+        final FunctionCall first = SearchAST.forNode(FunctionCall.class)
+                .where(Predicates.onLine(1))
+                .and(Predicates.hasName("method"))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionCall second = SearchAST.forNode(FunctionCall.class)
+                .where(Predicates.onLine(2))
+                .and(Predicates.hasName("method"))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionDeclaration decl2 = SearchAST.forNode(FunctionDeclaration.class)
+                .where(Predicates.onLine(11))
+                .and(Predicates.hasName("method"))
+                .in(this.compiler.getAst())
+                .get();
+
+        assertSame(decl2, first.getDeclaration());
+        assertSame(decl2, second.getDeclaration());
     }
 
     @Test
     @Monty(
     "A a := method(A())\n"+
+    "A b := method(B())\n"+
     "class A:\n"+
     "    pass\n" +
     "class B inherits A:\n" +
@@ -111,12 +175,34 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    return 5"
     )
     public void testBestFitGenerics() throws Exception {
-        this.compile();
+        compile();
+
+        final FunctionCall first = SearchAST.forNode(FunctionCall.class)
+                .where(Predicates.onLine(1))
+                .and(Predicates.hasName("method"))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionCall second = SearchAST.forNode(FunctionCall.class)
+                .where(Predicates.onLine(2))
+                .and(Predicates.hasName("method"))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionDeclaration decl1 = SearchAST.forNode(FunctionDeclaration.class)
+                .where(Predicates.onLine(7))
+                .and(Predicates.hasName("method"))
+                .in(this.compiler.getAst())
+                .get();
+
+        assertSame(decl1, first.getDeclaration());
+        assertSame(decl1, second.getDeclaration());
     }
 
     @Test
     @Monty(
     "Int a := method<B>(B())\n"+
+    "Int b := method<A>(A())\n" +
     "class A:\n"+
     "    pass\n" +
     "class B inherits A:\n" +
@@ -127,7 +213,27 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    return 5"
     )
     public void testBestFitExplicitGenerics() throws Exception {
-        this.compile();
+        compile();
+        final FunctionCall first = SearchAST.forNode(FunctionCall.class)
+                .where(Predicates.onLine(1))
+                .and(Predicates.hasName("method"))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionCall second = SearchAST.forNode(FunctionCall.class)
+                .where(Predicates.onLine(2))
+                .and(Predicates.hasName("method"))
+                .in(this.compiler.getAst())
+                .get();
+
+        final FunctionDeclaration decl2 = SearchAST.forNode(FunctionDeclaration.class)
+                .where(Predicates.onLine(9))
+                .and(Predicates.hasName("method"))
+                .in(this.compiler.getAst())
+                .get();
+
+        assertSame(decl2, first.getDeclaration());
+        assertSame(decl2, second.getDeclaration());
     }
 
     @Test
@@ -151,7 +257,7 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     "    method()"
     )
     public void testRecursiveProcedure() throws Exception {
-        this.compile();
+        compile();
     }
 
     @Test
@@ -174,36 +280,6 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     )
     public void testRecursiveFactorial() throws Exception {
         typeCheckAndExpectFailure("Encountered unresolved return type");
-    }
-
-    @Test
-    @Monty(
-    "? foo(Int a):\n" +
-    "    if a < 1:\n" +
-    "        return\n" +
-    "    return"
-    )
-    public void testInferVoidResultTypeMultipleReturns() throws Exception {
-        this.compile();
-        final ProcedureDeclaration decl = this.compiler.searchFor(
-                ProcedureDeclaration.class, Predicates.hasName("foo"));
-
-        assertEquals(CoreClasses.voidType().getType(),
-                decl.getType().asFunction().getReturnType());
-    }
-
-    @Test
-    @Monty(
-    "? foo(Int a):\n" +
-    "    pass"
-    )
-    public void testInferVoidResultTypeNoReturn() throws Exception {
-        this.compile();
-        final ProcedureDeclaration decl = this.compiler.searchFor(
-                ProcedureDeclaration.class, Predicates.hasName("foo"));
-
-        assertEquals(CoreClasses.voidType().getType(),
-                decl.getType().asFunction().getReturnType());
     }
 
     @Test
@@ -247,7 +323,7 @@ public class FunctionCallTest extends AbstractTypeInferenceTest {
     public void testOverloadNoMatches() throws Exception {
         typeCheckAndExpectFailure("Found no matching overload of <foo>");
     }
-    
+
     @Test
     @Monty(
     "foo(1234)\n"+

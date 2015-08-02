@@ -63,23 +63,23 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
                 .addTypeParameter(CoreClasses.intType().getType().asClass())
                 .addTypeParameter(CoreClasses.intType().getType().asClass())
                 .createType();
-        
+
         final Type pairPair = ClassType.classNamed("Pair")
                 .withSuperClass(CoreClasses.objectType().getType().asClass())
                 .addTypeParameter(pairA)
                 .addTypeParameter(CoreClasses.intType().getType().asClass())
                 .createType();
-        
+
         final Type expected = ClassType.classNamed("Pair2")
                 .withSuperClass(pairPair.asClass())
                 .addTypeParameter(CoreClasses.intType().getType().asClass())
                 .createType();
-        
-        final VariableDeclaration decl = compiler.searchFor(VariableDeclaration.class, 
+
+        final VariableDeclaration decl = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("p2"));
         assertUniqueTypeIs(expected, decl);
     }
-    
+
     @Test
     @Monty(
     "? p1 := Pair(Pair(1,2), 3)\n" +
@@ -93,32 +93,32 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     @Debug
     public void testNestedTypeParams() throws Exception {
         compile();
-        
+
         final Type intPair = ClassType.classNamed("Pair")
                 .withSuperClass(CoreClasses.objectType().getType().asClass())
                 .addTypeParameter(CoreClasses.intType().getType())
                 .addTypeParameter(CoreClasses.intType().getType())
                 .createType();
-        
+
         final Type expected = ClassType.classNamed("Pair")
                 .withSuperClass(CoreClasses.objectType().getType().asClass())
                 .addTypeParameter(intPair)
                 .addTypeParameter(CoreClasses.intType().getType())
                 .createType();
-        
-        final VariableDeclaration decl = compiler.searchFor(VariableDeclaration.class, 
+
+        final VariableDeclaration decl = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("p1"));
         assertUniqueTypeIs(expected, decl);
-                
+
     }
-    
+
     @Test
     @Monty(
     "? isEmpty():\n" +
     "    return true"
     )
     public void testInferReturnType() throws Exception {
-        this.compile();
+        compile();
         final FunctionDeclaration decl = this.compiler.searchFor(
                 FunctionDeclaration.class, Predicates.hasName("isEmpty"));
 
@@ -134,7 +134,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "    + String attr := \"Hallo\""
     )
     public void testFoo() throws Exception {
-        this.compile();
+        compile();
     }
 
     @Test
@@ -187,7 +187,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "    Int b := a"
     )
     public void testInferLocalVariableNoInitializationMultipleBranches() throws Exception {
-        this.compile();
+        compile();
     }
 
     @Test
@@ -209,8 +209,9 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "    return a"
     )
     @ExpectOutput("5")
+    @Debug
     public void testStaticGenericFunction() throws Exception {
-        this.compile();
+        compile();
         final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("x"));
 
@@ -226,7 +227,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     )
     @ExpectOutput("5")
     public void testStaticNestedGenericFunctionCall() throws Exception {
-        this.compile();
+        compile();
         final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("x"));
 
@@ -279,7 +280,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "    pass"
     )
     public void testAssignmentWithInheritedRecursiveInstantiation() throws Exception {
-        this.compile();
+        compile();
     }
 
     @Test
@@ -294,7 +295,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "        self.data := data"
     )
     public void testRecursiveType() throws Exception {
-        this.compile();
+        compile();
 
         final VariableDeclaration child = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("child"));
@@ -340,7 +341,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "    ? pair := Pair<>(2, \"5\")"
     )
     public void testGenericDeclarationWithAssignment() throws Exception {
-        this.compile();
+        compile();
         final VariableDeclaration decl = this.compiler.searchFor(
                 VariableDeclaration.class, Predicates.hasName("pair"));
 
@@ -367,7 +368,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "    +X x"
     )
     public void testAssignAttribute() throws Exception {
-        this.compile();
+        compile();
 
         final VariableDeclaration a = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("a"));
@@ -397,7 +398,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "    ? p := foo(1, 2)"
     )
     public void testReturnGeneric() throws Exception {
-        this.compile();
+        compile();
         final FunctionCall call = this.compiler.searchFor(FunctionCall.class,
                 Predicates.hasName("foo"));
 
@@ -424,7 +425,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "        return x"
     )
     public void testShadowing() throws Exception {
-        this.compile();
+        compile();
         final VariableDeclaration y = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("y"));
 
@@ -452,7 +453,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "? a := callFoo(Foo<Int>(1337))"
     )
     public void testCallGenericArgument() throws Exception {
-        this.compile();
+        compile();
 
         final MemberAccess fooAcces = SearchAST.forNode(VariableAccess.class)
                 .where(Predicates.hasName("foo"))
@@ -517,7 +518,7 @@ public class ImplicitTypingTest extends AbstractTypeInferenceTest {
     "        pass"
     )
     public void testAssignMultipleInheritance() throws Exception {
-        this.compile();
+        compile();
         final VariableDeclaration x = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("x"));
         final VariableDeclaration y = this.compiler.searchFor(VariableDeclaration.class,

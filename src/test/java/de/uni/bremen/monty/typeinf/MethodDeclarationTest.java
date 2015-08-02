@@ -1,9 +1,14 @@
 package de.uni.bremen.monty.typeinf;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 
 import de.uni.bremen.monty.moco.ast.CoreClasses;
+import de.uni.bremen.monty.moco.ast.declaration.FunctionDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.ProcedureDeclaration;
 import de.uni.bremen.monty.moco.ast.declaration.VariableDeclaration;
+import de.uni.bremen.monty.moco.ast.declaration.typeinf.Type;
 import de.uni.bremen.monty.moco.util.Debug;
 import de.uni.bremen.monty.moco.util.ExpectOutput;
 import de.uni.bremen.monty.moco.util.Monty;
@@ -16,17 +21,17 @@ public class MethodDeclarationTest extends AbstractTypeInferenceTest {
     "? bar(Int b):\n" +
     "    return b\n" +
     "? foo(? a):\n" +
-    "    return bar(a)" 
+    "    return bar(a)"
     )
     @Debug
     public void testInferParameterTypesFromCallInBody() throws Exception {
         compile();
-        final VariableDeclaration a = compiler.searchFor(VariableDeclaration.class, 
+        final VariableDeclaration a = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("a"));
-        
+
         assertUniqueTypeIs(CoreClasses.intType().getType(), a);
     }
-    
+
     @Test
     @Monty(
     "? foo(? a):\n" +
@@ -35,12 +40,12 @@ public class MethodDeclarationTest extends AbstractTypeInferenceTest {
     )
     public void testInferParameterTypesFromBody() throws Exception {
         compile();
-        final VariableDeclaration a = compiler.searchFor(VariableDeclaration.class, 
+        final VariableDeclaration a = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("a"));
-        
+
         assertUniqueTypeIs(CoreClasses.intType().getType(), a);
     }
-    
+
     @Test
     @Monty(
     "Bool c := foo(1)\n"+
@@ -53,7 +58,7 @@ public class MethodDeclarationTest extends AbstractTypeInferenceTest {
     public void testInferParameterTypeWrongCallType() throws Exception {
         typeCheckAndExpectFailure("Found no matching overload of <foo>");
     }
-    
+
     @Test
     @Monty(
     "foo(1)\n"+
@@ -66,7 +71,7 @@ public class MethodDeclarationTest extends AbstractTypeInferenceTest {
     public void testInferParameterTypeWrongCallType2() throws Exception {
         typeCheckAndExpectFailure("Found no matching overload of <foo>");
     }
-    
+
     @Test
     @Monty(
     "Bool c := foo(true)\n"+
@@ -82,12 +87,12 @@ public class MethodDeclarationTest extends AbstractTypeInferenceTest {
     @ExpectOutput("1")
     public void testTargetTypeConditional() throws Exception {
         compile();
-        final VariableDeclaration a = compiler.searchFor(VariableDeclaration.class, 
+        final VariableDeclaration a = this.compiler.searchFor(VariableDeclaration.class,
                 Predicates.hasName("a"));
-        
+
         assertUniqueTypeIs(CoreClasses.boolType().getType(), a);
     }
-    
+
     @Test
     @Monty(
     "? foo(? a):\n" +
@@ -97,7 +102,7 @@ public class MethodDeclarationTest extends AbstractTypeInferenceTest {
         typeCheckAndExpectFailure("Could not infer return type of <foo>");
     }
 
-    
+
     @Test
     @Monty(
     "? foo():\n" +
@@ -155,6 +160,42 @@ public class MethodDeclarationTest extends AbstractTypeInferenceTest {
     "        return 'c' as Object\n"
     )
     public void testInferTypeVarReturnType() throws Exception {
-        this.compile();
+        compile();
+
+        final FunctionDeclaration decl = this.compiler.searchFor(
+                FunctionDeclaration.class, Predicates.hasName("foo"));
+
+        final Type ret = decl.getType().asFunction().getReturnType();
+        assertEquals(CoreClasses.objectType().getType(), ret);
+    }
+
+    @Test
+    @Monty(
+    "? foo(Int a):\n" +
+    "    if a < 1:\n" +
+    "        return\n" +
+    "    return"
+    )
+    public void testInferVoidResultTypeMultipleReturns() throws Exception {
+        compile();
+        final ProcedureDeclaration decl = this.compiler.searchFor(
+                ProcedureDeclaration.class, Predicates.hasName("foo"));
+
+        assertEquals(CoreClasses.voidType().getType(),
+                decl.getType().asFunction().getReturnType());
+    }
+
+    @Test
+    @Monty(
+    "? foo(Int a):\n" +
+    "    pass"
+    )
+    public void testInferVoidResultTypeNoReturn() throws Exception {
+        compile();
+        final ProcedureDeclaration decl = this.compiler.searchFor(
+                ProcedureDeclaration.class, Predicates.hasName("foo"));
+
+        assertEquals(CoreClasses.voidType().getType(),
+                decl.getType().asFunction().getReturnType());
     }
 }
